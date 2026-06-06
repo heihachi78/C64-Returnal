@@ -6,6 +6,29 @@
 import CoreGraphics
 import Foundation
 
+enum LearnedSkill: CaseIterable {
+    case fireball
+    case lightning
+    case orbitalOrb
+    case beam
+    case meteor
+
+    var upgradeOptions: [LevelUpOption] {
+        switch self {
+        case .fireball:
+            return [.fireRate, .extraFireball]
+        case .lightning:
+            return [.lightningBounce, .lightningRate]
+        case .orbitalOrb:
+            return [.extraOrb, .orbitalSpeed]
+        case .beam:
+            return [.beamRate, .beamKillCount]
+        case .meteor:
+            return [.extraMeteor, .meteorRate]
+        }
+    }
+}
+
 struct Progression {
     private(set) var level = 1
     private(set) var experience = 0
@@ -77,12 +100,30 @@ struct Progression {
         isMeteorUnlocked ? upgradedMeteorCount : 0
     }
 
-    var maximumSkeletons: Int {
-        (GameConfiguration.baseMaximumSkeletons + level - 1) * 10
+    var learnedSkills: [LearnedSkill] {
+        var skills: [LearnedSkill] = [.fireball]
+
+        if isLightningUnlocked {
+            skills.append(.lightning)
+        }
+
+        if isOrbitalOrbUnlocked {
+            skills.append(.orbitalOrb)
+        }
+
+        if isBeamUnlocked {
+            skills.append(.beam)
+        }
+
+        if isMeteorUnlocked {
+            skills.append(.meteor)
+        }
+
+        return skills
     }
 
     var availableLevelUpOptions: [LevelUpOption] {
-        var options: [LevelUpOption] = [.fireRate, .extraFireball, .extraLife]
+        var options: [LevelUpOption] = [.fireRate, .extraFireball, .extraLife, .halveSkeletons]
 
         if isLightningUnlocked {
             options.append(contentsOf: [.lightningBounce, .lightningRate])
@@ -132,17 +173,22 @@ struct Progression {
         isMeteorUnlocked = false
     }
 
-    @discardableResult
-    mutating func gainExperience() -> Bool {
-        experience += 1
+    mutating func gainExperience() -> Int {
+        gainExperience(1)
+    }
 
-        guard experience >= nextExperience else {
-            return false
+    @discardableResult
+    mutating func gainExperience(_ amount: Int) -> Int {
+        experience += max(0, amount)
+        var levelUpCount = 0
+
+        while experience >= nextExperience {
+            experience -= nextExperience
+            levelUp()
+            levelUpCount += 1
         }
 
-        experience -= nextExperience
-        levelUp()
-        return true
+        return levelUpCount
     }
 
     mutating func advanceToOneKillBeforeNextLevel() {
@@ -156,6 +202,8 @@ struct Progression {
         case .extraFireball:
             simultaneousFireballCount += 1
         case .extraLife:
+            break
+        case .halveSkeletons:
             break
         case .learnLightning:
             isLightningUnlocked = true
@@ -182,6 +230,49 @@ struct Progression {
             upgradedMeteorCount += 1
         case .meteorRate:
             meteorRateUpgradeCount += 1
+        }
+    }
+
+    mutating func upgradeAllProperties(for skill: LearnedSkill) {
+        switch skill {
+        case .fireball:
+            fireRateUpgradeCount += 1
+            simultaneousFireballCount += 1
+        case .lightning:
+            guard isLightningUnlocked else {
+                return
+            }
+
+            lightningBounceCount += 1
+            lightningRateUpgradeCount += 1
+        case .orbitalOrb:
+            guard isOrbitalOrbUnlocked else {
+                return
+            }
+
+            upgradedOrbitalOrbCount += 1
+            orbitalOrbSpeedUpgradeCount += 1
+        case .beam:
+            guard isBeamUnlocked else {
+                return
+            }
+
+            beamRateUpgradeCount += 1
+            beamKillLevel += 1
+            upgradedBeamKillCount += beamKillLevel
+        case .meteor:
+            guard isMeteorUnlocked else {
+                return
+            }
+
+            upgradedMeteorCount += 1
+            meteorRateUpgradeCount += 1
+        }
+    }
+
+    mutating func upgradeAllProperties(for skills: [LearnedSkill]) {
+        for skill in skills {
+            upgradeAllProperties(for: skill)
         }
     }
 

@@ -20,23 +20,30 @@ struct Beam {
             y: origin.y + normalizedDirection.dy * length
         )
 
-        self.targets = targets
-            .compactMap { target -> (target: SKSpriteNode, progress: CGFloat)? in
-                guard let progress = Self.progressAlongBeam(
-                    targetPosition: target.position,
-                    origin: origin,
-                    direction: normalizedDirection,
-                    length: length,
-                    hitWidth: hitWidth
-                ) else {
-                    return nil
-                }
+        var selectedTargets = [(target: SKSpriteNode, progress: CGFloat)]()
+        selectedTargets.reserveCapacity(killLimit)
 
-                return (target, progress)
+        for target in targets {
+            guard let progress = Self.progressAlongBeam(
+                targetPosition: target.position,
+                origin: origin,
+                direction: normalizedDirection,
+                length: length,
+                hitWidth: hitWidth
+            ) else {
+                continue
             }
-            .sorted { $0.progress < $1.progress }
-            .prefix(killLimit)
-            .map(\.target)
+
+            if selectedTargets.count < killLimit {
+                selectedTargets.append((target, progress))
+                Self.moveNewestTargetIntoOrder(&selectedTargets)
+            } else if let lastProgress = selectedTargets.last?.progress, progress < lastProgress {
+                selectedTargets[selectedTargets.count - 1] = (target, progress)
+                Self.moveNewestTargetIntoOrder(&selectedTargets)
+            }
+        }
+
+        self.targets = selectedTargets.map(\.target)
     }
 
     static func makeEffectNode(from start: CGPoint, to end: CGPoint) -> SKNode {
@@ -87,11 +94,20 @@ struct Beam {
             y: origin.y + direction.dy * progress
         )
 
-        guard closestPoint.distance(to: targetPosition) <= hitWidth else {
+        guard closestPoint.distanceSquared(to: targetPosition) <= hitWidth * hitWidth else {
             return nil
         }
 
         return progress
+    }
+
+    private static func moveNewestTargetIntoOrder(_ targets: inout [(target: SKSpriteNode, progress: CGFloat)]) {
+        var index = targets.count - 1
+
+        while index > 0 && targets[index].progress < targets[index - 1].progress {
+            targets.swapAt(index, index - 1)
+            index -= 1
+        }
     }
 
     private static func makeBeamLine(from start: CGPoint, to end: CGPoint, lineWidth: CGFloat) -> SKShapeNode {

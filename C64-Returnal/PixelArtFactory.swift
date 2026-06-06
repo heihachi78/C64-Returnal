@@ -62,6 +62,10 @@ enum PixelArtFactory {
         nearestTexture(makeLifeImageTexture())
     }
 
+    static func makeChestTexture(tier: ChestTier) -> SKTexture {
+        nearestTexture(makeChestImageTexture(tier: tier))
+    }
+
     private static func nearestTexture(_ texture: SKTexture) -> SKTexture {
         texture.filteringMode = .nearest
         return texture
@@ -405,6 +409,57 @@ enum PixelArtFactory {
 
         image.unlockFocus()
         return SKTexture(image: image)
+    }
+
+    private static func makeChestImageTexture(tier: ChestTier) -> SKTexture {
+        let image = NSImage(size: CGSize(width: 16, height: 14))
+        let colors = chestColors(for: tier)
+        let outline = NSColor(calibratedRed: 0.09, green: 0.05, blue: 0.03, alpha: 1)
+        let darkStrap = NSColor(calibratedRed: 0.14, green: 0.08, blue: 0.04, alpha: 1)
+        let lock = NSColor(calibratedRed: 1.0, green: 0.86, blue: 0.28, alpha: 1)
+
+        image.lockFocus()
+        NSColor.clear.setFill()
+        NSBezierPath(rect: NSRect(x: 0, y: 0, width: 16, height: 14)).fill()
+
+        drawPixelRect(x: 3, y: 11, width: 10, height: 1, color: outline)
+        drawPixelRect(x: 2, y: 9, width: 12, height: 2, color: colors.dark)
+        drawPixelRect(x: 3, y: 10, width: 10, height: 1, color: colors.light)
+        drawPixelRect(x: 1, y: 3, width: 14, height: 6, color: outline)
+        drawPixelRect(x: 2, y: 4, width: 12, height: 5, color: colors.base)
+        drawPixelRect(x: 2, y: 7, width: 12, height: 1, color: colors.light)
+        drawPixelRect(x: 2, y: 4, width: 12, height: 1, color: colors.dark)
+        drawPixelRect(x: 1, y: 2, width: 14, height: 1, color: outline)
+        drawPixelRect(x: 7, y: 3, width: 2, height: 7, color: darkStrap)
+        drawPixelRect(x: 6, y: 5, width: 4, height: 3, color: outline)
+        drawPixelRect(x: 7, y: 5, width: 2, height: 2, color: lock)
+        drawPixelRect(x: 3, y: 8, width: 3, height: 1, color: colors.light)
+
+        image.unlockFocus()
+        return SKTexture(image: image)
+    }
+
+    private static func chestColors(for tier: ChestTier) -> (base: NSColor, light: NSColor, dark: NSColor) {
+        switch tier {
+        case .bronze:
+            return (
+                NSColor(calibratedRed: 0.55, green: 0.30, blue: 0.13, alpha: 1),
+                NSColor(calibratedRed: 0.86, green: 0.52, blue: 0.23, alpha: 1),
+                NSColor(calibratedRed: 0.32, green: 0.16, blue: 0.07, alpha: 1)
+            )
+        case .silver:
+            return (
+                NSColor(calibratedRed: 0.58, green: 0.63, blue: 0.68, alpha: 1),
+                NSColor(calibratedRed: 0.88, green: 0.93, blue: 0.96, alpha: 1),
+                NSColor(calibratedRed: 0.34, green: 0.38, blue: 0.43, alpha: 1)
+            )
+        case .gold:
+            return (
+                NSColor(calibratedRed: 0.86, green: 0.58, blue: 0.08, alpha: 1),
+                NSColor(calibratedRed: 1.0, green: 0.86, blue: 0.25, alpha: 1),
+                NSColor(calibratedRed: 0.48, green: 0.30, blue: 0.03, alpha: 1)
+            )
+        }
     }
 
     private static func grassColor(red: CGFloat, green: CGFloat, blue: CGFloat, variant: Int, shift: Int) -> NSColor {

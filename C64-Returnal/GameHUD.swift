@@ -14,6 +14,7 @@ enum LevelUpOption: CaseIterable {
     case fireRate
     case extraFireball
     case extraLife
+    case halveSkeletons
     case learnLightning
     case lightningBounce
     case lightningRate
@@ -39,6 +40,8 @@ enum LevelUpOption: CaseIterable {
             return "+1 FIREBALL"
         case .extraLife:
             return "+1 LIFE"
+        case .halveSkeletons:
+            return "HALVE HORDE"
         case .learnLightning:
             return "LEARN BOLT"
         case .lightningBounce:
@@ -67,18 +70,27 @@ enum LevelUpOption: CaseIterable {
     }
 }
 
+struct ChestRewardDisplayItem {
+    let option: LevelUpOption
+    let title: String
+}
+
 final class GameHUD {
     private let topStatusBackground = SKShapeNode()
     private let combatStatusBackground = SKShapeNode()
     private let levelUpBackground = SKShapeNode()
+    private let chestRewardBackground = SKShapeNode()
     private let gameOverBackground = SKShapeNode()
     private let gameOverLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let restartLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let exitLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let levelUpLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let chestRewardLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let chestRewardContinueLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let fireRateLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let extraFireballLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let extraLifeLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let halveSkeletonsLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let learnLightningLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let lightningBounceLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let lightningRateLabel = SKLabelNode(fontNamed: "Menlo-Bold")
@@ -91,9 +103,13 @@ final class GameHUD {
     private let learnMeteorLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let extraMeteorLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let meteorRateLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let firstLevelUpKeyLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let secondLevelUpKeyLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let thirdLevelUpKeyLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let fireRateIcon = SKSpriteNode()
     private let extraFireballIcon = SKSpriteNode()
     private let extraLifeIcon = SKSpriteNode()
+    private let halveSkeletonsIcon = SKSpriteNode()
     private let learnLightningIcon = SKSpriteNode()
     private let lightningBounceIcon = SKSpriteNode()
     private let lightningRateIcon = SKSpriteNode()
@@ -127,10 +143,13 @@ final class GameHUD {
     private let skeletonAliveLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let skeletonIntervalLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private var activeLevelUpOptions = [LevelUpOption]()
+    private var activeChestRewardItems = [ChestRewardDisplayItem]()
+    private var chestRewardNodes = [SKNode]()
     private var lifeIcons = [SKSpriteNode]()
     private var lifeTexture: SKTexture?
     private var lifeIconOrigin = CGPoint.zero
     private var currentLives = 0
+    private var currentSceneSize = CGSize(width: 800, height: 600)
     private weak var parentNode: SKNode?
 
     func add(to parent: SKNode, fireballTexture: SKTexture, lightningTexture: SKTexture, orbTexture: SKTexture, beamTexture: SKTexture, meteorTexture: SKTexture, lifeTexture: SKTexture, skeletonTexture: SKTexture) {
@@ -138,7 +157,8 @@ final class GameHUD {
         self.lifeTexture = lifeTexture
 
         setupGameOverLabel()
-        setupLevelUpLabels(fireballTexture: fireballTexture, lightningTexture: lightningTexture, orbTexture: orbTexture, beamTexture: beamTexture, meteorTexture: meteorTexture, lifeTexture: lifeTexture)
+        setupLevelUpLabels(fireballTexture: fireballTexture, lightningTexture: lightningTexture, orbTexture: orbTexture, beamTexture: beamTexture, meteorTexture: meteorTexture, lifeTexture: lifeTexture, skeletonTexture: skeletonTexture)
+        setupChestRewardLabels()
         setupProgressLabels()
         setupBackgroundPanels()
         setupFireballStatus(fireballTexture: fireballTexture)
@@ -151,14 +171,18 @@ final class GameHUD {
         parent.addChild(topStatusBackground)
         parent.addChild(combatStatusBackground)
         parent.addChild(levelUpBackground)
+        parent.addChild(chestRewardBackground)
         parent.addChild(gameOverBackground)
         parent.addChild(gameOverLabel)
         parent.addChild(restartLabel)
         parent.addChild(exitLabel)
         parent.addChild(levelUpLabel)
+        parent.addChild(chestRewardLabel)
+        parent.addChild(chestRewardContinueLabel)
         parent.addChild(fireRateLabel)
         parent.addChild(extraFireballLabel)
         parent.addChild(extraLifeLabel)
+        parent.addChild(halveSkeletonsLabel)
         parent.addChild(learnLightningLabel)
         parent.addChild(lightningBounceLabel)
         parent.addChild(lightningRateLabel)
@@ -171,9 +195,13 @@ final class GameHUD {
         parent.addChild(learnMeteorLabel)
         parent.addChild(extraMeteorLabel)
         parent.addChild(meteorRateLabel)
+        parent.addChild(firstLevelUpKeyLabel)
+        parent.addChild(secondLevelUpKeyLabel)
+        parent.addChild(thirdLevelUpKeyLabel)
         parent.addChild(fireRateIcon)
         parent.addChild(extraFireballIcon)
         parent.addChild(extraLifeIcon)
+        parent.addChild(halveSkeletonsIcon)
         parent.addChild(learnLightningIcon)
         parent.addChild(lightningBounceIcon)
         parent.addChild(lightningRateIcon)
@@ -209,6 +237,7 @@ final class GameHUD {
     }
 
     func layout(for sceneSize: CGSize) {
+        currentSceneSize = sceneSize
         let left = -sceneSize.width / 2 + 18
         let top = sceneSize.height / 2 - 24
 
@@ -238,18 +267,16 @@ final class GameHUD {
         skeletonAliveLabel.position = CGPoint(x: left + 28, y: bottom + 240)
         skeletonIntervalLabel.position = CGPoint(x: left + 28, y: bottom + 220)
 
+        layoutChestRewardItems()
+
         setPanel(
             combatStatusBackground,
             rect: CGRect(x: left - 10, y: bottom - 15, width: 150, height: 274),
             cornerRadius: Self.panelCornerRadius
         )
 
-        let centeredPanelWidth = min(max(360, sceneSize.width - 48), 620)
-        setPanel(
-            levelUpBackground,
-            rect: CGRect(x: -centeredPanelWidth / 2, y: -88, width: centeredPanelWidth, height: 178),
-            cornerRadius: Self.panelCornerRadius
-        )
+        layoutLevelUpBackground(optionCount: max(2, activeLevelUpOptions.count))
+        layoutChestRewardBackground(itemCount: activeChestRewardItems.count)
         setPanel(
             gameOverBackground,
             rect: CGRect(x: -centeredPanelWidth / 2, y: -100, width: centeredPanelWidth, height: 190),
@@ -340,8 +367,9 @@ final class GameHUD {
 
     func showLevelUp(level: Int, options: [LevelUpOption], beamKillUpgradeBonus: Int) {
         hideLevelUpOptions()
-        activeLevelUpOptions = Array(options.prefix(2))
+        activeLevelUpOptions = Array(options.prefix(3))
         levelUpLabel.text = "LEVEL \(level)"
+        layoutLevelUpBackground(optionCount: activeLevelUpOptions.count)
         levelUpBackground.run(SKAction.fadeAlpha(to: Self.panelAlpha, duration: 0.2))
         levelUpLabel.setScale(0.75)
         levelUpLabel.run(
@@ -352,7 +380,12 @@ final class GameHUD {
         )
 
         for (index, option) in activeLevelUpOptions.enumerated() {
-            showLevelUpOption(option, yPosition: index == 0 ? -4 : -56, beamKillUpgradeBonus: beamKillUpgradeBonus)
+            showLevelUpOption(
+                option,
+                index: index,
+                yPosition: Self.levelUpOptionYPosition(for: index),
+                beamKillUpgradeBonus: beamKillUpgradeBonus
+            )
         }
     }
 
@@ -366,6 +399,41 @@ final class GameHUD {
         activeLevelUpOptions.removeAll()
     }
 
+    func showChestReward(tier: ChestTier, items: [ChestRewardDisplayItem]) {
+        hideChestReward()
+        activeChestRewardItems = items
+        chestRewardLabel.text = "\(tier.title) CHEST"
+        layoutChestRewardBackground(itemCount: items.count)
+        chestRewardBackground.run(SKAction.fadeAlpha(to: Self.panelAlpha, duration: 0.2))
+        chestRewardLabel.setScale(0.75)
+        chestRewardLabel.run(
+            SKAction.group([
+                SKAction.fadeIn(withDuration: 0.2),
+                SKAction.scale(to: 1, duration: 0.2)
+            ])
+        )
+        chestRewardContinueLabel.run(SKAction.fadeIn(withDuration: 0.2))
+
+        showChestRewardItems(items)
+    }
+
+    func hideChestReward() {
+        chestRewardBackground.removeAllActions()
+        chestRewardBackground.alpha = 0
+        chestRewardLabel.removeAllActions()
+        chestRewardLabel.alpha = 0
+        chestRewardLabel.setScale(1)
+        chestRewardContinueLabel.removeAllActions()
+        chestRewardContinueLabel.alpha = 0
+        activeChestRewardItems.removeAll()
+
+        for node in chestRewardNodes {
+            node.removeAllActions()
+            node.removeFromParent()
+        }
+        chestRewardNodes.removeAll()
+    }
+
     private func hideLevelUpOptions() {
         for label in levelUpOptionLabels {
             label.removeAllActions()
@@ -377,6 +445,12 @@ final class GameHUD {
             icon.removeAllActions()
             icon.alpha = 0
             icon.setScale(1)
+        }
+
+        for keyLabel in levelUpKeyLabels {
+            keyLabel.removeAllActions()
+            keyLabel.alpha = 0
+            keyLabel.setScale(1)
         }
     }
 
@@ -413,6 +487,14 @@ final class GameHUD {
         return nil
     }
 
+    func levelUpOption(atIndex index: Int) -> LevelUpOption? {
+        guard activeLevelUpOptions.indices.contains(index) else {
+            return nil
+        }
+
+        return activeLevelUpOptions[index]
+    }
+
     private func setupGameOverLabel() {
         gameOverLabel.text = "YOU DIED AT LEVEL 1"
         gameOverLabel.fontName = "Menlo-Bold"
@@ -436,7 +518,7 @@ final class GameHUD {
             panel.zPosition = 80
         }
 
-        for panel in [levelUpBackground, gameOverBackground] {
+        for panel in [levelUpBackground, chestRewardBackground, gameOverBackground] {
             panel.fillColor = Self.panelColor
             panel.strokeColor = .clear
             panel.alpha = 0
@@ -444,7 +526,7 @@ final class GameHUD {
         }
     }
 
-    private func setupLevelUpLabels(fireballTexture: SKTexture, lightningTexture: SKTexture, orbTexture: SKTexture, beamTexture: SKTexture, meteorTexture: SKTexture, lifeTexture: SKTexture) {
+    private func setupLevelUpLabels(fireballTexture: SKTexture, lightningTexture: SKTexture, orbTexture: SKTexture, beamTexture: SKTexture, meteorTexture: SKTexture, lifeTexture: SKTexture, skeletonTexture: SKTexture) {
         levelUpLabel.fontSize = 40
         levelUpLabel.fontColor = Self.primaryTextColor
         levelUpLabel.horizontalAlignmentMode = .center
@@ -456,6 +538,7 @@ final class GameHUD {
         setupLevelUpOption(fireRateLabel, text: LevelUpOption.fireRate.title)
         setupLevelUpOption(extraFireballLabel, text: LevelUpOption.extraFireball.title)
         setupLevelUpOption(extraLifeLabel, text: LevelUpOption.extraLife.title)
+        setupLevelUpOption(halveSkeletonsLabel, text: LevelUpOption.halveSkeletons.title)
         setupLevelUpOption(learnLightningLabel, text: LevelUpOption.learnLightning.title)
         setupLevelUpOption(lightningBounceLabel, text: LevelUpOption.lightningBounce.title)
         setupLevelUpOption(lightningRateLabel, text: LevelUpOption.lightningRate.title)
@@ -471,6 +554,7 @@ final class GameHUD {
         setupLevelUpIcon(fireRateIcon, texture: fireballTexture)
         setupLevelUpIcon(extraFireballIcon, texture: fireballTexture)
         setupLevelUpIcon(extraLifeIcon, texture: lifeTexture)
+        setupLevelUpIcon(halveSkeletonsIcon, texture: skeletonTexture)
         setupLevelUpIcon(learnLightningIcon, texture: lightningTexture)
         setupLevelUpIcon(lightningBounceIcon, texture: lightningTexture)
         setupLevelUpIcon(lightningRateIcon, texture: lightningTexture)
@@ -483,6 +567,29 @@ final class GameHUD {
         setupLevelUpIcon(learnMeteorIcon, texture: meteorTexture)
         setupLevelUpIcon(extraMeteorIcon, texture: meteorTexture)
         setupLevelUpIcon(meteorRateIcon, texture: meteorTexture)
+        setupLevelUpKeyLabel(firstLevelUpKeyLabel, text: "[Q]")
+        setupLevelUpKeyLabel(secondLevelUpKeyLabel, text: "[A]")
+        setupLevelUpKeyLabel(thirdLevelUpKeyLabel, text: "[Y]")
+    }
+
+    private func setupChestRewardLabels() {
+        chestRewardLabel.text = "BRONZE CHEST"
+        chestRewardLabel.fontSize = 34
+        chestRewardLabel.fontColor = Self.primaryTextColor
+        chestRewardLabel.horizontalAlignmentMode = .center
+        chestRewardLabel.verticalAlignmentMode = .center
+        chestRewardLabel.position = CGPoint(x: 0, y: 88)
+        chestRewardLabel.zPosition = 100
+        chestRewardLabel.alpha = 0
+
+        chestRewardContinueLabel.text = "[Q] CONTINUE"
+        chestRewardContinueLabel.fontSize = 18
+        chestRewardContinueLabel.fontColor = Self.keyHintTextColor
+        chestRewardContinueLabel.horizontalAlignmentMode = .center
+        chestRewardContinueLabel.verticalAlignmentMode = .center
+        chestRewardContinueLabel.position = CGPoint(x: 0, y: -116)
+        chestRewardContinueLabel.zPosition = 100
+        chestRewardContinueLabel.alpha = 0
     }
 
     private func setupGameOverOption(_ label: SKLabelNode, text: String, yPosition: CGFloat) {
@@ -502,7 +609,18 @@ final class GameHUD {
         label.fontColor = Self.primaryTextColor
         label.horizontalAlignmentMode = .left
         label.verticalAlignmentMode = .center
-        label.position = CGPoint(x: -76, y: 0)
+        label.position = CGPoint(x: -78, y: 0)
+        label.zPosition = 100
+        label.alpha = 0
+    }
+
+    private func setupLevelUpKeyLabel(_ label: SKLabelNode, text: String) {
+        label.text = text
+        label.fontSize = 18
+        label.fontColor = Self.keyHintTextColor
+        label.horizontalAlignmentMode = .center
+        label.verticalAlignmentMode = .center
+        label.position = CGPoint(x: -150, y: 0)
         label.zPosition = 100
         label.alpha = 0
     }
@@ -510,7 +628,7 @@ final class GameHUD {
     private func setupLevelUpIcon(_ icon: SKSpriteNode, texture: SKTexture) {
         icon.texture = texture
         icon.size = CGSize(width: 24, height: 24)
-        icon.position = CGPoint(x: -110, y: 0)
+        icon.position = CGPoint(x: -116, y: 0)
         icon.zPosition = 100
         icon.alpha = 0
     }
@@ -656,16 +774,19 @@ final class GameHUD {
         label.frame.insetBy(dx: -26, dy: -12)
     }
 
-    private func showLevelUpOption(_ option: LevelUpOption, yPosition: CGFloat, beamKillUpgradeBonus: Int) {
+    private func showLevelUpOption(_ option: LevelUpOption, index: Int, yPosition: CGFloat, beamKillUpgradeBonus: Int) {
         let label = label(for: option)
         let icon = icon(for: option)
+        let keyLabel = levelUpKeyLabels[index]
 
         label.text = option.title(beamKillBonus: beamKillUpgradeBonus)
-        label.position = CGPoint(x: -76, y: yPosition)
-        icon.position = CGPoint(x: -110, y: yPosition)
+        label.position = CGPoint(x: -78, y: yPosition)
+        icon.position = CGPoint(x: -116, y: yPosition)
+        keyLabel.position = CGPoint(x: -150, y: yPosition)
 
         label.run(SKAction.fadeIn(withDuration: 0.2))
         icon.run(SKAction.fadeIn(withDuration: 0.2))
+        keyLabel.run(SKAction.fadeIn(withDuration: 0.2))
     }
 
     private func label(for option: LevelUpOption) -> SKLabelNode {
@@ -676,6 +797,8 @@ final class GameHUD {
             return extraFireballLabel
         case .extraLife:
             return extraLifeLabel
+        case .halveSkeletons:
+            return halveSkeletonsLabel
         case .learnLightning:
             return learnLightningLabel
         case .lightningBounce:
@@ -711,6 +834,8 @@ final class GameHUD {
             return extraFireballIcon
         case .extraLife:
             return extraLifeIcon
+        case .halveSkeletons:
+            return halveSkeletonsIcon
         case .learnLightning:
             return learnLightningIcon
         case .lightningBounce:
@@ -738,9 +863,61 @@ final class GameHUD {
         }
     }
 
+    private func showChestRewardItems(_ items: [ChestRewardDisplayItem]) {
+        for (index, item) in items.enumerated() {
+            showChestRewardItem(item, index: index, itemCount: items.count)
+        }
+    }
+
+    private func showChestRewardItem(_ item: ChestRewardDisplayItem, index: Int, itemCount: Int) {
+        guard let parentNode = parentNode else {
+            return
+        }
+
+        let yPosition = Self.chestRewardItemYPosition(for: index, itemCount: itemCount)
+        let sourceIcon = icon(for: item.option)
+        let icon = SKSpriteNode(texture: sourceIcon.texture)
+        icon.size = sourceIcon.size
+        icon.position = CGPoint(x: -104, y: yPosition)
+        icon.zPosition = 100
+        icon.alpha = 0
+
+        let label = SKLabelNode(fontNamed: "Menlo-Bold")
+        label.text = item.title
+        label.fontSize = 20
+        label.fontColor = Self.primaryTextColor
+        label.horizontalAlignmentMode = .left
+        label.verticalAlignmentMode = .center
+        label.position = CGPoint(x: -66, y: yPosition)
+        label.zPosition = 100
+        label.alpha = 0
+
+        parentNode.addChild(icon)
+        parentNode.addChild(label)
+        chestRewardNodes.append(icon)
+        chestRewardNodes.append(label)
+
+        icon.run(SKAction.fadeIn(withDuration: 0.2))
+        label.run(SKAction.fadeIn(withDuration: 0.2))
+    }
+
+    private func layoutChestRewardItems() {
+        let itemCount = chestRewardNodes.count / 2
+
+        guard itemCount > 0 else {
+            return
+        }
+
+        for index in 0..<itemCount {
+            let yPosition = Self.chestRewardItemYPosition(for: index, itemCount: itemCount)
+            chestRewardNodes[index * 2].position = CGPoint(x: -104, y: yPosition)
+            chestRewardNodes[index * 2 + 1].position = CGPoint(x: -66, y: yPosition)
+        }
+    }
+
     private var levelUpOptionLabels: [SKLabelNode] {
         [
-            fireRateLabel, extraFireballLabel, extraLifeLabel,
+            fireRateLabel, extraFireballLabel, extraLifeLabel, halveSkeletonsLabel,
             learnLightningLabel, lightningBounceLabel, lightningRateLabel,
             learnOrbLabel, extraOrbLabel, orbitalSpeedLabel,
             learnBeamLabel, beamRateLabel, beamKillCountLabel,
@@ -750,12 +927,55 @@ final class GameHUD {
 
     private var levelUpOptionIcons: [SKSpriteNode] {
         [
-            fireRateIcon, extraFireballIcon, extraLifeIcon,
+            fireRateIcon, extraFireballIcon, extraLifeIcon, halveSkeletonsIcon,
             learnLightningIcon, lightningBounceIcon, lightningRateIcon,
             learnOrbIcon, extraOrbIcon, orbitalSpeedIcon,
             learnBeamIcon, beamRateIcon, beamKillCountIcon,
             learnMeteorIcon, extraMeteorIcon, meteorRateIcon
         ]
+    }
+
+    private var levelUpKeyLabels: [SKLabelNode] {
+        [firstLevelUpKeyLabel, secondLevelUpKeyLabel, thirdLevelUpKeyLabel]
+    }
+
+    private var centeredPanelWidth: CGFloat {
+        min(max(360, currentSceneSize.width - 48), 620)
+    }
+
+    private func layoutLevelUpBackground(optionCount: Int) {
+        let clampedOptionCount = max(2, optionCount)
+        let height = CGFloat(178 + max(0, clampedOptionCount - 2) * 52)
+
+        setPanel(
+            levelUpBackground,
+            rect: CGRect(x: -centeredPanelWidth / 2, y: 90 - height, width: centeredPanelWidth, height: height),
+            cornerRadius: Self.panelCornerRadius
+        )
+    }
+
+    private func layoutChestRewardBackground(itemCount: Int) {
+        let visibleItemCount = max(1, itemCount)
+        let height = min(currentSceneSize.height - 64, CGFloat(174 + visibleItemCount * 34))
+
+        chestRewardLabel.position = CGPoint(x: 0, y: height / 2 - 54)
+        chestRewardContinueLabel.position = CGPoint(x: 0, y: -height / 2 + 36)
+        setPanel(
+            chestRewardBackground,
+            rect: CGRect(x: -centeredPanelWidth / 2, y: -height / 2, width: centeredPanelWidth, height: height),
+            cornerRadius: Self.panelCornerRadius
+        )
+    }
+
+    private static func levelUpOptionYPosition(for index: Int) -> CGFloat {
+        -4 - CGFloat(index) * 52
+    }
+
+    private static func chestRewardItemYPosition(for index: Int, itemCount: Int) -> CGFloat {
+        let spacing: CGFloat = 30
+        let totalHeight = CGFloat(max(0, itemCount - 1)) * spacing
+
+        return totalHeight / 2 - CGFloat(index) * spacing - 12
     }
 
     private static func formattedSeconds(_ value: TimeInterval) -> String {
@@ -767,6 +987,7 @@ final class GameHUD {
     }
 
     private static let primaryTextColor = SKColor(calibratedRed: 0.96, green: 0.93, blue: 0.83, alpha: 1)
+    private static let keyHintTextColor = SKColor(calibratedRed: 1.0, green: 0.86, blue: 0.26, alpha: 1)
     private static let deathTextColor = SKColor(calibratedRed: 0.95, green: 0.05, blue: 0.08, alpha: 1)
     private static let panelColor = SKColor(calibratedWhite: 0.02, alpha: 1)
     private static let panelAlpha: CGFloat = 0.62

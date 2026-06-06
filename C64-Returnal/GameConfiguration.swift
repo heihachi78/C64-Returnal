@@ -15,11 +15,10 @@ enum GameConfiguration {
     static let playerAnimationFrameDuration: TimeInterval = 0.18
 
     static let skeletonSpeed: CGFloat = 82
-    static let initialSkeletonSpawnInterval: TimeInterval = 0.5
+    static let initialSkeletonSpawnInterval: TimeInterval = 0.85
     static let skeletonIntervalMultiplierPerLevel = 0.9
     static let skeletonHitDistance: CGFloat = 24
     static let skeletonSpawnMargin: CGFloat = 72
-    static let baseMaximumSkeletons = 16
     static let skeletonAnimationFrameDuration: TimeInterval = 0.20
 
     static let fireballSpeed: CGFloat = 280
@@ -53,6 +52,15 @@ enum GameConfiguration {
     static let meteorFallHeight: CGFloat = 240
     static let meteorFallDrift: CGFloat = 90
     static let meteorAnimationFrameDuration: TimeInterval = 0.14
+
+    static let chestSpawnMargin: CGFloat = 88
+    static let chestPickupDistance: CGFloat = 28
+    static let bronzeChestKillInterval = 250
+    static let silverChestKillInterval = 1000
+    static let goldChestKillInterval = 5_000
+
+    static let thirdLevelUpOptionChanceNumerator = 5
+    static let thirdLevelUpOptionChanceDenominator = 100
 }
 
 enum ArrowKey {
@@ -72,5 +80,32 @@ enum DebugKey {
 
     static func isLevelSetupShortcut(_ keyCode: UInt16) -> Bool {
         keyCode == one || keyCode == keypadOne
+    }
+}
+
+enum LevelUpSelectionKey {
+    static let firstOption: UInt16 = 12
+    static let secondOption: UInt16 = 0
+    static let thirdOption: UInt16 = 16
+
+    static func optionIndex(for keyCode: UInt16) -> Int? {
+        switch keyCode {
+        case firstOption:
+            return 0
+        case secondOption:
+            return 1
+        case thirdOption:
+            return 2
+        default:
+            return nil
+        }
+    }
+}
+
+enum ChestRewardKey {
+    static let advance: UInt16 = 12
+
+    static func isAdvance(_ keyCode: UInt16) -> Bool {
+        keyCode == advance
     }
 }

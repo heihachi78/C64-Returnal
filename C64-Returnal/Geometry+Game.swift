@@ -6,11 +6,15 @@
 import CoreGraphics
 
 extension CGPoint {
-    func distance(to other: CGPoint) -> CGFloat {
+    func distanceSquared(to other: CGPoint) -> CGFloat {
         let dx = x - other.x
         let dy = y - other.y
 
-        return sqrt(dx * dx + dy * dy)
+        return dx * dx + dy * dy
+    }
+
+    func distance(to other: CGPoint) -> CGFloat {
+        sqrt(distanceSquared(to: other))
     }
 }
 

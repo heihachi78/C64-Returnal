@@ -68,7 +68,7 @@ struct ChainLightning {
 
     private static func closestTargetIndex(to position: CGPoint, in targets: [SKSpriteNode]) -> Int? {
         targets.indices.min {
-            targets[$0].position.distance(to: position) < targets[$1].position.distance(to: position)
+            targets[$0].position.distanceSquared(to: position) < targets[$1].position.distanceSquared(to: position)
         }
     }
 
