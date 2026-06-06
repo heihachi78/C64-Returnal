@@ -12,12 +12,24 @@ enum PixelArtFactory {
         }
     }
 
+    static func makeMageTextures() -> [SKTexture] {
+        (0..<2).map { variant in
+            nearestTexture(makeMageImageTexture(variant: variant))
+        }
+    }
+
     static func makeMageTexture() -> SKTexture {
-        nearestTexture(makeMageImageTexture())
+        makeMageTextures()[0]
+    }
+
+    static func makeSkeletonTextures() -> [SKTexture] {
+        (0..<2).map { variant in
+            nearestTexture(makeSkeletonImageTexture(variant: variant))
+        }
     }
 
     static func makeSkeletonTexture() -> SKTexture {
-        nearestTexture(makeSkeletonImageTexture())
+        makeSkeletonTextures()[0]
     }
 
     static func makeFireballTextures() -> [SKTexture] {
@@ -38,6 +50,16 @@ enum PixelArtFactory {
 
     static func makeBeamTexture() -> SKTexture {
         nearestTexture(makeBeamImageTexture())
+    }
+
+    static func makeMeteorTextures() -> [SKTexture] {
+        (0..<2).map { variant in
+            nearestTexture(makeMeteorTexture(variant: variant))
+        }
+    }
+
+    static func makeLifeTexture() -> SKTexture {
+        nearestTexture(makeLifeImageTexture())
     }
 
     private static func nearestTexture(_ texture: SKTexture) -> SKTexture {
@@ -117,9 +139,14 @@ enum PixelArtFactory {
         }
     }
 
-    private static func makeMageImageTexture() -> SKTexture {
+    private static func makeMageImageTexture(variant: Int) -> SKTexture {
         let pixelSize = 16
         let image = NSImage(size: CGSize(width: pixelSize, height: 22))
+        let leftFootX = variant == 0 ? 4 : 3
+        let rightFootX = variant == 0 ? 9 : 10
+        let staffX = variant == 0 ? 13 : 14
+        let crystalX = variant == 0 ? 12 : 13
+        let crystalY = variant == 0 ? 17 : 16
 
         image.lockFocus()
         NSColor.clear.setFill()
@@ -138,20 +165,25 @@ enum PixelArtFactory {
         drawPixelRect(x: 3, y: 3, width: 10, height: 2, color: NSColor(calibratedRed: 0.09, green: 0.15, blue: 0.39, alpha: 1))
         drawPixelRect(x: 5, y: 5, width: 2, height: 6, color: NSColor(calibratedRed: 0.22, green: 0.35, blue: 0.83, alpha: 1))
         drawPixelRect(x: 9, y: 5, width: 2, height: 6, color: NSColor(calibratedRed: 0.09, green: 0.15, blue: 0.39, alpha: 1))
-        drawPixelRect(x: 2, y: 6, width: 3, height: 3, color: NSColor(calibratedRed: 0.32, green: 0.13, blue: 0.56, alpha: 1))
-        drawPixelRect(x: 11, y: 7, width: 2, height: 2, color: NSColor(calibratedRed: 0.32, green: 0.13, blue: 0.56, alpha: 1))
-        drawPixelRect(x: 4, y: 1, width: 3, height: 2, color: NSColor(calibratedRed: 0.08, green: 0.07, blue: 0.16, alpha: 1))
-        drawPixelRect(x: 9, y: 1, width: 3, height: 2, color: NSColor(calibratedRed: 0.08, green: 0.07, blue: 0.16, alpha: 1))
+        if variant == 0 {
+            drawPixelRect(x: 2, y: 6, width: 3, height: 3, color: NSColor(calibratedRed: 0.32, green: 0.13, blue: 0.56, alpha: 1))
+            drawPixelRect(x: 11, y: 7, width: 2, height: 2, color: NSColor(calibratedRed: 0.32, green: 0.13, blue: 0.56, alpha: 1))
+        } else {
+            drawPixelRect(x: 3, y: 7, width: 2, height: 2, color: NSColor(calibratedRed: 0.32, green: 0.13, blue: 0.56, alpha: 1))
+            drawPixelRect(x: 11, y: 5, width: 3, height: 3, color: NSColor(calibratedRed: 0.32, green: 0.13, blue: 0.56, alpha: 1))
+        }
+        drawPixelRect(x: leftFootX, y: 1, width: 3, height: 2, color: NSColor(calibratedRed: 0.08, green: 0.07, blue: 0.16, alpha: 1))
+        drawPixelRect(x: rightFootX, y: 1, width: 3, height: 2, color: NSColor(calibratedRed: 0.08, green: 0.07, blue: 0.16, alpha: 1))
 
-        drawPixelRect(x: 13, y: 4, width: 1, height: 13, color: NSColor(calibratedRed: 0.37, green: 0.20, blue: 0.09, alpha: 1))
-        drawPixelRect(x: 12, y: 17, width: 3, height: 3, color: NSColor(calibratedRed: 0.32, green: 0.86, blue: 0.95, alpha: 1))
-        drawPixelRect(x: 13, y: 18, width: 1, height: 1, color: NSColor.white)
+        drawPixelRect(x: staffX, y: 4, width: 1, height: 13, color: NSColor(calibratedRed: 0.37, green: 0.20, blue: 0.09, alpha: 1))
+        drawPixelRect(x: crystalX, y: crystalY, width: 3, height: 3, color: NSColor(calibratedRed: 0.32, green: 0.86, blue: 0.95, alpha: 1))
+        drawPixelRect(x: crystalX + 1, y: crystalY + 1, width: 1, height: 1, color: NSColor.white)
 
         image.unlockFocus()
         return SKTexture(image: image)
     }
 
-    private static func makeSkeletonImageTexture() -> SKTexture {
+    private static func makeSkeletonImageTexture(variant: Int) -> SKTexture {
         let pixelSize = 16
         let image = NSImage(size: CGSize(width: pixelSize, height: 22))
         let bone = NSColor(calibratedRed: 0.82, green: 0.84, blue: 0.76, alpha: 1)
@@ -177,17 +209,31 @@ enum PixelArtFactory {
         drawPixelRect(x: 5, y: 7, width: 1, height: 4, color: shadowBone)
         drawPixelRect(x: 11, y: 7, width: 1, height: 4, color: shadowBone)
 
-        drawPixelRect(x: 3, y: 8, width: 2, height: 1, color: bone)
-        drawPixelRect(x: 2, y: 5, width: 1, height: 4, color: bone)
-        drawPixelRect(x: 12, y: 8, width: 2, height: 1, color: bone)
-        drawPixelRect(x: 13, y: 5, width: 1, height: 4, color: bone)
+        if variant == 0 {
+            drawPixelRect(x: 3, y: 8, width: 2, height: 1, color: bone)
+            drawPixelRect(x: 2, y: 5, width: 1, height: 4, color: bone)
+            drawPixelRect(x: 12, y: 8, width: 2, height: 1, color: bone)
+            drawPixelRect(x: 13, y: 5, width: 1, height: 4, color: bone)
 
-        drawPixelRect(x: 6, y: 4, width: 2, height: 4, color: bone)
-        drawPixelRect(x: 10, y: 4, width: 2, height: 4, color: bone)
-        drawPixelRect(x: 5, y: 2, width: 3, height: 2, color: bone)
-        drawPixelRect(x: 10, y: 2, width: 3, height: 2, color: bone)
-        drawPixelRect(x: 5, y: 1, width: 4, height: 1, color: shadowBone)
-        drawPixelRect(x: 10, y: 1, width: 4, height: 1, color: shadowBone)
+            drawPixelRect(x: 6, y: 4, width: 2, height: 4, color: bone)
+            drawPixelRect(x: 10, y: 4, width: 2, height: 4, color: bone)
+            drawPixelRect(x: 5, y: 2, width: 3, height: 2, color: bone)
+            drawPixelRect(x: 10, y: 2, width: 3, height: 2, color: bone)
+            drawPixelRect(x: 5, y: 1, width: 4, height: 1, color: shadowBone)
+            drawPixelRect(x: 10, y: 1, width: 4, height: 1, color: shadowBone)
+        } else {
+            drawPixelRect(x: 3, y: 7, width: 2, height: 1, color: bone)
+            drawPixelRect(x: 2, y: 4, width: 1, height: 4, color: bone)
+            drawPixelRect(x: 12, y: 9, width: 2, height: 1, color: bone)
+            drawPixelRect(x: 14, y: 6, width: 1, height: 4, color: bone)
+
+            drawPixelRect(x: 5, y: 4, width: 2, height: 4, color: bone)
+            drawPixelRect(x: 11, y: 4, width: 2, height: 4, color: bone)
+            drawPixelRect(x: 4, y: 2, width: 3, height: 2, color: bone)
+            drawPixelRect(x: 11, y: 2, width: 3, height: 2, color: bone)
+            drawPixelRect(x: 4, y: 1, width: 4, height: 1, color: shadowBone)
+            drawPixelRect(x: 11, y: 1, width: 4, height: 1, color: shadowBone)
+        }
 
         drawPixelRect(x: 13, y: 7, width: 1, height: 8, color: rust)
         drawPixelRect(x: 12, y: 14, width: 3, height: 1, color: rust)
@@ -300,6 +346,62 @@ enum PixelArtFactory {
         drawPixelRect(x: 3, y: 5, width: 6, height: 2, color: white)
         drawPixelRect(x: 2, y: 8, width: 2, height: 1, color: yellow)
         drawPixelRect(x: 8, y: 3, width: 2, height: 1, color: yellow)
+
+        image.unlockFocus()
+        return SKTexture(image: image)
+    }
+
+    private static func makeMeteorTexture(variant: Int) -> SKTexture {
+        let pixelSize = 12
+        let image = NSImage(size: CGSize(width: pixelSize, height: pixelSize))
+        let darkBrown = NSColor(calibratedRed: 0.22, green: 0.12, blue: 0.06, alpha: 1)
+        let brown = NSColor(calibratedRed: 0.42, green: 0.24, blue: 0.11, alpha: 1)
+        let warmBrown = NSColor(calibratedRed: 0.58, green: 0.36, blue: 0.17, alpha: 1)
+        let highlight = NSColor(calibratedRed: 0.76, green: 0.53, blue: 0.28, alpha: 1)
+        let shadow = variant == 0 ? darkBrown : brown
+        let mid = variant == 0 ? brown : warmBrown
+
+        image.lockFocus()
+        NSColor.clear.setFill()
+        NSBezierPath(rect: NSRect(x: 0, y: 0, width: pixelSize, height: pixelSize)).fill()
+
+        drawPixelRect(x: 4, y: 10, width: 4, height: 1, color: shadow)
+        drawPixelRect(x: 2, y: 8, width: 8, height: 2, color: darkBrown)
+        drawPixelRect(x: 1, y: 4, width: 10, height: 4, color: brown)
+        drawPixelRect(x: 3, y: 2, width: 7, height: 2, color: shadow)
+        drawPixelRect(x: 4, y: 5, width: 5, height: 3, color: mid)
+        drawPixelRect(x: 5, y: 7, width: 3, height: 2, color: highlight)
+
+        if variant == 0 {
+            drawPixelRect(x: 2, y: 6, width: 2, height: 2, color: warmBrown)
+            drawPixelRect(x: 8, y: 3, width: 2, height: 1, color: darkBrown)
+        } else {
+            drawPixelRect(x: 8, y: 6, width: 2, height: 2, color: warmBrown)
+            drawPixelRect(x: 2, y: 3, width: 2, height: 1, color: darkBrown)
+        }
+
+        image.unlockFocus()
+        return SKTexture(image: image)
+    }
+
+    private static func makeLifeImageTexture() -> SKTexture {
+        let pixelSize = 12
+        let image = NSImage(size: CGSize(width: pixelSize, height: pixelSize))
+        let red = NSColor(calibratedRed: 0.86, green: 0.05, blue: 0.10, alpha: 1)
+        let brightRed = NSColor(calibratedRed: 1.0, green: 0.18, blue: 0.22, alpha: 1)
+        let highlight = NSColor(calibratedRed: 1.0, green: 0.62, blue: 0.62, alpha: 1)
+        let shadow = NSColor(calibratedRed: 0.45, green: 0.02, blue: 0.06, alpha: 1)
+
+        image.lockFocus()
+        NSColor.clear.setFill()
+        NSBezierPath(rect: NSRect(x: 0, y: 0, width: pixelSize, height: pixelSize)).fill()
+
+        drawPixelRect(x: 2, y: 7, width: 3, height: 3, color: red)
+        drawPixelRect(x: 7, y: 7, width: 3, height: 3, color: red)
+        drawPixelRect(x: 1, y: 5, width: 10, height: 3, color: brightRed)
+        drawPixelRect(x: 2, y: 3, width: 8, height: 2, color: red)
+        drawPixelRect(x: 4, y: 1, width: 4, height: 2, color: shadow)
+        drawPixelRect(x: 3, y: 8, width: 2, height: 1, color: highlight)
 
         image.unlockFocus()
         return SKTexture(image: image)

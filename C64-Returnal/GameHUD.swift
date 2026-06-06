@@ -13,63 +13,101 @@ enum GameOverOption {
 enum LevelUpOption: CaseIterable {
     case fireRate
     case extraFireball
+    case extraLife
+    case learnLightning
     case lightningBounce
     case lightningRate
+    case learnOrb
     case extraOrb
     case orbitalSpeed
+    case learnBeam
     case beamRate
     case beamKillCount
+    case learnMeteor
+    case extraMeteor
+    case meteorRate
 
     var title: String {
-        title(level: nil)
+        title(beamKillBonus: nil)
     }
 
-    func title(level: Int?) -> String {
+    func title(beamKillBonus: Int?) -> String {
         switch self {
         case .fireRate:
             return "FASTER FIRE"
         case .extraFireball:
             return "+1 FIREBALL"
+        case .extraLife:
+            return "+1 LIFE"
+        case .learnLightning:
+            return "LEARN BOLT"
         case .lightningBounce:
             return "+1 CHAIN"
         case .lightningRate:
             return "FASTER BOLT"
+        case .learnOrb:
+            return "LEARN ORB"
         case .extraOrb:
             return "+1 ORB"
         case .orbitalSpeed:
             return "FASTER ORB"
+        case .learnBeam:
+            return "LEARN BEAM"
         case .beamRate:
             return "FASTER BEAM"
         case .beamKillCount:
-            return "+\(level ?? 1) BEAM KILL"
+            return "+\(beamKillBonus ?? 1) BEAM KILL"
+        case .learnMeteor:
+            return "LEARN METEOR"
+        case .extraMeteor:
+            return "+1 METEOR"
+        case .meteorRate:
+            return "FASTER METEOR"
         }
     }
 }
 
 final class GameHUD {
+    private let topStatusBackground = SKShapeNode()
+    private let combatStatusBackground = SKShapeNode()
+    private let levelUpBackground = SKShapeNode()
+    private let gameOverBackground = SKShapeNode()
     private let gameOverLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let restartLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let exitLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let levelUpLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let fireRateLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let extraFireballLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let extraLifeLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let learnLightningLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let lightningBounceLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let lightningRateLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let learnOrbLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let extraOrbLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let orbitalSpeedLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let learnBeamLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let beamRateLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let beamKillCountLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let learnMeteorLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let extraMeteorLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let meteorRateLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let fireRateIcon = SKSpriteNode()
     private let extraFireballIcon = SKSpriteNode()
+    private let extraLifeIcon = SKSpriteNode()
+    private let learnLightningIcon = SKSpriteNode()
     private let lightningBounceIcon = SKSpriteNode()
     private let lightningRateIcon = SKSpriteNode()
+    private let learnOrbIcon = SKSpriteNode()
     private let extraOrbIcon = SKSpriteNode()
     private let orbitalSpeedIcon = SKSpriteNode()
+    private let learnBeamIcon = SKSpriteNode()
     private let beamRateIcon = SKSpriteNode()
     private let beamKillCountIcon = SKSpriteNode()
+    private let learnMeteorIcon = SKSpriteNode()
+    private let extraMeteorIcon = SKSpriteNode()
+    private let meteorRateIcon = SKSpriteNode()
     private let levelLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let experienceLabel = SKLabelNode(fontNamed: "Menlo-Bold")
-    private let livesLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let fireballIcon = SKSpriteNode()
     private let fireballCountLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let fireballIntervalLabel = SKLabelNode(fontNamed: "Menlo-Bold")
@@ -82,44 +120,74 @@ final class GameHUD {
     private let beamIcon = SKSpriteNode()
     private let beamKillLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let beamIntervalLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let meteorIcon = SKSpriteNode()
+    private let meteorCountLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let meteorIntervalLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let skeletonIcon = SKSpriteNode()
     private let skeletonAliveLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let skeletonIntervalLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private var activeLevelUpOptions = [LevelUpOption]()
+    private var lifeIcons = [SKSpriteNode]()
+    private var lifeTexture: SKTexture?
+    private var lifeIconOrigin = CGPoint.zero
+    private var currentLives = 0
+    private weak var parentNode: SKNode?
 
-    func add(to parent: SKNode, fireballTexture: SKTexture, lightningTexture: SKTexture, orbTexture: SKTexture, beamTexture: SKTexture, skeletonTexture: SKTexture) {
+    func add(to parent: SKNode, fireballTexture: SKTexture, lightningTexture: SKTexture, orbTexture: SKTexture, beamTexture: SKTexture, meteorTexture: SKTexture, lifeTexture: SKTexture, skeletonTexture: SKTexture) {
+        parentNode = parent
+        self.lifeTexture = lifeTexture
+
         setupGameOverLabel()
-        setupLevelUpLabels(fireballTexture: fireballTexture, lightningTexture: lightningTexture, orbTexture: orbTexture, beamTexture: beamTexture)
+        setupLevelUpLabels(fireballTexture: fireballTexture, lightningTexture: lightningTexture, orbTexture: orbTexture, beamTexture: beamTexture, meteorTexture: meteorTexture, lifeTexture: lifeTexture)
         setupProgressLabels()
+        setupBackgroundPanels()
         setupFireballStatus(fireballTexture: fireballTexture)
         setupLightningStatus(lightningTexture: lightningTexture)
         setupOrbStatus(orbTexture: orbTexture)
         setupBeamStatus(beamTexture: beamTexture)
+        setupMeteorStatus(meteorTexture: meteorTexture)
         setupSkeletonStatus(skeletonTexture: skeletonTexture)
 
+        parent.addChild(topStatusBackground)
+        parent.addChild(combatStatusBackground)
+        parent.addChild(levelUpBackground)
+        parent.addChild(gameOverBackground)
         parent.addChild(gameOverLabel)
         parent.addChild(restartLabel)
         parent.addChild(exitLabel)
         parent.addChild(levelUpLabel)
         parent.addChild(fireRateLabel)
         parent.addChild(extraFireballLabel)
+        parent.addChild(extraLifeLabel)
+        parent.addChild(learnLightningLabel)
         parent.addChild(lightningBounceLabel)
         parent.addChild(lightningRateLabel)
+        parent.addChild(learnOrbLabel)
         parent.addChild(extraOrbLabel)
         parent.addChild(orbitalSpeedLabel)
+        parent.addChild(learnBeamLabel)
         parent.addChild(beamRateLabel)
         parent.addChild(beamKillCountLabel)
+        parent.addChild(learnMeteorLabel)
+        parent.addChild(extraMeteorLabel)
+        parent.addChild(meteorRateLabel)
         parent.addChild(fireRateIcon)
         parent.addChild(extraFireballIcon)
+        parent.addChild(extraLifeIcon)
+        parent.addChild(learnLightningIcon)
         parent.addChild(lightningBounceIcon)
         parent.addChild(lightningRateIcon)
+        parent.addChild(learnOrbIcon)
         parent.addChild(extraOrbIcon)
         parent.addChild(orbitalSpeedIcon)
+        parent.addChild(learnBeamIcon)
         parent.addChild(beamRateIcon)
         parent.addChild(beamKillCountIcon)
+        parent.addChild(learnMeteorIcon)
+        parent.addChild(extraMeteorIcon)
+        parent.addChild(meteorRateIcon)
         parent.addChild(levelLabel)
         parent.addChild(experienceLabel)
-        parent.addChild(livesLabel)
         parent.addChild(fireballIcon)
         parent.addChild(fireballCountLabel)
         parent.addChild(fireballIntervalLabel)
@@ -132,6 +200,9 @@ final class GameHUD {
         parent.addChild(beamIcon)
         parent.addChild(beamKillLabel)
         parent.addChild(beamIntervalLabel)
+        parent.addChild(meteorIcon)
+        parent.addChild(meteorCountLabel)
+        parent.addChild(meteorIntervalLabel)
         parent.addChild(skeletonIcon)
         parent.addChild(skeletonAliveLabel)
         parent.addChild(skeletonIntervalLabel)
@@ -143,7 +214,9 @@ final class GameHUD {
 
         levelLabel.position = CGPoint(x: left, y: top)
         experienceLabel.position = CGPoint(x: left, y: top - 24)
-        livesLabel.position = CGPoint(x: left, y: top - 48)
+        lifeIconOrigin = CGPoint(x: left + 7, y: top - 50)
+        layoutLifeIcons()
+        layoutTopStatusBackground(left: left, top: top)
 
         let bottom = -sceneSize.height / 2 + 18
         fireballIcon.position = CGPoint(x: left + 9, y: bottom + 14)
@@ -158,9 +231,30 @@ final class GameHUD {
         beamIcon.position = CGPoint(x: left + 9, y: bottom + 146)
         beamKillLabel.position = CGPoint(x: left + 28, y: bottom + 152)
         beamIntervalLabel.position = CGPoint(x: left + 28, y: bottom + 132)
-        skeletonIcon.position = CGPoint(x: left + 9, y: bottom + 190)
-        skeletonAliveLabel.position = CGPoint(x: left + 28, y: bottom + 196)
-        skeletonIntervalLabel.position = CGPoint(x: left + 28, y: bottom + 176)
+        meteorIcon.position = CGPoint(x: left + 9, y: bottom + 190)
+        meteorCountLabel.position = CGPoint(x: left + 28, y: bottom + 196)
+        meteorIntervalLabel.position = CGPoint(x: left + 28, y: bottom + 176)
+        skeletonIcon.position = CGPoint(x: left + 9, y: bottom + 234)
+        skeletonAliveLabel.position = CGPoint(x: left + 28, y: bottom + 240)
+        skeletonIntervalLabel.position = CGPoint(x: left + 28, y: bottom + 220)
+
+        setPanel(
+            combatStatusBackground,
+            rect: CGRect(x: left - 10, y: bottom - 15, width: 150, height: 274),
+            cornerRadius: Self.panelCornerRadius
+        )
+
+        let centeredPanelWidth = min(max(360, sceneSize.width - 48), 620)
+        setPanel(
+            levelUpBackground,
+            rect: CGRect(x: -centeredPanelWidth / 2, y: -88, width: centeredPanelWidth, height: 178),
+            cornerRadius: Self.panelCornerRadius
+        )
+        setPanel(
+            gameOverBackground,
+            rect: CGRect(x: -centeredPanelWidth / 2, y: -100, width: centeredPanelWidth, height: 190),
+            cornerRadius: Self.panelCornerRadius
+        )
     }
 
     func updateProgress(level: Int, experience: Int, nextExperience: Int) {
@@ -169,7 +263,10 @@ final class GameHUD {
     }
 
     func updateLives(_ lives: Int) {
-        livesLabel.text = "LIVES \(lives)"
+        currentLives = max(0, lives)
+        syncLifeIcons()
+        layoutLifeIcons()
+        layoutTopStatusBackground()
     }
 
     func updateFireballStatus(count: Int, interval: TimeInterval) {
@@ -177,19 +274,48 @@ final class GameHUD {
         fireballIntervalLabel.text = "\(Self.formattedSeconds(interval))s"
     }
 
-    func updateLightningStatus(strikeCount: Int, interval: TimeInterval) {
+    func updateLightningStatus(isUnlocked: Bool, strikeCount: Int, interval: TimeInterval) {
+        guard isUnlocked else {
+            lightningCountLabel.text = "LOCKED"
+            lightningIntervalLabel.text = "--"
+            return
+        }
+
         lightningCountLabel.text = "x\(strikeCount)"
         lightningIntervalLabel.text = "\(Self.formattedSeconds(interval))s"
     }
 
-    func updateOrbStatus(count: Int, angularSpeed: CGFloat) {
+    func updateOrbStatus(isUnlocked: Bool, count: Int, angularSpeed: CGFloat) {
+        guard isUnlocked else {
+            orbCountLabel.text = "LOCKED"
+            orbSpeedLabel.text = "--"
+            return
+        }
+
         orbCountLabel.text = "x\(count)"
         orbSpeedLabel.text = "\(String(format: "%.1f", angularSpeed))r/s"
     }
 
-    func updateBeamStatus(killCount: Int, interval: TimeInterval) {
+    func updateBeamStatus(isUnlocked: Bool, killCount: Int, interval: TimeInterval) {
+        guard isUnlocked else {
+            beamKillLabel.text = "LOCKED"
+            beamIntervalLabel.text = "--"
+            return
+        }
+
         beamKillLabel.text = "x\(killCount)"
         beamIntervalLabel.text = "\(Self.formattedSeconds(interval))s"
+    }
+
+    func updateMeteorStatus(isUnlocked: Bool, count: Int, interval: TimeInterval) {
+        guard isUnlocked else {
+            meteorCountLabel.text = "LOCKED"
+            meteorIntervalLabel.text = "--"
+            return
+        }
+
+        meteorCountLabel.text = "x\(count)"
+        meteorIntervalLabel.text = "\(Self.formattedSeconds(interval))s"
     }
 
     func updateSkeletonStatus(aliveCount: Int, spawnInterval: TimeInterval) {
@@ -197,7 +323,9 @@ final class GameHUD {
         skeletonIntervalLabel.text = "\(Self.formattedSeconds(spawnInterval))s"
     }
 
-    func showGameOver() {
+    func showGameOver(level: Int) {
+        gameOverLabel.text = "YOU DIED AT LEVEL \(level)"
+        gameOverBackground.run(SKAction.fadeAlpha(to: Self.panelAlpha, duration: 0.2))
         gameOverLabel.setScale(0.75)
         gameOverLabel.run(
             SKAction.group([
@@ -210,10 +338,11 @@ final class GameHUD {
         exitLabel.run(SKAction.fadeIn(withDuration: 0.2))
     }
 
-    func showLevelUp(level: Int, options: [LevelUpOption]) {
+    func showLevelUp(level: Int, options: [LevelUpOption], beamKillUpgradeBonus: Int) {
         hideLevelUpOptions()
         activeLevelUpOptions = Array(options.prefix(2))
         levelUpLabel.text = "LEVEL \(level)"
+        levelUpBackground.run(SKAction.fadeAlpha(to: Self.panelAlpha, duration: 0.2))
         levelUpLabel.setScale(0.75)
         levelUpLabel.run(
             SKAction.group([
@@ -223,11 +352,13 @@ final class GameHUD {
         )
 
         for (index, option) in activeLevelUpOptions.enumerated() {
-            showLevelUpOption(option, yPosition: index == 0 ? -4 : -56, level: level)
+            showLevelUpOption(option, yPosition: index == 0 ? -4 : -56, beamKillUpgradeBonus: beamKillUpgradeBonus)
         }
     }
 
     func hideLevelUp() {
+        levelUpBackground.removeAllActions()
+        levelUpBackground.alpha = 0
         levelUpLabel.removeAllActions()
         levelUpLabel.alpha = 0
         levelUpLabel.setScale(1)
@@ -250,6 +381,9 @@ final class GameHUD {
     }
 
     func hideGameOver() {
+        gameOverBackground.removeAllActions()
+        gameOverBackground.alpha = 0
+
         for label in [gameOverLabel, restartLabel, exitLabel] {
             label.removeAllActions()
             label.alpha = 0
@@ -280,9 +414,10 @@ final class GameHUD {
     }
 
     private func setupGameOverLabel() {
-        gameOverLabel.text = "GAME OVER"
-        gameOverLabel.fontSize = 44
-        gameOverLabel.fontColor = Self.primaryTextColor
+        gameOverLabel.text = "YOU DIED AT LEVEL 1"
+        gameOverLabel.fontName = "Menlo-Bold"
+        gameOverLabel.fontSize = 40
+        gameOverLabel.fontColor = Self.deathTextColor
         gameOverLabel.horizontalAlignmentMode = .center
         gameOverLabel.verticalAlignmentMode = .center
         gameOverLabel.position = CGPoint(x: 0, y: 42)
@@ -293,7 +428,23 @@ final class GameHUD {
         setupGameOverOption(exitLabel, text: "EXIT", yPosition: -70)
     }
 
-    private func setupLevelUpLabels(fireballTexture: SKTexture, lightningTexture: SKTexture, orbTexture: SKTexture, beamTexture: SKTexture) {
+    private func setupBackgroundPanels() {
+        for panel in [topStatusBackground, combatStatusBackground] {
+            panel.fillColor = Self.panelColor
+            panel.strokeColor = .clear
+            panel.alpha = Self.panelAlpha
+            panel.zPosition = 80
+        }
+
+        for panel in [levelUpBackground, gameOverBackground] {
+            panel.fillColor = Self.panelColor
+            panel.strokeColor = .clear
+            panel.alpha = 0
+            panel.zPosition = 99
+        }
+    }
+
+    private func setupLevelUpLabels(fireballTexture: SKTexture, lightningTexture: SKTexture, orbTexture: SKTexture, beamTexture: SKTexture, meteorTexture: SKTexture, lifeTexture: SKTexture) {
         levelUpLabel.fontSize = 40
         levelUpLabel.fontColor = Self.primaryTextColor
         levelUpLabel.horizontalAlignmentMode = .center
@@ -304,26 +455,40 @@ final class GameHUD {
 
         setupLevelUpOption(fireRateLabel, text: LevelUpOption.fireRate.title)
         setupLevelUpOption(extraFireballLabel, text: LevelUpOption.extraFireball.title)
+        setupLevelUpOption(extraLifeLabel, text: LevelUpOption.extraLife.title)
+        setupLevelUpOption(learnLightningLabel, text: LevelUpOption.learnLightning.title)
         setupLevelUpOption(lightningBounceLabel, text: LevelUpOption.lightningBounce.title)
         setupLevelUpOption(lightningRateLabel, text: LevelUpOption.lightningRate.title)
+        setupLevelUpOption(learnOrbLabel, text: LevelUpOption.learnOrb.title)
         setupLevelUpOption(extraOrbLabel, text: LevelUpOption.extraOrb.title)
         setupLevelUpOption(orbitalSpeedLabel, text: LevelUpOption.orbitalSpeed.title)
+        setupLevelUpOption(learnBeamLabel, text: LevelUpOption.learnBeam.title)
         setupLevelUpOption(beamRateLabel, text: LevelUpOption.beamRate.title)
         setupLevelUpOption(beamKillCountLabel, text: LevelUpOption.beamKillCount.title)
+        setupLevelUpOption(learnMeteorLabel, text: LevelUpOption.learnMeteor.title)
+        setupLevelUpOption(extraMeteorLabel, text: LevelUpOption.extraMeteor.title)
+        setupLevelUpOption(meteorRateLabel, text: LevelUpOption.meteorRate.title)
         setupLevelUpIcon(fireRateIcon, texture: fireballTexture)
         setupLevelUpIcon(extraFireballIcon, texture: fireballTexture)
+        setupLevelUpIcon(extraLifeIcon, texture: lifeTexture)
+        setupLevelUpIcon(learnLightningIcon, texture: lightningTexture)
         setupLevelUpIcon(lightningBounceIcon, texture: lightningTexture)
         setupLevelUpIcon(lightningRateIcon, texture: lightningTexture)
+        setupLevelUpIcon(learnOrbIcon, texture: orbTexture)
         setupLevelUpIcon(extraOrbIcon, texture: orbTexture)
         setupLevelUpIcon(orbitalSpeedIcon, texture: orbTexture)
+        setupLevelUpIcon(learnBeamIcon, texture: beamTexture)
         setupLevelUpIcon(beamRateIcon, texture: beamTexture)
         setupLevelUpIcon(beamKillCountIcon, texture: beamTexture)
+        setupLevelUpIcon(learnMeteorIcon, texture: meteorTexture)
+        setupLevelUpIcon(extraMeteorIcon, texture: meteorTexture)
+        setupLevelUpIcon(meteorRateIcon, texture: meteorTexture)
     }
 
     private func setupGameOverOption(_ label: SKLabelNode, text: String, yPosition: CGFloat) {
         label.text = text
         label.fontSize = 22
-        label.fontColor = Self.primaryTextColor
+        label.fontColor = Self.deathTextColor
         label.horizontalAlignmentMode = .center
         label.verticalAlignmentMode = .center
         label.position = CGPoint(x: 0, y: yPosition)
@@ -351,13 +516,56 @@ final class GameHUD {
     }
 
     private func setupProgressLabels() {
-        for label in [levelLabel, experienceLabel, livesLabel] {
+        for label in [levelLabel, experienceLabel] {
             label.fontSize = 16
             label.fontColor = Self.primaryTextColor
             label.horizontalAlignmentMode = .left
             label.verticalAlignmentMode = .center
             label.zPosition = 90
         }
+    }
+
+    private func syncLifeIcons() {
+        guard let parentNode = parentNode, let lifeTexture = lifeTexture else {
+            return
+        }
+
+        while lifeIcons.count < currentLives {
+            let icon = SKSpriteNode(texture: lifeTexture)
+            icon.size = CGSize(width: Self.lifeIconSize, height: Self.lifeIconSize)
+            icon.zPosition = 90
+            parentNode.addChild(icon)
+            lifeIcons.append(icon)
+        }
+
+        while lifeIcons.count > currentLives {
+            lifeIcons.removeLast().removeFromParent()
+        }
+    }
+
+    private func layoutLifeIcons() {
+        for (index, icon) in lifeIcons.enumerated() {
+            let column = index % Self.lifeIconsPerRow
+            let row = index / Self.lifeIconsPerRow
+            icon.position = CGPoint(
+                x: lifeIconOrigin.x + CGFloat(column) * Self.lifeIconSpacing,
+                y: lifeIconOrigin.y - CGFloat(row) * Self.lifeIconSpacing
+            )
+        }
+    }
+
+    private func layoutTopStatusBackground(left: CGFloat? = nil, top: CGFloat? = nil) {
+        let rows = max(1, Int(ceil(Double(max(1, currentLives)) / Double(Self.lifeIconsPerRow))))
+        let panelLeft = (left ?? levelLabel.position.x) - 10
+        let panelTop = (top ?? levelLabel.position.y) + 15
+        let lowestHeartBottom = lifeIconOrigin.y - CGFloat(rows - 1) * Self.lifeIconSpacing - Self.lifeIconSize / 2
+        let height = panelTop - lowestHeartBottom + 8
+
+        setPanel(
+            topStatusBackground,
+            rect: CGRect(x: panelLeft, y: panelTop - height, width: 210, height: height),
+            cornerRadius: Self.panelCornerRadius
+        )
     }
 
     private func setupFireballStatus(fireballTexture: SKTexture) {
@@ -430,15 +638,29 @@ final class GameHUD {
         }
     }
 
+    private func setupMeteorStatus(meteorTexture: SKTexture) {
+        meteorIcon.texture = meteorTexture
+        meteorIcon.size = CGSize(width: 18, height: 18)
+        meteorIcon.zPosition = 90
+
+        for label in [meteorCountLabel, meteorIntervalLabel] {
+            label.fontSize = 14
+            label.fontColor = Self.primaryTextColor
+            label.horizontalAlignmentMode = .left
+            label.verticalAlignmentMode = .center
+            label.zPosition = 90
+        }
+    }
+
     private func hitArea(for label: SKLabelNode) -> CGRect {
         label.frame.insetBy(dx: -26, dy: -12)
     }
 
-    private func showLevelUpOption(_ option: LevelUpOption, yPosition: CGFloat, level: Int) {
+    private func showLevelUpOption(_ option: LevelUpOption, yPosition: CGFloat, beamKillUpgradeBonus: Int) {
         let label = label(for: option)
         let icon = icon(for: option)
 
-        label.text = option.title(level: level)
+        label.text = option.title(beamKillBonus: beamKillUpgradeBonus)
         label.position = CGPoint(x: -76, y: yPosition)
         icon.position = CGPoint(x: -110, y: yPosition)
 
@@ -452,18 +674,32 @@ final class GameHUD {
             return fireRateLabel
         case .extraFireball:
             return extraFireballLabel
+        case .extraLife:
+            return extraLifeLabel
+        case .learnLightning:
+            return learnLightningLabel
         case .lightningBounce:
             return lightningBounceLabel
         case .lightningRate:
             return lightningRateLabel
+        case .learnOrb:
+            return learnOrbLabel
         case .extraOrb:
             return extraOrbLabel
         case .orbitalSpeed:
             return orbitalSpeedLabel
+        case .learnBeam:
+            return learnBeamLabel
         case .beamRate:
             return beamRateLabel
         case .beamKillCount:
             return beamKillCountLabel
+        case .learnMeteor:
+            return learnMeteorLabel
+        case .extraMeteor:
+            return extraMeteorLabel
+        case .meteorRate:
+            return meteorRateLabel
         }
     }
 
@@ -473,27 +709,53 @@ final class GameHUD {
             return fireRateIcon
         case .extraFireball:
             return extraFireballIcon
+        case .extraLife:
+            return extraLifeIcon
+        case .learnLightning:
+            return learnLightningIcon
         case .lightningBounce:
             return lightningBounceIcon
         case .lightningRate:
             return lightningRateIcon
+        case .learnOrb:
+            return learnOrbIcon
         case .extraOrb:
             return extraOrbIcon
         case .orbitalSpeed:
             return orbitalSpeedIcon
+        case .learnBeam:
+            return learnBeamIcon
         case .beamRate:
             return beamRateIcon
         case .beamKillCount:
             return beamKillCountIcon
+        case .learnMeteor:
+            return learnMeteorIcon
+        case .extraMeteor:
+            return extraMeteorIcon
+        case .meteorRate:
+            return meteorRateIcon
         }
     }
 
     private var levelUpOptionLabels: [SKLabelNode] {
-        [fireRateLabel, extraFireballLabel, lightningBounceLabel, lightningRateLabel, extraOrbLabel, orbitalSpeedLabel, beamRateLabel, beamKillCountLabel]
+        [
+            fireRateLabel, extraFireballLabel, extraLifeLabel,
+            learnLightningLabel, lightningBounceLabel, lightningRateLabel,
+            learnOrbLabel, extraOrbLabel, orbitalSpeedLabel,
+            learnBeamLabel, beamRateLabel, beamKillCountLabel,
+            learnMeteorLabel, extraMeteorLabel, meteorRateLabel
+        ]
     }
 
     private var levelUpOptionIcons: [SKSpriteNode] {
-        [fireRateIcon, extraFireballIcon, lightningBounceIcon, lightningRateIcon, extraOrbIcon, orbitalSpeedIcon, beamRateIcon, beamKillCountIcon]
+        [
+            fireRateIcon, extraFireballIcon, extraLifeIcon,
+            learnLightningIcon, lightningBounceIcon, lightningRateIcon,
+            learnOrbIcon, extraOrbIcon, orbitalSpeedIcon,
+            learnBeamIcon, beamRateIcon, beamKillCountIcon,
+            learnMeteorIcon, extraMeteorIcon, meteorRateIcon
+        ]
     }
 
     private static func formattedSeconds(_ value: TimeInterval) -> String {
@@ -505,4 +767,20 @@ final class GameHUD {
     }
 
     private static let primaryTextColor = SKColor(calibratedRed: 0.96, green: 0.93, blue: 0.83, alpha: 1)
+    private static let deathTextColor = SKColor(calibratedRed: 0.95, green: 0.05, blue: 0.08, alpha: 1)
+    private static let panelColor = SKColor(calibratedWhite: 0.02, alpha: 1)
+    private static let panelAlpha: CGFloat = 0.62
+    private static let panelCornerRadius: CGFloat = 6
+    private static let lifeIconSize: CGFloat = 14
+    private static let lifeIconsPerRow = 12
+    private static let lifeIconSpacing: CGFloat = 16
+
+    private func setPanel(_ panel: SKShapeNode, rect: CGRect, cornerRadius: CGFloat) {
+        panel.path = CGPath(
+            roundedRect: rect,
+            cornerWidth: cornerRadius,
+            cornerHeight: cornerRadius,
+            transform: nil
+        )
+    }
 }

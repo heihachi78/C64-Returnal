@@ -10,18 +10,21 @@ import SpriteKit
 final class GameScene: SKScene {
     private let worldNode = SKNode()
     private let cameraNode = SKCameraNode()
-    private let player = SKSpriteNode(texture: PixelArtFactory.makeMageTexture())
+    private let mageTextures = PixelArtFactory.makeMageTextures()
+    private lazy var player = SKSpriteNode(texture: mageTextures[0])
     private let hud = GameHUD()
     private let grassField = InfiniteGrassField(
         tileSize: GameConfiguration.tileSize,
         textures: PixelArtFactory.makeGrassTextures(tileSize: GameConfiguration.tileSize)
     )
 
-    private let skeletonTexture = PixelArtFactory.makeSkeletonTexture()
+    private let skeletonTextures = PixelArtFactory.makeSkeletonTextures()
     private let fireballTextures = PixelArtFactory.makeFireballTextures()
     private let lightningTexture = PixelArtFactory.makeLightningTexture()
     private let orbitalOrbTextures = PixelArtFactory.makeOrbitalOrbTextures()
     private let beamTexture = PixelArtFactory.makeBeamTexture()
+    private let meteorTextures = PixelArtFactory.makeMeteorTextures()
+    private let lifeTexture = PixelArtFactory.makeLifeTexture()
 
     private var progression = Progression()
     private var skeletons = [SKSpriteNode]()
@@ -33,6 +36,7 @@ final class GameScene: SKScene {
     private var fireballCastTimer: TimeInterval = 0
     private var lightningCastTimer: TimeInterval = 0
     private var beamCastTimer: TimeInterval = 0
+    private var meteorCastTimer: TimeInterval = 0
     private var playerHitInvulnerabilityTimer: TimeInterval = 0
     private var playerLives = GameConfiguration.initialPlayerLives
     private var currentPlayerMovementDirection: CGVector?
@@ -56,6 +60,11 @@ final class GameScene: SKScene {
 
     override func keyDown(with event: NSEvent) {
         guard !isGameOver, !isLevelUpChoiceActive else {
+            return
+        }
+
+        if DebugKey.isLevelSetupShortcut(event.keyCode) {
+            advanceDebugExperience()
             return
         }
 
@@ -134,6 +143,13 @@ final class GameScene: SKScene {
             }
 
             updateBeamCasting(deltaTime: deltaTime)
+
+            guard !isLevelUpChoiceActive else {
+                lastUpdateTime = currentTime
+                return
+            }
+
+            updateMeteorCasting(deltaTime: deltaTime)
             updatePlayerHitInvulnerability(deltaTime: deltaTime)
 
             guard !isLevelUpChoiceActive else {
@@ -165,7 +181,9 @@ final class GameScene: SKScene {
             lightningTexture: lightningTexture,
             orbTexture: orbitalOrbTextures[0],
             beamTexture: beamTexture,
-            skeletonTexture: skeletonTexture
+            meteorTexture: meteorTextures[0],
+            lifeTexture: lifeTexture,
+            skeletonTexture: skeletonTextures[0]
         )
         syncOrbitalOrbCount()
         updateHUDProgress()
@@ -176,6 +194,7 @@ final class GameScene: SKScene {
     private func configurePlayer() {
         player.size = CGSize(width: 32, height: 44)
         player.zPosition = 10
+        stopPlayerAnimation()
         worldNode.addChild(player)
     }
 
@@ -196,8 +215,10 @@ final class GameScene: SKScene {
             player.position.x += movement.dx * GameConfiguration.playerSpeed * CGFloat(deltaTime)
             player.position.y += movement.dy * GameConfiguration.playerSpeed * CGFloat(deltaTime)
             updateFacing(for: player, movement: movement)
+            startPlayerAnimation()
         } else {
             currentPlayerMovementDirection = nil
+            stopPlayerAnimation()
         }
 
         cameraNode.position = player.position
@@ -234,6 +255,10 @@ final class GameScene: SKScene {
     }
 
     private func updateOrbitalOrbs(deltaTime: TimeInterval) {
+        guard progression.isOrbitalOrbUnlocked else {
+            return
+        }
+
         guard !orbitalOrbs.isEmpty else {
             return
         }
@@ -260,6 +285,11 @@ final class GameScene: SKScene {
     }
 
     private func updateLightningCasting(deltaTime: TimeInterval) {
+        guard progression.isLightningUnlocked else {
+            lightningCastTimer = 0
+            return
+        }
+
         guard !skeletons.isEmpty else {
             lightningCastTimer = 0
             return
@@ -278,6 +308,11 @@ final class GameScene: SKScene {
     }
 
     private func updateBeamCasting(deltaTime: TimeInterval) {
+        guard progression.isBeamUnlocked else {
+            beamCastTimer = 0
+            return
+        }
+
         guard !skeletons.isEmpty else {
             beamCastTimer = 0
             return
@@ -292,6 +327,25 @@ final class GameScene: SKScene {
             if isLevelUpChoiceActive {
                 return
             }
+        }
+    }
+
+    private func updateMeteorCasting(deltaTime: TimeInterval) {
+        guard progression.isMeteorUnlocked else {
+            meteorCastTimer = 0
+            return
+        }
+
+        guard !skeletons.isEmpty else {
+            meteorCastTimer = 0
+            return
+        }
+
+        meteorCastTimer += deltaTime
+
+        while meteorCastTimer >= progression.meteorCastInterval {
+            meteorCastTimer -= progression.meteorCastInterval
+            castMeteors()
         }
     }
 
@@ -362,10 +416,11 @@ final class GameScene: SKScene {
     }
 
     private func spawnSkeleton() {
-        let skeleton = SKSpriteNode(texture: skeletonTexture)
+        let skeleton = SKSpriteNode(texture: skeletonTextures[0])
         skeleton.size = CGSize(width: 30, height: 42)
         skeleton.position = skeletonSpawnPosition()
         skeleton.zPosition = 9
+        startSkeletonAnimation(skeleton)
 
         skeletons.append(skeleton)
         worldNode.addChild(skeleton)
@@ -513,32 +568,116 @@ final class GameScene: SKScene {
         worldNode.addChild(Beam.makeEffectNode(from: start, to: end))
     }
 
+    private func castMeteors() {
+        for _ in 0..<progression.meteorCount {
+            castMeteor()
+        }
+    }
+
+    private func castMeteor() {
+        let meteor = Meteor(
+            origin: player.position,
+            targetRadius: GameConfiguration.orbitalOrbRadius * GameConfiguration.meteorTargetRadiusMultiplier
+        )
+        let meteorNode = makeMeteorNode()
+        meteorNode.position = meteor.spawnPosition
+        meteorNode.zRotation = atan2(
+            meteor.impactPosition.y - meteor.spawnPosition.y,
+            meteor.impactPosition.x - meteor.spawnPosition.x
+        )
+
+        worldNode.addChild(meteorNode)
+        meteorNode.run(
+            SKAction.sequence([
+                SKAction.move(to: meteor.impactPosition, duration: GameConfiguration.meteorFallDuration),
+                SKAction.removeFromParent()
+            ])
+        ) { [weak self] in
+            self?.impactMeteor(at: meteor.impactPosition)
+        }
+    }
+
+    private func makeMeteorNode() -> SKSpriteNode {
+        let meteorNode = SKSpriteNode(texture: meteorTextures[0])
+        meteorNode.name = Meteor.projectileName
+        meteorNode.size = CGSize(width: 24, height: 24)
+        meteorNode.zPosition = 14
+        meteorNode.run(
+            SKAction.repeatForever(
+                SKAction.animate(
+                    with: meteorTextures,
+                    timePerFrame: GameConfiguration.meteorAnimationFrameDuration
+                )
+            )
+        )
+
+        return meteorNode
+    }
+
+    private func impactMeteor(at position: CGPoint) {
+        guard !isGameOver else {
+            return
+        }
+
+        showMeteorImpact(at: position)
+
+        let targets = skeletons.filter { skeleton in
+            skeleton.position.distance(to: position) <= GameConfiguration.meteorImpactRadius
+        }
+        var didLevelUp = false
+
+        for target in targets {
+            didLevelUp = destroySkeleton(target, shouldTriggerLevelUpChoice: false) || didLevelUp
+        }
+
+        if didLevelUp {
+            triggerLevelUpChoice()
+        }
+    }
+
+    private func showMeteorImpact(at position: CGPoint) {
+        worldNode.addChild(
+            Meteor.makeImpactEffectNode(
+                at: position,
+                radius: GameConfiguration.meteorImpactRadius
+            )
+        )
+    }
+
     private func skeletonSpawnPosition() -> CGPoint {
         let halfWidth = size.width / 2
         let halfHeight = size.height / 2
+        let spawnDistance = hypot(halfWidth, halfHeight) + GameConfiguration.skeletonSpawnMargin
+        let directionTarget: CGPoint
 
         switch Int.random(in: 0..<4) {
         case 0:
-            return CGPoint(
-                x: player.position.x - halfWidth - GameConfiguration.skeletonSpawnMargin,
+            directionTarget = CGPoint(
+                x: player.position.x - halfWidth,
                 y: player.position.y + CGFloat.random(in: -halfHeight...halfHeight)
             )
         case 1:
-            return CGPoint(
-                x: player.position.x + halfWidth + GameConfiguration.skeletonSpawnMargin,
+            directionTarget = CGPoint(
+                x: player.position.x + halfWidth,
                 y: player.position.y + CGFloat.random(in: -halfHeight...halfHeight)
             )
         case 2:
-            return CGPoint(
+            directionTarget = CGPoint(
                 x: player.position.x + CGFloat.random(in: -halfWidth...halfWidth),
-                y: player.position.y - halfHeight - GameConfiguration.skeletonSpawnMargin
+                y: player.position.y - halfHeight
             )
         default:
-            return CGPoint(
+            directionTarget = CGPoint(
                 x: player.position.x + CGFloat.random(in: -halfWidth...halfWidth),
-                y: player.position.y + halfHeight + GameConfiguration.skeletonSpawnMargin
+                y: player.position.y + halfHeight
             )
         }
+
+        let direction = CGVector(from: player.position, to: directionTarget).normalized
+        return CGPoint(
+            x: player.position.x + direction.dx * spawnDistance,
+            y: player.position.y + direction.dy * spawnDistance
+        )
     }
 
     private func checkSkeletonCollisions() {
@@ -616,18 +755,20 @@ final class GameScene: SKScene {
         hud.hideLevelUp()
 
         player.removeAction(forKey: Self.playerHitFlashActionKey)
+        stopPlayerAnimation()
         player.color = SKColor(calibratedRed: 0.85, green: 0.05, blue: 0.08, alpha: 1)
         player.colorBlendFactor = 0.65
         player.alpha = 0.45
         player.run(SKAction.rotate(byAngle: -.pi / 2, duration: 0.16))
 
-        hud.showGameOver()
+        hud.showGameOver(level: progression.level)
 
         for fireball in fireballs {
             fireball.node.removeAllActions()
         }
         removeLightningEffects()
         removeBeamEffects()
+        removeMeteorEffects()
     }
 
     private func restartGame() {
@@ -639,6 +780,7 @@ final class GameScene: SKScene {
         fireballCastTimer = 0
         lightningCastTimer = 0
         beamCastTimer = 0
+        meteorCastTimer = 0
         playerHitInvulnerabilityTimer = 0
         playerLives = GameConfiguration.initialPlayerLives
         currentPlayerMovementDirection = nil
@@ -665,6 +807,8 @@ final class GameScene: SKScene {
         player.yScale = 1
         player.alpha = 1
         player.colorBlendFactor = 0
+        player.texture = mageTextures[0]
+        stopPlayerAnimation()
     }
 
     private func removeAllEnemiesAndProjectiles() {
@@ -684,6 +828,7 @@ final class GameScene: SKScene {
 
         removeLightningEffects()
         removeBeamEffects()
+        removeMeteorEffects()
         updateHUDCombatStatus()
     }
 
@@ -760,16 +905,24 @@ final class GameScene: SKScene {
             interval: progression.fireballCastInterval
         )
         hud.updateLightningStatus(
+            isUnlocked: progression.isLightningUnlocked,
             strikeCount: progression.lightningStrikeCount,
             interval: progression.lightningCastInterval
         )
         hud.updateOrbStatus(
+            isUnlocked: progression.isOrbitalOrbUnlocked,
             count: progression.orbitalOrbCount,
             angularSpeed: progression.orbitalOrbAngularSpeed
         )
         hud.updateBeamStatus(
+            isUnlocked: progression.isBeamUnlocked,
             killCount: progression.beamKillCount,
             interval: progression.beamCastInterval
+        )
+        hud.updateMeteorStatus(
+            isUnlocked: progression.isMeteorUnlocked,
+            count: progression.meteorCount,
+            interval: progression.meteorCastInterval
         )
         updateHUDCombatStatus()
     }
@@ -797,17 +950,32 @@ final class GameScene: SKScene {
         isLevelUpChoiceActive = true
         worldNode.isPaused = true
         pressedKeys.removeAll()
-        hud.showLevelUp(level: progression.level, options: randomLevelUpOptions())
+        stopPlayerAnimation()
+        hud.showLevelUp(
+            level: progression.level,
+            options: randomLevelUpOptions(),
+            beamKillUpgradeBonus: progression.beamKillUpgradeBonus
+        )
     }
 
     private func applyLevelUpOption(_ option: LevelUpOption) {
-        progression.applyLevelUpOption(option)
+        if option == .extraLife {
+            playerLives += 1
+        } else {
+            progression.applyLevelUpOption(option)
+        }
+
         syncOrbitalOrbCount()
         updateHUDProgress()
 
         isLevelUpChoiceActive = false
         worldNode.isPaused = false
         hud.hideLevelUp()
+    }
+
+    private func advanceDebugExperience() {
+        progression.advanceToOneKillBeforeNextLevel()
+        updateHUDProgress()
     }
 
     private func availableSkeletonTargets() -> [SKSpriteNode] {
@@ -852,6 +1020,17 @@ final class GameScene: SKScene {
         }
     }
 
+    private func removeMeteorEffects() {
+        worldNode.enumerateChildNodes(withName: Meteor.projectileName) { node, _ in
+            node.removeAllActions()
+            node.removeFromParent()
+        }
+        worldNode.enumerateChildNodes(withName: Meteor.effectName) { node, _ in
+            node.removeAllActions()
+            node.removeFromParent()
+        }
+    }
+
     private func updateFacing(for node: SKSpriteNode, movement: CGVector) {
         if movement.dx < 0 {
             node.xScale = -abs(node.xScale)
@@ -860,8 +1039,42 @@ final class GameScene: SKScene {
         }
     }
 
+    private func startPlayerAnimation() {
+        guard player.action(forKey: Self.playerAnimationActionKey) == nil else {
+            return
+        }
+
+        player.removeAction(forKey: Self.playerAnimationActionKey)
+        player.run(
+            SKAction.repeatForever(
+                SKAction.animate(
+                    with: mageTextures,
+                    timePerFrame: GameConfiguration.playerAnimationFrameDuration
+                )
+            ),
+            withKey: Self.playerAnimationActionKey
+        )
+    }
+
+    private func stopPlayerAnimation() {
+        player.removeAction(forKey: Self.playerAnimationActionKey)
+        player.texture = mageTextures[0]
+    }
+
+    private func startSkeletonAnimation(_ skeleton: SKSpriteNode) {
+        skeleton.run(
+            SKAction.repeatForever(
+                SKAction.animate(
+                    with: skeletonTextures,
+                    timePerFrame: GameConfiguration.skeletonAnimationFrameDuration
+                )
+            ),
+            withKey: Self.skeletonAnimationActionKey
+        )
+    }
+
     private func randomLevelUpOptions() -> [LevelUpOption] {
-        Array(LevelUpOption.allCases.shuffled().prefix(2))
+        Array(progression.availableLevelUpOptions.shuffled().prefix(2))
     }
 
     private func playerBeamDirection() -> CGVector {
@@ -891,4 +1104,6 @@ final class GameScene: SKScene {
     }
 
     private static let playerHitFlashActionKey = "playerHitFlash"
+    private static let playerAnimationActionKey = "playerAnimation"
+    private static let skeletonAnimationActionKey = "skeletonAnimation"
 }

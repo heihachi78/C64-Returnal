@@ -26,4 +26,12 @@ class ViewController: NSViewController {
         skView.showsNodeCount = true
         #endif
     }
+
+    override func viewDidAppear() {
+        super.viewDidAppear()
+
+        view.window?.isRestorable = false
+        view.window?.restorationClass = nil
+        view.window?.identifier = nil
+    }
 }
