@@ -15,11 +15,17 @@ enum GameConfiguration {
     static let playerAnimationFrameDuration: TimeInterval = 0.18
 
     static let skeletonSpeed: CGFloat = 82
-    static let initialSkeletonSpawnInterval: TimeInterval = 0.85
-    static let skeletonIntervalMultiplierPerLevel = 0.9
+    static let initialSkeletonSpawnInterval: TimeInterval = 0.95
+    static let skeletonIntervalMultiplierPerLevel = 0.915
     static let skeletonHitDistance: CGFloat = 24
     static let skeletonSpawnMargin: CGFloat = 72
     static let skeletonAnimationFrameDuration: TimeInterval = 0.20
+    static let redOnlySkeletonLevel = 66
+    static let redOnlySkeletonSpawnIntervalMultiplier: TimeInterval = 2.0
+    static let redSkeletonHitPoints = 2
+    static let redSkeletonKillInterval = 100
+    static let purpleSkeletonHitPoints = 5
+    static let purpleSkeletonKillInterval = 500
 
     static let fireballSpeed: CGFloat = 280
     static let initialFireballCastInterval: TimeInterval = 3.0
@@ -47,7 +53,7 @@ enum GameConfiguration {
     static let initialMeteorCastInterval: TimeInterval = 3.0
     static let meteorIntervalMultiplierPerUpgrade = 0.95
     static let meteorTargetRadiusMultiplier: CGFloat = 8
-    static let meteorImpactRadius: CGFloat = 24
+    static let meteorImpactRadius: CGFloat = 48
     static let meteorFallDuration: TimeInterval = 0.55
     static let meteorFallHeight: CGFloat = 240
     static let meteorFallDrift: CGFloat = 90
@@ -58,8 +64,12 @@ enum GameConfiguration {
     static let bronzeChestKillInterval = 250
     static let silverChestKillInterval = 1000
     static let goldChestKillInterval = 5_000
+    static let bronzeChestMaximumLevel = 33
+    static let silverChestMaximumLevel = 55
 
-    static let thirdLevelUpOptionChanceNumerator = 5
+    static let halveHordeLevelUpOptionChanceNumerator = 5
+    static let halveHordeLevelUpOptionChanceDenominator = 100
+    static let thirdLevelUpOptionChanceNumerator = 10
     static let thirdLevelUpOptionChanceDenominator = 100
 }
 
@@ -98,5 +108,14 @@ enum ChestRewardKey {
 
     static func isAdvance(_ keyCode: UInt16) -> Bool {
         keyCode == advance
+    }
+}
+
+enum ExperienceDebugKey {
+    static let one: UInt16 = 18
+    static let keypadOne: UInt16 = 83
+
+    static func isKillAllAndGrantExperience(_ keyCode: UInt16) -> Bool {
+        keyCode == one || keyCode == keypadOne
     }
 }

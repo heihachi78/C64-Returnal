@@ -51,8 +51,14 @@ struct Progression {
     private var upgradedMeteorCount = 1
 
     var skeletonSpawnInterval: TimeInterval {
-        GameConfiguration.initialSkeletonSpawnInterval
+        let baseInterval = GameConfiguration.initialSkeletonSpawnInterval
             * pow(GameConfiguration.skeletonIntervalMultiplierPerLevel, Double(level - 1))
+
+        guard level >= GameConfiguration.redOnlySkeletonLevel else {
+            return baseInterval
+        }
+
+        return baseInterval * GameConfiguration.redOnlySkeletonSpawnIntervalMultiplier
     }
 
     var fireballCastInterval: TimeInterval {
@@ -278,6 +284,6 @@ struct Progression {
     }
 
     private static func experienceRequirement(for level: Int) -> Int {
-        level * level
+        max(1, (level * level) / 2)
     }
 }

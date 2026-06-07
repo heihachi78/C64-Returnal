@@ -15,6 +15,49 @@ private enum AttackKind {
     case meteor
 }
 
+private enum SkeletonKind {
+    case regular
+    case red
+    case purple
+
+    var hitPoints: Int {
+        switch self {
+        case .regular:
+            return 1
+        case .red:
+            return max(1, GameConfiguration.redSkeletonHitPoints)
+        case .purple:
+            return max(1, GameConfiguration.purpleSkeletonHitPoints)
+        }
+    }
+
+    var tint: SKColor {
+        switch self {
+        case .regular:
+            return .white
+        case .red:
+            return SKColor(calibratedRed: 0.95, green: 0.05, blue: 0.04, alpha: 1)
+        case .purple:
+            return SKColor(calibratedRed: 0.58, green: 0.12, blue: 0.95, alpha: 1)
+        }
+    }
+
+    var tintBlendFactor: CGFloat {
+        switch self {
+        case .regular:
+            return 0
+        case .red:
+            return 0.68
+        case .purple:
+            return 0.72
+        }
+    }
+}
+
+private enum SkeletonUserDataKey {
+    static let hitPoints = "skeletonHitPoints"
+}
+
 final class GameScene: SKScene {
     private let worldNode = SKNode()
     private let cameraNode = SKCameraNode()
@@ -67,7 +110,7 @@ final class GameScene: SKScene {
     private var playerLives = GameConfiguration.initialPlayerLives
     private var currentPlayerMovementDirection: CGVector?
     private var orbitalOrbAngle: CGFloat = 0
-    private var pendingLevelUpChoices = 0
+    private var pendingLevelUpLevels = [Int]()
     private var totalSkeletonKills = 0
     private var fireballKillCount = 0
     private var lightningKillCount = 0
@@ -107,6 +150,11 @@ final class GameScene: SKScene {
 
         if isLevelUpChoiceActive {
             selectLevelUpOption(with: event.keyCode)
+            return
+        }
+
+        if ExperienceDebugKey.isKillAllAndGrantExperience(event.keyCode) {
+            killAllEnemiesAndGrantExperience()
             return
         }
 
@@ -311,13 +359,21 @@ final class GameScene: SKScene {
 
         while skeletonSpawnTimer >= spawnInterval {
             skeletonSpawnTimer -= spawnInterval
-            spawnSkeleton(shouldUpdateHUD: false)
+            spawnSkeleton(kind: timedSkeletonSpawnKind, shouldUpdateHUD: false)
             didSpawn = true
         }
 
         if didSpawn {
             updateHUDCombatStatus()
         }
+    }
+
+    private var timedSkeletonSpawnKind: SkeletonKind {
+        usesRedOnlySkeletonSpawns ? .red : .regular
+    }
+
+    private var usesRedOnlySkeletonSpawns: Bool {
+        progression.level >= GameConfiguration.redOnlySkeletonLevel
     }
 
     private func updateOrbitalOrbs(deltaTime: TimeInterval) {
@@ -401,7 +457,7 @@ final class GameScene: SKScene {
     }
 
     private func updateMeteorCasting(deltaTime: TimeInterval) {
-        guard progression.isMeteorUnlocked else {
+        guard progression.isMeteorUnlocked, progression.meteorCount > 0 else {
             meteorCastTimer = 0
             return
         }
@@ -412,11 +468,11 @@ final class GameScene: SKScene {
         }
 
         meteorCastTimer += deltaTime
-        let castInterval = progression.meteorCastInterval
+        let spawnInterval = progression.meteorCastInterval / TimeInterval(progression.meteorCount)
 
-        while meteorCastTimer >= castInterval {
-            meteorCastTimer -= castInterval
-            castMeteors()
+        while meteorCastTimer >= spawnInterval {
+            meteorCastTimer -= spawnInterval
+            castMeteor()
         }
     }
 
@@ -448,7 +504,7 @@ final class GameScene: SKScene {
         let travelDistance = GameConfiguration.fireballSpeed * CGFloat(deltaTime)
 
         guard distanceSquared > 0 else {
-            destroySkeleton(target, killedBy: .fireball)
+            damageSkeleton(target, killedBy: .fireball)
             removeFireball(at: index)
             return
         }
@@ -461,7 +517,7 @@ final class GameScene: SKScene {
 
         if distanceSquared <= hitDistance * hitDistance {
             fireballs[index].node.position = target.position
-            destroySkeleton(target, killedBy: .fireball)
+            damageSkeleton(target, killedBy: .fireball)
             removeFireball(at: index)
             return
         }
@@ -476,7 +532,7 @@ final class GameScene: SKScene {
 
         if let target = firstSkeletonHitByFireball(from: startPosition, to: fireballs[index].node.position) {
             fireballs[index].node.position = target.position
-            destroySkeleton(target, killedBy: .fireball)
+            damageSkeleton(target, killedBy: .fireball)
             removeFireball(at: index)
             return
         }
@@ -494,11 +550,17 @@ final class GameScene: SKScene {
         fireballs[index].node.zRotation = atan2(movement.dy, movement.dx)
     }
 
-    private func spawnSkeleton(shouldUpdateHUD: Bool = true) {
+    private func spawnSkeleton(kind: SkeletonKind = .regular, shouldUpdateHUD: Bool = true) {
         let skeleton = SKSpriteNode(texture: skeletonTextures[0])
         skeleton.size = CGSize(width: 30, height: 42)
         skeleton.position = skeletonSpawnPosition()
         skeleton.zPosition = 9
+        skeleton.color = kind.tint
+        skeleton.colorBlendFactor = kind.tintBlendFactor
+        skeleton.userData = NSMutableDictionary(
+            object: NSNumber(value: kind.hitPoints),
+            forKey: SkeletonUserDataKey.hitPoints as NSString
+        )
 
         let identifier = ObjectIdentifier(skeleton)
         skeletonIndices[identifier] = skeletons.count
@@ -593,7 +655,7 @@ final class GameScene: SKScene {
             targets: availableLightningTargets()
         )
         var levelUpCount = 0
-        var didKill = false
+        var didHit = false
 
         for strike in chainLightning.strikes {
             guard isSkeletonAlive(strike.target) else {
@@ -602,11 +664,11 @@ final class GameScene: SKScene {
 
             showLightningStrike(from: strike.start, to: strike.end)
             showLightningTargetHit(strike.target)
-            didKill = true
-            levelUpCount += destroySkeleton(strike.target, killedBy: .lightning, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
+            didHit = true
+            levelUpCount += damageSkeleton(strike.target, killedBy: .lightning, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
         }
 
-        if didKill {
+        if didHit {
             updateHUDProgress()
         }
 
@@ -648,16 +710,16 @@ final class GameScene: SKScene {
             targets: skeletons
         )
         var levelUpCount = 0
-        var didKill = false
+        var didHit = false
 
         showBeam(from: beam.start, to: beam.end)
 
         for target in beam.targets {
-            didKill = true
-            levelUpCount += destroySkeleton(target, killedBy: .beam, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
+            didHit = true
+            levelUpCount += damageSkeleton(target, killedBy: .beam, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
         }
 
-        if didKill {
+        if didHit {
             updateHUDProgress()
         }
 
@@ -666,12 +728,6 @@ final class GameScene: SKScene {
 
     private func showBeam(from start: CGPoint, to end: CGPoint) {
         worldNode.addChild(Beam.makeEffectNode(from: start, to: end))
-    }
-
-    private func castMeteors() {
-        for _ in 0..<progression.meteorCount {
-            castMeteor()
-        }
     }
 
     private func castMeteor() {
@@ -740,7 +796,7 @@ final class GameScene: SKScene {
         var levelUpCount = 0
 
         for target in targets {
-            levelUpCount += destroySkeleton(target, killedBy: .meteor, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
+            levelUpCount += damageSkeleton(target, killedBy: .meteor, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
         }
 
         if !targets.isEmpty {
@@ -836,7 +892,7 @@ final class GameScene: SKScene {
 
     private func checkOrbitalOrbCollisions() {
         var levelUpCount = 0
-        var didKill = false
+        var didHit = false
 
         for index in orbitalOrbs.indices where orbitalOrbs[index].isActive {
             guard let skeleton = firstSkeletonTouchingOrb(at: index) else {
@@ -844,11 +900,11 @@ final class GameScene: SKScene {
             }
 
             orbitalOrbs[index].deactivate()
-            didKill = true
-            levelUpCount += destroySkeleton(skeleton, killedBy: .orbitalOrb, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
+            didHit = true
+            levelUpCount += damageSkeleton(skeleton, killedBy: .orbitalOrb, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
         }
 
-        if didKill {
+        if didHit {
             updateHUDProgress()
         }
 
@@ -877,7 +933,7 @@ final class GameScene: SKScene {
         isLevelUpChoiceActive = false
         isChestRewardActive = false
         playerHitInvulnerabilityTimer = 0
-        pendingLevelUpChoices = 0
+        pendingLevelUpLevels.removeAll(keepingCapacity: true)
         worldNode.isPaused = false
         pressedKeys.removeAll()
         hud.hideLevelUp()
@@ -923,7 +979,7 @@ final class GameScene: SKScene {
         playerLives = GameConfiguration.initialPlayerLives
         currentPlayerMovementDirection = nil
         orbitalOrbAngle = 0
-        pendingLevelUpChoices = 0
+        pendingLevelUpLevels.removeAll(keepingCapacity: true)
         totalSkeletonKills = 0
         fireballKillCount = 0
         lightningKillCount = 0
@@ -995,6 +1051,55 @@ final class GameScene: SKScene {
     }
 
     @discardableResult
+    private func damageSkeleton(_ skeleton: SKSpriteNode, killedBy attackKind: AttackKind? = nil, shouldTriggerLevelUpChoice: Bool = true, shouldUpdateHUD: Bool = true) -> Int {
+        guard isSkeletonAlive(skeleton) else {
+            return 0
+        }
+
+        let remainingHitPoints = skeletonHitPoints(for: skeleton)
+
+        guard remainingHitPoints > 1 else {
+            return destroySkeleton(
+                skeleton,
+                killedBy: attackKind,
+                shouldTriggerLevelUpChoice: shouldTriggerLevelUpChoice,
+                shouldUpdateHUD: shouldUpdateHUD
+            )
+        }
+
+        setSkeletonHitPoints(remainingHitPoints - 1, for: skeleton)
+        showSkeletonDamageFeedback(skeleton)
+        return 0
+    }
+
+    private func skeletonHitPoints(for skeleton: SKSpriteNode) -> Int {
+        guard let hitPoints = skeleton.userData?[SkeletonUserDataKey.hitPoints] as? NSNumber else {
+            return 1
+        }
+
+        return max(1, hitPoints.intValue)
+    }
+
+    private func setSkeletonHitPoints(_ hitPoints: Int, for skeleton: SKSpriteNode) {
+        if skeleton.userData == nil {
+            skeleton.userData = NSMutableDictionary()
+        }
+
+        skeleton.userData?[SkeletonUserDataKey.hitPoints] = NSNumber(value: max(1, hitPoints))
+    }
+
+    private func showSkeletonDamageFeedback(_ skeleton: SKSpriteNode) {
+        skeleton.removeAction(forKey: Self.skeletonDamageFlashActionKey)
+        skeleton.alpha = 1
+
+        let flash = SKAction.sequence([
+            SKAction.fadeAlpha(to: 0.35, duration: 0.06),
+            SKAction.fadeAlpha(to: 1, duration: 0.06)
+        ])
+        skeleton.run(SKAction.repeat(flash, count: 2), withKey: Self.skeletonDamageFlashActionKey)
+    }
+
+    @discardableResult
     private func destroySkeleton(_ skeleton: SKSpriteNode, killedBy attackKind: AttackKind? = nil, shouldTriggerLevelUpChoice: Bool = true, shouldUpdateHUD: Bool = true) -> Int {
         let identifier = ObjectIdentifier(skeleton)
 
@@ -1054,20 +1159,48 @@ final class GameScene: SKScene {
 
     private func registerSkeletonKill() {
         totalSkeletonKills += 1
+        spawnMilestoneSkeletonsIfNeeded()
 
         while totalSkeletonKills >= nextChestMilestone {
-            spawnChest(tier: chestTier(for: nextChestMilestone))
+            if let tier = chestTier(for: nextChestMilestone) {
+                spawnChest(tier: tier)
+            }
             nextChestMilestone += GameConfiguration.bronzeChestKillInterval
         }
     }
 
-    private func chestTier(for milestone: Int) -> ChestTier {
+    private func spawnMilestoneSkeletonsIfNeeded() {
+        guard !usesRedOnlySkeletonSpawns else {
+            return
+        }
+
+        spawnSkeleton(kind: .red, afterEveryKills: GameConfiguration.redSkeletonKillInterval)
+        spawnSkeleton(kind: .purple, afterEveryKills: GameConfiguration.purpleSkeletonKillInterval)
+    }
+
+    private func spawnSkeleton(kind: SkeletonKind, afterEveryKills killInterval: Int) {
+        guard killInterval > 0, totalSkeletonKills.isMultiple(of: killInterval) else {
+            return
+        }
+
+        spawnSkeleton(kind: kind, shouldUpdateHUD: false)
+    }
+
+    private func chestTier(for milestone: Int) -> ChestTier? {
         if milestone.isMultiple(of: GameConfiguration.goldChestKillInterval) {
             return .gold
         }
 
         if milestone.isMultiple(of: GameConfiguration.silverChestKillInterval) {
+            guard progression.level <= GameConfiguration.silverChestMaximumLevel else {
+                return nil
+            }
+
             return .silver
+        }
+
+        guard progression.level <= GameConfiguration.bronzeChestMaximumLevel else {
+            return nil
         }
 
         return .bronze
@@ -1309,17 +1442,39 @@ final class GameScene: SKScene {
         playerHitInvulnerabilityTimer = max(0, playerHitInvulnerabilityTimer - deltaTime)
     }
 
+    private func killAllEnemiesAndGrantExperience() {
+        let defeatedCount = skeletons.count
+
+        guard defeatedCount > 0 else {
+            return
+        }
+
+        skeletons.forEach {
+            $0.removeAllActions()
+            $0.removeFromParent()
+        }
+        skeletons.removeAll()
+        skeletonIdentifiers.removeAll(keepingCapacity: true)
+        skeletonIndices.removeAll(keepingCapacity: true)
+        skeletonSpatialIndex.removeAll()
+
+        let levelUpCount = progression.gainExperience(defeatedCount)
+        updateHUDProgress()
+        queueLevelUpChoices(levelUpCount)
+    }
+
     private func queueLevelUpChoices(_ count: Int) {
         guard count > 0, !isGameOver else {
             return
         }
 
-        pendingLevelUpChoices += count
+        let firstQueuedLevel = progression.level - count + 1
+        pendingLevelUpLevels.append(contentsOf: firstQueuedLevel...progression.level)
         presentNextLevelUpChoiceIfNeeded()
     }
 
     private func presentNextLevelUpChoiceIfNeeded() {
-        guard !isGameOver, !isLevelUpChoiceActive, pendingLevelUpChoices > 0 else {
+        guard !isGameOver, !isLevelUpChoiceActive, let level = pendingLevelUpLevels.first else {
             return
         }
 
@@ -1328,7 +1483,7 @@ final class GameScene: SKScene {
         pressedKeys.removeAll()
         stopPlayerAnimation()
         hud.showLevelUp(
-            level: progression.level,
+            level: level,
             options: randomLevelUpOptions(),
             beamKillUpgradeBonus: progression.beamKillUpgradeBonus
         )
@@ -1340,8 +1495,8 @@ final class GameScene: SKScene {
         syncOrbitalOrbCount()
         updateHUDProgress()
 
-        if pendingLevelUpChoices > 0 {
-            pendingLevelUpChoices -= 1
+        if !pendingLevelUpLevels.isEmpty {
+            pendingLevelUpLevels.removeFirst()
         }
 
         isLevelUpChoiceActive = false
@@ -1592,7 +1747,31 @@ final class GameScene: SKScene {
 
     private func randomLevelUpOptions() -> [LevelUpOption] {
         let optionCount = shouldShowThirdLevelUpOption() ? 3 : 2
-        return Array(progression.availableLevelUpOptions.shuffled().prefix(optionCount))
+        let availableOptions = progression.availableLevelUpOptions.filter { option in
+            option != .halveSkeletons
+        }
+        var selectedOptions = Array(availableOptions.shuffled().prefix(optionCount))
+
+        if shouldShowHalveHordeOption(), !selectedOptions.isEmpty {
+            selectedOptions[Int.random(in: selectedOptions.indices)] = .halveSkeletons
+        }
+
+        return selectedOptions
+    }
+
+    private func shouldShowHalveHordeOption() -> Bool {
+        guard !skeletons.isEmpty else {
+            return false
+        }
+
+        let numerator = GameConfiguration.halveHordeLevelUpOptionChanceNumerator
+        let denominator = GameConfiguration.halveHordeLevelUpOptionChanceDenominator
+
+        guard numerator > 0, denominator > 0 else {
+            return false
+        }
+
+        return Int.random(in: 1...denominator) <= numerator
     }
 
     private func shouldShowThirdLevelUpOption() -> Bool {
@@ -1632,6 +1811,7 @@ final class GameScene: SKScene {
         return value
     }
 
+    private static let skeletonDamageFlashActionKey = "skeletonDamageFlash"
     private static let playerHitFlashActionKey = "playerHitFlash"
     private static let playerAnimationActionKey = "playerAnimation"
 }
