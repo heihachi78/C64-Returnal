@@ -72,8 +72,8 @@ final class InfiniteGrassField {
         tile.texture = textures[grassHash(column: column, row: row, salt: 17) % textures.count]
         tile.color = grassTint(column: column, row: row)
         tile.xScale = grassFlipValue(column: column, row: row, salt: 31)
-        tile.yScale = grassFlipValue(column: column, row: row, salt: 67)
-        tile.zRotation = CGFloat(grassHash(column: column, row: row, salt: 101) % 4) * .pi / 2
+        tile.yScale = 1
+        tile.zRotation = 0
     }
 
     private func grassTint(column: Int, row: Int) -> SKColor {

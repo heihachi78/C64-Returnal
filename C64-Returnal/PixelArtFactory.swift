@@ -75,71 +75,107 @@ enum PixelArtFactory {
         let image = NSImage(size: CGSize(width: size, height: size))
 
         image.lockFocus()
-        grassColor(red: 0.24, green: 0.50, blue: 0.18, variant: variant, shift: 0).setFill()
+        grassColor(red: 0.22, green: 0.47, blue: 0.17, variant: variant, shift: 0).setFill()
         NSBezierPath(rect: NSRect(x: 0, y: 0, width: size, height: size)).fill()
 
-        let patchSeeds: [(Int, Int, Int, Int, CGFloat, CGFloat, CGFloat)] = [
-            (3, 5, 19, 7, 0.34, 0.61, 0.22),
-            (28, 2, 14, 13, 0.18, 0.43, 0.16),
-            (48, 8, 10, 19, 0.39, 0.68, 0.25),
-            (9, 28, 24, 10, 0.15, 0.38, 0.15),
-            (36, 36, 21, 11, 0.31, 0.57, 0.19),
-            (1, 50, 15, 9, 0.42, 0.70, 0.27),
-            (22, 53, 26, 6, 0.20, 0.45, 0.17),
-            (53, 49, 7, 10, 0.29, 0.54, 0.20)
-        ]
-
-        for (index, patch) in patchSeeds.enumerated() {
-            grassColor(red: patch.4, green: patch.5, blue: patch.6, variant: variant, shift: index).setFill()
-            NSBezierPath(
-                rect: NSRect(
-                    x: wrappedPixel(patch.0 + grassOffset(variant: variant, index: index, axis: 0), size: size),
-                    y: wrappedPixel(patch.1 + grassOffset(variant: variant, index: index, axis: 1), size: size),
-                    width: max(6, patch.2 + grassOffset(variant: variant, index: index, axis: 2) / 2),
-                    height: max(4, patch.3 + grassOffset(variant: variant, index: index, axis: 3) / 2)
-                )
-            ).fill()
-        }
-
+        drawGrassGroundFlecks(size: size, variant: variant)
         drawGrassDetails(size: size, variant: variant)
 
         image.unlockFocus()
         return SKTexture(image: image)
     }
 
-    private static func drawGrassDetails(size: Int, variant: Int) {
-        let bladeColor = grassColor(red: 0.49, green: 0.78, blue: 0.30, variant: variant, shift: 19)
-        let shadowColor = grassColor(red: 0.11, green: 0.31, blue: 0.13, variant: variant, shift: 23)
-        let blades = [
-            (5, 18, 1, 5), (17, 43, 1, 4), (24, 18, 1, 6), (41, 24, 1, 5),
-            (57, 33, 1, 4), (12, 60, 1, 3), (31, 47, 1, 4), (50, 4, 1, 5)
-        ]
-        let shadows = [
-            (8, 12, 6, 2), (32, 21, 8, 2), (46, 58, 7, 2), (19, 7, 6, 2)
+    private static func drawGrassGroundFlecks(size: Int, variant: Int) {
+        let flecks = [
+            (4, 7, 3, 1, 0), (13, 23, 2, 1, 1), (27, 9, 4, 1, 2), (39, 18, 2, 1, 3),
+            (52, 5, 3, 1, 4), (7, 39, 2, 1, 5), (20, 53, 3, 1, 6), (34, 41, 4, 1, 7),
+            (49, 55, 2, 1, 8), (58, 29, 3, 1, 9), (2, 58, 2, 1, 10), (45, 34, 3, 1, 11)
         ]
 
-        bladeColor.setFill()
-        for (index, blade) in blades.enumerated() {
-            NSBezierPath(
-                rect: NSRect(
-                    x: wrappedPixel(blade.0 + grassOffset(variant: variant, index: index, axis: 4), size: size),
-                    y: wrappedPixel(blade.1 + grassOffset(variant: variant, index: index, axis: 5), size: size),
-                    width: blade.2,
-                    height: max(2, blade.3 + grassOffset(variant: variant, index: index, axis: 6) / 2)
-                )
-            ).fill()
+        for (index, fleck) in flecks.enumerated() {
+            let color = fleck.4.isMultiple(of: 2)
+                ? grassColor(red: 0.30, green: 0.56, blue: 0.20, variant: variant, shift: index)
+                : grassColor(red: 0.16, green: 0.36, blue: 0.14, variant: variant, shift: index)
+            drawPixelRect(
+                x: wrappedPixel(fleck.0 + grassOffset(variant: variant, index: index, axis: 0), size: size),
+                y: wrappedPixel(fleck.1 + grassOffset(variant: variant, index: index, axis: 1), size: size),
+                width: fleck.2,
+                height: fleck.3,
+                color: color
+            )
+        }
+    }
+
+    private static func drawGrassDetails(size: Int, variant: Int) {
+        let darkBlade = grassColor(red: 0.10, green: 0.29, blue: 0.11, variant: variant, shift: 17)
+        let midBlade = grassColor(red: 0.28, green: 0.61, blue: 0.20, variant: variant, shift: 19)
+        let lightBlade = grassColor(red: 0.50, green: 0.82, blue: 0.31, variant: variant, shift: 23)
+        let rootColor = grassColor(red: 0.08, green: 0.24, blue: 0.10, variant: variant, shift: 29)
+
+        let tufts = [
+            (7, 9, 8), (22, 5, 11), (43, 8, 9), (56, 17, 10),
+            (13, 29, 12), (33, 25, 8), (49, 36, 13), (5, 49, 9),
+            (25, 51, 10), (39, 55, 7), (59, 53, 11)
+        ]
+
+        for (index, tuft) in tufts.enumerated() {
+            let baseX = wrappedPixel(tuft.0 + grassOffset(variant: variant, index: index, axis: 4), size: size)
+            let baseY = wrappedPixel(tuft.1 + grassOffset(variant: variant, index: index, axis: 5), size: size)
+            let height = max(5, tuft.2 + grassOffset(variant: variant, index: index, axis: 6) / 2)
+
+            drawGrassTuft(
+                baseX: baseX,
+                baseY: baseY,
+                height: height,
+                darkColor: darkBlade,
+                midColor: midBlade,
+                lightColor: lightBlade,
+                rootColor: rootColor
+            )
         }
 
-        shadowColor.setFill()
-        for (index, shadow) in shadows.enumerated() {
-            NSBezierPath(
-                rect: NSRect(
-                    x: wrappedPixel(shadow.0 + grassOffset(variant: variant, index: index, axis: 7), size: size),
-                    y: wrappedPixel(shadow.1 + grassOffset(variant: variant, index: index, axis: 8), size: size),
-                    width: max(3, shadow.2 + grassOffset(variant: variant, index: index, axis: 9) / 2),
-                    height: shadow.3
-                )
-            ).fill()
+        let singleBlades = [
+            (4, 21, 6, 1), (17, 42, 5, -1), (30, 15, 7, 0), (41, 44, 6, 1),
+            (54, 28, 5, -1), (61, 6, 6, 0), (9, 60, 4, 1), (31, 36, 5, -1)
+        ]
+
+        for (index, blade) in singleBlades.enumerated() {
+            let x = wrappedPixel(blade.0 + grassOffset(variant: variant, index: index, axis: 7), size: size)
+            let y = wrappedPixel(blade.1 + grassOffset(variant: variant, index: index, axis: 8), size: size)
+            let height = max(3, blade.2 + grassOffset(variant: variant, index: index, axis: 9) / 2)
+            drawGrassBlade(baseX: x, baseY: y, height: height, lean: blade.3, color: lightBlade, baseWidth: 1)
+        }
+    }
+
+    private static func drawGrassTuft(
+        baseX: Int,
+        baseY: Int,
+        height: Int,
+        darkColor: NSColor,
+        midColor: NSColor,
+        lightColor: NSColor,
+        rootColor: NSColor
+    ) {
+        drawPixelRect(x: baseX - 2, y: baseY, width: 6, height: 2, color: rootColor)
+        drawPixelRect(x: baseX - 1, y: baseY + 1, width: 4, height: 1, color: darkColor)
+
+        drawGrassBlade(baseX: baseX - 2, baseY: baseY + 1, height: height - 2, lean: -1, color: darkColor, baseWidth: 1)
+        drawGrassBlade(baseX: baseX, baseY: baseY + 1, height: height, lean: 0, color: midColor, baseWidth: 2)
+        drawGrassBlade(baseX: baseX + 2, baseY: baseY + 1, height: height - 1, lean: 1, color: midColor, baseWidth: 1)
+        drawGrassBlade(baseX: baseX + 1, baseY: baseY + 2, height: max(3, height - 4), lean: -1, color: lightColor, baseWidth: 1)
+
+        drawPixelRect(x: baseX, y: baseY + height + 1, width: 1, height: 1, color: lightColor)
+    }
+
+    private static func drawGrassBlade(baseX: Int, baseY: Int, height: Int, lean: Int, color: NSColor, baseWidth: Int) {
+        guard height > 0 else {
+            return
+        }
+
+        for step in 0..<height {
+            let leanOffset = lean == 0 ? 0 : (step * lean) / 3
+            let width = step < 2 ? baseWidth : 1
+            drawPixelRect(x: baseX + leanOffset, y: baseY + step, width: width, height: 1, color: color)
         }
     }
 
