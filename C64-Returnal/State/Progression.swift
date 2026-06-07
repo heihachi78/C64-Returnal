@@ -30,6 +30,8 @@ enum LearnedSkill: CaseIterable {
 }
 
 struct Progression {
+    private let tuning: GameTuning
+
     private(set) var level = 1
     private(set) var experience = 0
     private(set) var nextExperience = 1
@@ -50,25 +52,30 @@ struct Progression {
     private var upgradedBeamKillCount = 1
     private var upgradedMeteorCount = 1
 
-    var skeletonSpawnInterval: TimeInterval {
-        let baseInterval = GameConfiguration.initialSkeletonSpawnInterval
-            * pow(GameConfiguration.skeletonIntervalMultiplierPerLevel, Double(level - 1))
+    init(tuning: GameTuning = GameConfiguration.defaultTuning) {
+        self.tuning = tuning
+        nextExperience = Self.experienceRequirement(for: level)
+    }
 
-        guard level >= GameConfiguration.redOnlySkeletonLevel else {
+    var skeletonSpawnInterval: TimeInterval {
+        let baseInterval = tuning.skeleton.initialSpawnInterval
+            * pow(tuning.skeleton.intervalMultiplierPerLevel, Double(level - 1))
+
+        guard level >= tuning.skeleton.redOnlyLevel else {
             return baseInterval
         }
 
-        return baseInterval * GameConfiguration.redOnlySkeletonSpawnIntervalMultiplier
+        return baseInterval * tuning.skeleton.redOnlySpawnIntervalMultiplier
     }
 
     var fireballCastInterval: TimeInterval {
-        GameConfiguration.initialFireballCastInterval
-            * pow(GameConfiguration.fireballIntervalMultiplierPerUpgrade, Double(fireRateUpgradeCount))
+        tuning.fireball.initialCastInterval
+            * pow(tuning.fireball.intervalMultiplierPerUpgrade, Double(fireRateUpgradeCount))
     }
 
     var lightningCastInterval: TimeInterval {
-        GameConfiguration.initialLightningCastInterval
-            * pow(GameConfiguration.lightningIntervalMultiplierPerUpgrade, Double(lightningRateUpgradeCount))
+        tuning.lightning.initialCastInterval
+            * pow(tuning.lightning.intervalMultiplierPerUpgrade, Double(lightningRateUpgradeCount))
     }
 
     var lightningStrikeCount: Int {
@@ -76,8 +83,8 @@ struct Progression {
     }
 
     var orbitalOrbAngularSpeed: CGFloat {
-        GameConfiguration.initialOrbitalOrbAngularSpeed
-            * pow(GameConfiguration.orbitalOrbSpeedMultiplierPerUpgrade, CGFloat(orbitalOrbSpeedUpgradeCount))
+        tuning.orbitalOrb.initialAngularSpeed
+            * pow(tuning.orbitalOrb.speedMultiplierPerUpgrade, CGFloat(orbitalOrbSpeedUpgradeCount))
     }
 
     var orbitalOrbCount: Int {
@@ -85,8 +92,8 @@ struct Progression {
     }
 
     var beamCastInterval: TimeInterval {
-        GameConfiguration.initialBeamCastInterval
-            * pow(GameConfiguration.beamIntervalMultiplierPerUpgrade, Double(beamRateUpgradeCount))
+        tuning.beam.initialCastInterval
+            * pow(tuning.beam.intervalMultiplierPerUpgrade, Double(beamRateUpgradeCount))
     }
 
     var beamKillCount: Int {
@@ -98,8 +105,8 @@ struct Progression {
     }
 
     var meteorCastInterval: TimeInterval {
-        GameConfiguration.initialMeteorCastInterval
-            * pow(GameConfiguration.meteorIntervalMultiplierPerUpgrade, Double(meteorRateUpgradeCount))
+        tuning.meteor.initialCastInterval
+            * pow(tuning.meteor.intervalMultiplierPerUpgrade, Double(meteorRateUpgradeCount))
     }
 
     var meteorCount: Int {

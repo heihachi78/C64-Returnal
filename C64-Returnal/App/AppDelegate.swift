@@ -13,14 +13,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         sharedDelegate = delegate
         app.delegate = delegate
-        app.setActivationPolicy(.regular)
-        app.mainMenu = makeMainMenu()
+        if !isRunningUnitTests {
+            app.setActivationPolicy(.regular)
+            app.mainMenu = makeMainMenu()
+        }
         app.finishLaunching()
-        delegate.showGameWindow()
+        if !isRunningUnitTests {
+            delegate.showGameWindow()
+        }
         app.run()
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        guard !Self.isRunningUnitTests else {
+            return
+        }
+
         showGameWindow()
     }
 
@@ -90,5 +98,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         mainMenu.addItem(appMenuItem)
 
         return mainMenu
+    }
+
+    private static var isRunningUnitTests: Bool {
+        let environment = ProcessInfo.processInfo.environment
+        let arguments = ProcessInfo.processInfo.arguments.joined(separator: " ")
+
+        return environment["C64_RETURNAL_HEADLESS"] == "1"
+            || environment["XCTestConfigurationFilePath"] != nil
+            || environment["XCTestBundlePath"] != nil
+            || environment["XCTestSessionIdentifier"] != nil
+            || environment["XCInjectBundleInto"] != nil
+            || arguments.localizedCaseInsensitiveContains("xctest")
+            || Bundle.allBundles.contains { bundle in
+                bundle.bundlePath.localizedCaseInsensitiveContains(".xctest")
+            }
+            || NSClassFromString("XCTest.XCTestCase") != nil
+            || NSClassFromString("XCTestCase") != nil
     }
 }

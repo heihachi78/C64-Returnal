@@ -6,8 +6,46 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A00002012FCF200000000001 /* GameConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001012FCF200000000001 /* GameConfiguration.swift */; };
+		A00002022FCF200000000001 /* InputBindings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001022FCF200000000001 /* InputBindings.swift */; };
+		A00002032FCF200000000001 /* HUDModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001032FCF200000000001 /* HUDModels.swift */; };
+		A00002042FCF200000000001 /* Progression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001042FCF200000000001 /* Progression.swift */; };
+		A00002052FCF200000000001 /* Chest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001052FCF200000000001 /* Chest.swift */; };
+		A00002062FCF200000000001 /* GameplayModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001062FCF200000000001 /* GameplayModels.swift */; };
+		A00002072FCF200000000001 /* Geometry+Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001072FCF200000000001 /* Geometry+Game.swift */; };
+		A00002082FCF200000000001 /* Beam.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001082FCF200000000001 /* Beam.swift */; };
+		A00002092FCF200000000001 /* ChainLightning.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001092FCF200000000001 /* ChainLightning.swift */; };
+		A00002102FCF200000000001 /* SkeletonSpatialIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001102FCF200000000001 /* SkeletonSpatialIndex.swift */; };
+		A00002112FCF200000000001 /* ChestSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001112FCF200000000001 /* ChestSystem.swift */; };
+		A00002122FCF200000000001 /* ProgressionSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001122FCF200000000001 /* ProgressionSystem.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A00000062FCF100000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9DFBAD642FCF018E00C70B37 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9DFBAD6B2FCF018E00C70B37;
+			remoteInfo = "C64-Returnal";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		9DFBAD6C2FCF018E00C70B37 /* C64-Returnal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "C64-Returnal.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A00000012FCF100000000001 /* C64-ReturnalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "C64-ReturnalTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A00001012FCF200000000001 /* GameConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Configuration/GameConfiguration.swift"; sourceTree = "<group>"; };
+		A00001022FCF200000000001 /* InputBindings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Input/InputBindings.swift"; sourceTree = "<group>"; };
+		A00001032FCF200000000001 /* HUDModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/HUD/HUDModels.swift"; sourceTree = "<group>"; };
+		A00001042FCF200000000001 /* Progression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/State/Progression.swift"; sourceTree = "<group>"; };
+		A00001052FCF200000000001 /* Chest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Entities/Chest.swift"; sourceTree = "<group>"; };
+		A00001062FCF200000000001 /* GameplayModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Entities/GameplayModels.swift"; sourceTree = "<group>"; };
+		A00001072FCF200000000001 /* Geometry+Game.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Support/Geometry+Game.swift"; sourceTree = "<group>"; };
+		A00001082FCF200000000001 /* Beam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Systems/Beam.swift"; sourceTree = "<group>"; };
+		A00001092FCF200000000001 /* ChainLightning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Systems/ChainLightning.swift"; sourceTree = "<group>"; };
+		A00001102FCF200000000001 /* SkeletonSpatialIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Systems/SkeletonSpatialIndex.swift"; sourceTree = "<group>"; };
+		A00001112FCF200000000001 /* ChestSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Systems/ChestSystem.swift"; sourceTree = "<group>"; };
+		A00001122FCF200000000001 /* ProgressionSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Systems/ProgressionSystem.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +54,22 @@
 			path = "C64-Returnal";
 			sourceTree = "<group>";
 		};
+		A00000022FCF100000000001 /* C64-ReturnalTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "C64-ReturnalTests";
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		9DFBAD692FCF018E00C70B37 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A00000032FCF100000000001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +83,7 @@
 			isa = PBXGroup;
 			children = (
 				9DFBAD6E2FCF018E00C70B37 /* C64-Returnal */,
+				A00000022FCF100000000001 /* C64-ReturnalTests */,
 				9DFBAD6D2FCF018E00C70B37 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +92,7 @@
 			isa = PBXGroup;
 			children = (
 				9DFBAD6C2FCF018E00C70B37 /* C64-Returnal.app */,
+				A00000012FCF100000000001 /* C64-ReturnalTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +122,29 @@
 			productReference = 9DFBAD6C2FCF018E00C70B37 /* C64-Returnal.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A00000082FCF100000000001 /* C64-ReturnalTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A00000112FCF100000000001 /* Build configuration list for PBXNativeTarget "C64-ReturnalTests" */;
+			buildPhases = (
+				A00000042FCF100000000001 /* Sources */,
+				A00000032FCF100000000001 /* Frameworks */,
+				A00000052FCF100000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A00000072FCF100000000001 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A00000022FCF100000000001 /* C64-ReturnalTests */,
+			);
+			name = "C64-ReturnalTests";
+			packageProductDependencies = (
+			);
+			productName = "C64-ReturnalTests";
+			productReference = A00000012FCF100000000001 /* C64-ReturnalTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -81,6 +156,9 @@
 				LastUpgradeCheck = 2650;
 				TargetAttributes = {
 					9DFBAD6B2FCF018E00C70B37 = {
+						CreatedOnToolsVersion = 26.5;
+					};
+					A00000082FCF100000000001 = {
 						CreatedOnToolsVersion = 26.5;
 					};
 				};
@@ -100,12 +178,20 @@
 			projectRoot = "";
 			targets = (
 				9DFBAD6B2FCF018E00C70B37 /* C64-Returnal */,
+				A00000082FCF100000000001 /* C64-ReturnalTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		9DFBAD6A2FCF018E00C70B37 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A00000052FCF100000000001 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +208,34 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A00000042FCF100000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A00002012FCF200000000001 /* GameConfiguration.swift in Sources */,
+				A00002022FCF200000000001 /* InputBindings.swift in Sources */,
+				A00002032FCF200000000001 /* HUDModels.swift in Sources */,
+				A00002042FCF200000000001 /* Progression.swift in Sources */,
+				A00002052FCF200000000001 /* Chest.swift in Sources */,
+				A00002062FCF200000000001 /* GameplayModels.swift in Sources */,
+				A00002072FCF200000000001 /* Geometry+Game.swift in Sources */,
+				A00002082FCF200000000001 /* Beam.swift in Sources */,
+				A00002092FCF200000000001 /* ChainLightning.swift in Sources */,
+				A00002102FCF200000000001 /* SkeletonSpatialIndex.swift in Sources */,
+				A00002112FCF200000000001 /* ChestSystem.swift in Sources */,
+				A00002122FCF200000000001 /* ProgressionSystem.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A00000072FCF100000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9DFBAD6B2FCF018E00C70B37 /* C64-Returnal */;
+			targetProxy = A00000062FCF100000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		9DFBAD942FCF018F00C70B37 /* Debug */ = {
@@ -307,6 +420,46 @@
 			};
 			name = Release;
 		};
+		A00000092FCF100000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D7FPGMHNJQ;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "ti.C64-ReturnalTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A00000102FCF100000000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = D7FPGMHNJQ;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "ti.C64-ReturnalTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -324,6 +477,15 @@
 			buildConfigurations = (
 				9DFBAD972FCF018F00C70B37 /* Debug */,
 				9DFBAD982FCF018F00C70B37 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A00000112FCF100000000001 /* Build configuration list for PBXNativeTarget "C64-ReturnalTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A00000092FCF100000000001 /* Debug */,
+				A00000102FCF100000000001 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
