@@ -39,7 +39,15 @@ extension GameScene {
     }
 
     var timedSkeletonSpawnKind: SkeletonKind {
-        usesRedOnlySkeletonSpawns ? .red : .regular
+        if usesPurpleOnlySkeletonSpawns {
+            return .purple
+        }
+
+        return usesRedOnlySkeletonSpawns ? .red : .regular
+    }
+
+    var usesPurpleOnlySkeletonSpawns: Bool {
+        session.progression.level >= tuning.skeleton.purpleOnlyLevel
     }
 
     var usesRedOnlySkeletonSpawns: Bool {
@@ -54,10 +62,10 @@ extension GameScene {
         skeleton.zPosition = 9
         skeleton.color = kind.tint
         skeleton.colorBlendFactor = kind.tintBlendFactor
-        skeleton.userData = NSMutableDictionary(
-            object: NSNumber(value: kind.hitPoints),
-            forKey: SkeletonUserDataKey.hitPoints as NSString
-        )
+        skeleton.userData = NSMutableDictionary()
+        skeleton.userData?[SkeletonUserDataKey.kind] = kind.rawValue
+        skeleton.userData?[SkeletonUserDataKey.hitPoints] = NSNumber(value: kind.hitPoints)
+        skeleton.userData?[SkeletonUserDataKey.experienceReward] = NSNumber(value: kind.experienceReward)
 
         let identifier = ObjectIdentifier(skeleton)
         skeletonIndices[identifier] = skeletons.count
@@ -123,14 +131,19 @@ extension GameScene {
     }
 
 
-    func damageSkeleton(_ skeleton: SKSpriteNode, killedBy attackKind: AttackKind? = nil, shouldTriggerLevelUpChoice: Bool = true, shouldUpdateHUD: Bool = true) -> Int {
+    func damageSkeleton(_ skeleton: SKSpriteNode, amount: Int = 1, killedBy attackKind: AttackKind? = nil, shouldTriggerLevelUpChoice: Bool = true, shouldUpdateHUD: Bool = true) -> Int {
         guard isSkeletonAlive(skeleton) else {
+            return 0
+        }
+
+        let damage = max(0, amount)
+        guard damage > 0 else {
             return 0
         }
 
         let remainingHitPoints = skeletonHitPoints(for: skeleton)
 
-        guard remainingHitPoints > 1 else {
+        guard remainingHitPoints > damage else {
             return destroySkeleton(
                 skeleton,
                 killedBy: attackKind,
@@ -139,7 +152,7 @@ extension GameScene {
             )
         }
 
-        setSkeletonHitPoints(remainingHitPoints - 1, for: skeleton)
+        setSkeletonHitPoints(remainingHitPoints - damage, for: skeleton)
         showSkeletonDamageFeedback(skeleton)
         return 0
     }
@@ -174,6 +187,8 @@ extension GameScene {
     @discardableResult
     func destroySkeleton(_ skeleton: SKSpriteNode, killedBy attackKind: AttackKind? = nil, shouldTriggerLevelUpChoice: Bool = true, shouldUpdateHUD: Bool = true) -> Int {
         let identifier = ObjectIdentifier(skeleton)
+        let kind = skeletonKind(for: skeleton)
+        let experienceReward = skeletonExperienceReward(for: skeleton)
 
         guard let index = skeletonIndices[identifier] else {
             return 0
@@ -182,10 +197,10 @@ extension GameScene {
         skeleton.removeAllActions()
         skeleton.removeFromParent()
         removeSkeletonFromTracking(identifier: identifier, at: index)
-        registerSkeletonKill()
+        registerSkeletonKill(kind: kind)
         registerAttackKill(attackKind)
 
-        let levelUpCount = session.progression.gainExperience()
+        let levelUpCount = session.progression.gainExperience(experienceReward)
 
         if shouldUpdateHUD {
             updateHUDProgress()
@@ -215,6 +230,23 @@ extension GameScene {
         }
     }
 
+    func skeletonExperienceReward(for skeleton: SKSpriteNode) -> Int {
+        guard let reward = skeleton.userData?[SkeletonUserDataKey.experienceReward] as? NSNumber else {
+            return 1
+        }
+
+        return max(1, reward.intValue)
+    }
+
+    func skeletonKind(for skeleton: SKSpriteNode) -> SkeletonKind {
+        guard let rawKind = skeleton.userData?[SkeletonUserDataKey.kind] as? String,
+              let kind = SkeletonKind(rawValue: rawKind) else {
+            return .regular
+        }
+
+        return kind
+    }
+
     func removeSkeletonFromTracking(identifier: ObjectIdentifier, at index: Int) {
         let lastIndex = skeletons.count - 1
 
@@ -229,8 +261,9 @@ extension GameScene {
         skeletonIdentifiers.remove(identifier)
     }
 
-    func registerSkeletonKill() {
+    func registerSkeletonKill(kind: SkeletonKind) {
         session.kills.totalSkeletons += 1
+        spawnBlackSkeletonIfNeeded(afterKilling: kind)
         spawnMilestoneSkeletonsIfNeeded()
 
         while session.kills.totalSkeletons >= session.nextChestMilestone {
@@ -238,6 +271,18 @@ extension GameScene {
                 spawnChest(tier: tier)
             }
             session.nextChestMilestone += tuning.chest.bronzeKillInterval
+        }
+    }
+
+    func spawnBlackSkeletonIfNeeded(afterKilling kind: SkeletonKind) {
+        guard kind == .purple, tuning.skeleton.blackPurpleKillInterval > 0 else {
+            return
+        }
+
+        session.kills.purpleSkeletons += 1
+
+        if session.kills.purpleSkeletons.isMultiple(of: tuning.skeleton.blackPurpleKillInterval) {
+            spawnSkeleton(kind: .black, shouldUpdateHUD: false)
         }
     }
 
@@ -261,6 +306,9 @@ extension GameScene {
 
     func killAllEnemiesAndGrantExperience() {
         let defeatedCount = skeletons.count
+        let experienceReward = skeletons.reduce(0) { total, skeleton in
+            total + skeletonExperienceReward(for: skeleton)
+        }
 
         guard defeatedCount > 0 else {
             return
@@ -275,7 +323,7 @@ extension GameScene {
         skeletonIndices.removeAll(keepingCapacity: true)
         skeletonSpatialIndex.removeAll()
 
-        let levelUpCount = session.progression.gainExperience(defeatedCount)
+        let levelUpCount = session.progression.gainExperience(experienceReward)
         updateHUDProgress()
         queueLevelUpChoices(levelUpCount)
     }

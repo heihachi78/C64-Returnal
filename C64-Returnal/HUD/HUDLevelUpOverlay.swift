@@ -119,7 +119,7 @@ extension GameHUD {
         setupLevelUpIcon(meteorRateIcon, texture: meteorTexture)
         setupLevelUpKeyLabel(firstLevelUpKeyLabel, text: "[Q]")
         setupLevelUpKeyLabel(secondLevelUpKeyLabel, text: "[A]")
-        setupLevelUpKeyLabel(thirdLevelUpKeyLabel, text: "[Y]")
+        setupLevelUpKeyLabel(thirdLevelUpKeyLabel, text: "[C]")
         setupLevelUpKeyLabel(fourthLevelUpKeyLabel, text: "[X]")
     }
 

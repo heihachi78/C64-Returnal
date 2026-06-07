@@ -309,17 +309,24 @@ extension GameScene {
             direction: playerBeamDirection(),
             length: beamLength,
             hitWidth: tuning.beam.hitWidth,
-            killLimit: session.progression.beamKillCount,
+            damageLimit: session.progression.beamKillCount,
             targets: skeletons
         )
         var levelUpCount = 0
         var didHit = false
+        var remainingDamage = session.progression.beamKillCount
 
         showBeam(from: beam.start, to: beam.end)
 
         for target in beam.targets {
+            guard remainingDamage > 0 else {
+                break
+            }
+
+            let damage = min(remainingDamage, skeletonHitPoints(for: target))
             didHit = true
-            levelUpCount += damageSkeleton(target, killedBy: .beam, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
+            remainingDamage -= damage
+            levelUpCount += damageSkeleton(target, amount: damage, killedBy: .beam, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
         }
 
         if didHit {

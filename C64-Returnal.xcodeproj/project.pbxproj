@@ -7,18 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A00002012FCF200000000001 /* GameConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001012FCF200000000001 /* GameConfiguration.swift */; };
-		A00002022FCF200000000001 /* InputBindings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001022FCF200000000001 /* InputBindings.swift */; };
-		A00002032FCF200000000001 /* HUDModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001032FCF200000000001 /* HUDModels.swift */; };
-		A00002042FCF200000000001 /* Progression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001042FCF200000000001 /* Progression.swift */; };
-		A00002052FCF200000000001 /* Chest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001052FCF200000000001 /* Chest.swift */; };
-		A00002062FCF200000000001 /* GameplayModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001062FCF200000000001 /* GameplayModels.swift */; };
-		A00002072FCF200000000001 /* Geometry+Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001072FCF200000000001 /* Geometry+Game.swift */; };
-		A00002082FCF200000000001 /* Beam.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001082FCF200000000001 /* Beam.swift */; };
-		A00002092FCF200000000001 /* ChainLightning.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001092FCF200000000001 /* ChainLightning.swift */; };
-		A00002102FCF200000000001 /* SkeletonSpatialIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001102FCF200000000001 /* SkeletonSpatialIndex.swift */; };
-		A00002112FCF200000000001 /* ChestSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001112FCF200000000001 /* ChestSystem.swift */; };
-		A00002122FCF200000000001 /* ProgressionSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001122FCF200000000001 /* ProgressionSystem.swift */; };
+		A00002012FCF200000000001 /* C64-Returnal/Configuration/GameConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001012FCF200000000001 /* C64-Returnal/Configuration/GameConfiguration.swift */; };
+		A00002022FCF200000000001 /* C64-Returnal/Input/InputBindings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001022FCF200000000001 /* C64-Returnal/Input/InputBindings.swift */; };
+		A00002032FCF200000000001 /* C64-Returnal/HUD/HUDModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001032FCF200000000001 /* C64-Returnal/HUD/HUDModels.swift */; };
+		A00002042FCF200000000001 /* C64-Returnal/State/Progression.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001042FCF200000000001 /* C64-Returnal/State/Progression.swift */; };
+		A00002052FCF200000000001 /* C64-Returnal/Entities/Chest.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001052FCF200000000001 /* C64-Returnal/Entities/Chest.swift */; };
+		A00002062FCF200000000001 /* C64-Returnal/Entities/GameplayModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001062FCF200000000001 /* C64-Returnal/Entities/GameplayModels.swift */; };
+		A00002072FCF200000000001 /* C64-Returnal/Support/Geometry+Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001072FCF200000000001 /* C64-Returnal/Support/Geometry+Game.swift */; };
+		A00002082FCF200000000001 /* C64-Returnal/Systems/Beam.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001082FCF200000000001 /* C64-Returnal/Systems/Beam.swift */; };
+		A00002092FCF200000000001 /* C64-Returnal/Systems/ChainLightning.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001092FCF200000000001 /* C64-Returnal/Systems/ChainLightning.swift */; };
+		A00002102FCF200000000001 /* C64-Returnal/Systems/SkeletonSpatialIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001102FCF200000000001 /* C64-Returnal/Systems/SkeletonSpatialIndex.swift */; };
+		A00002112FCF200000000001 /* C64-Returnal/Systems/ChestSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001112FCF200000000001 /* C64-Returnal/Systems/ChestSystem.swift */; };
+		A00002122FCF200000000001 /* C64-Returnal/Systems/ProgressionSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00001122FCF200000000001 /* C64-Returnal/Systems/ProgressionSystem.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,18 +34,18 @@
 /* Begin PBXFileReference section */
 		9DFBAD6C2FCF018E00C70B37 /* C64-Returnal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "C64-Returnal.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A00000012FCF100000000001 /* C64-ReturnalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "C64-ReturnalTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		A00001012FCF200000000001 /* GameConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Configuration/GameConfiguration.swift"; sourceTree = "<group>"; };
-		A00001022FCF200000000001 /* InputBindings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Input/InputBindings.swift"; sourceTree = "<group>"; };
-		A00001032FCF200000000001 /* HUDModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/HUD/HUDModels.swift"; sourceTree = "<group>"; };
-		A00001042FCF200000000001 /* Progression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/State/Progression.swift"; sourceTree = "<group>"; };
-		A00001052FCF200000000001 /* Chest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Entities/Chest.swift"; sourceTree = "<group>"; };
-		A00001062FCF200000000001 /* GameplayModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Entities/GameplayModels.swift"; sourceTree = "<group>"; };
-		A00001072FCF200000000001 /* Geometry+Game.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Support/Geometry+Game.swift"; sourceTree = "<group>"; };
-		A00001082FCF200000000001 /* Beam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Systems/Beam.swift"; sourceTree = "<group>"; };
-		A00001092FCF200000000001 /* ChainLightning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Systems/ChainLightning.swift"; sourceTree = "<group>"; };
-		A00001102FCF200000000001 /* SkeletonSpatialIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Systems/SkeletonSpatialIndex.swift"; sourceTree = "<group>"; };
-		A00001112FCF200000000001 /* ChestSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Systems/ChestSystem.swift"; sourceTree = "<group>"; };
-		A00001122FCF200000000001 /* ProgressionSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Systems/ProgressionSystem.swift"; sourceTree = "<group>"; };
+		A00001012FCF200000000001 /* C64-Returnal/Configuration/GameConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Configuration/GameConfiguration.swift"; sourceTree = "<group>"; };
+		A00001022FCF200000000001 /* C64-Returnal/Input/InputBindings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Input/InputBindings.swift"; sourceTree = "<group>"; };
+		A00001032FCF200000000001 /* C64-Returnal/HUD/HUDModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/HUD/HUDModels.swift"; sourceTree = "<group>"; };
+		A00001042FCF200000000001 /* C64-Returnal/State/Progression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/State/Progression.swift"; sourceTree = "<group>"; };
+		A00001052FCF200000000001 /* C64-Returnal/Entities/Chest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Entities/Chest.swift"; sourceTree = "<group>"; };
+		A00001062FCF200000000001 /* C64-Returnal/Entities/GameplayModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Entities/GameplayModels.swift"; sourceTree = "<group>"; };
+		A00001072FCF200000000001 /* C64-Returnal/Support/Geometry+Game.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Support/Geometry+Game.swift"; sourceTree = "<group>"; };
+		A00001082FCF200000000001 /* C64-Returnal/Systems/Beam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Systems/Beam.swift"; sourceTree = "<group>"; };
+		A00001092FCF200000000001 /* C64-Returnal/Systems/ChainLightning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Systems/ChainLightning.swift"; sourceTree = "<group>"; };
+		A00001102FCF200000000001 /* C64-Returnal/Systems/SkeletonSpatialIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Systems/SkeletonSpatialIndex.swift"; sourceTree = "<group>"; };
+		A00001112FCF200000000001 /* C64-Returnal/Systems/ChestSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Systems/ChestSystem.swift"; sourceTree = "<group>"; };
+		A00001122FCF200000000001 /* C64-Returnal/Systems/ProgressionSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "C64-Returnal/Systems/ProgressionSystem.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -79,12 +79,32 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		9D287A172FD5E8B600BBA853 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				A00001012FCF200000000001 /* C64-Returnal/Configuration/GameConfiguration.swift */,
+				A00001022FCF200000000001 /* C64-Returnal/Input/InputBindings.swift */,
+				A00001032FCF200000000001 /* C64-Returnal/HUD/HUDModels.swift */,
+				A00001042FCF200000000001 /* C64-Returnal/State/Progression.swift */,
+				A00001052FCF200000000001 /* C64-Returnal/Entities/Chest.swift */,
+				A00001062FCF200000000001 /* C64-Returnal/Entities/GameplayModels.swift */,
+				A00001072FCF200000000001 /* C64-Returnal/Support/Geometry+Game.swift */,
+				A00001082FCF200000000001 /* C64-Returnal/Systems/Beam.swift */,
+				A00001092FCF200000000001 /* C64-Returnal/Systems/ChainLightning.swift */,
+				A00001102FCF200000000001 /* C64-Returnal/Systems/SkeletonSpatialIndex.swift */,
+				A00001112FCF200000000001 /* C64-Returnal/Systems/ChestSystem.swift */,
+				A00001122FCF200000000001 /* C64-Returnal/Systems/ProgressionSystem.swift */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
 		9DFBAD632FCF018E00C70B37 = {
 			isa = PBXGroup;
 			children = (
 				9DFBAD6E2FCF018E00C70B37 /* C64-Returnal */,
 				A00000022FCF100000000001 /* C64-ReturnalTests */,
 				9DFBAD6D2FCF018E00C70B37 /* Products */,
+				9D287A172FD5E8B600BBA853 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -160,6 +180,7 @@
 					};
 					A00000082FCF100000000001 = {
 						CreatedOnToolsVersion = 26.5;
+						TestTargetID = 9DFBAD6B2FCF018E00C70B37;
 					};
 				};
 			};
@@ -212,18 +233,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A00002012FCF200000000001 /* GameConfiguration.swift in Sources */,
-				A00002022FCF200000000001 /* InputBindings.swift in Sources */,
-				A00002032FCF200000000001 /* HUDModels.swift in Sources */,
-				A00002042FCF200000000001 /* Progression.swift in Sources */,
-				A00002052FCF200000000001 /* Chest.swift in Sources */,
-				A00002062FCF200000000001 /* GameplayModels.swift in Sources */,
-				A00002072FCF200000000001 /* Geometry+Game.swift in Sources */,
-				A00002082FCF200000000001 /* Beam.swift in Sources */,
-				A00002092FCF200000000001 /* ChainLightning.swift in Sources */,
-				A00002102FCF200000000001 /* SkeletonSpatialIndex.swift in Sources */,
-				A00002112FCF200000000001 /* ChestSystem.swift in Sources */,
-				A00002122FCF200000000001 /* ProgressionSystem.swift in Sources */,
+				A00002012FCF200000000001 /* C64-Returnal/Configuration/GameConfiguration.swift in Sources */,
+				A00002022FCF200000000001 /* C64-Returnal/Input/InputBindings.swift in Sources */,
+				A00002032FCF200000000001 /* C64-Returnal/HUD/HUDModels.swift in Sources */,
+				A00002042FCF200000000001 /* C64-Returnal/State/Progression.swift in Sources */,
+				A00002052FCF200000000001 /* C64-Returnal/Entities/Chest.swift in Sources */,
+				A00002062FCF200000000001 /* C64-Returnal/Entities/GameplayModels.swift in Sources */,
+				A00002072FCF200000000001 /* C64-Returnal/Support/Geometry+Game.swift in Sources */,
+				A00002082FCF200000000001 /* C64-Returnal/Systems/Beam.swift in Sources */,
+				A00002092FCF200000000001 /* C64-Returnal/Systems/ChainLightning.swift in Sources */,
+				A00002102FCF200000000001 /* C64-Returnal/Systems/SkeletonSpatialIndex.swift in Sources */,
+				A00002112FCF200000000001 /* C64-Returnal/Systems/ChestSystem.swift in Sources */,
+				A00002122FCF200000000001 /* C64-Returnal/Systems/ProgressionSystem.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -423,6 +444,7 @@
 		A00000092FCF100000000001 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = D7FPGMHNJQ;
@@ -437,12 +459,14 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "ti.C64-ReturnalTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/C64-Returnal.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/C64-Returnal";
 			};
 			name = Debug;
 		};
 		A00000102FCF100000000001 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = D7FPGMHNJQ;
@@ -457,6 +481,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "ti.C64-ReturnalTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/C64-Returnal.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/C64-Returnal";
 			};
 			name = Release;
 		};

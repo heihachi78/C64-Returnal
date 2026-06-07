@@ -3,6 +3,7 @@ import Foundation
 
 struct KillCounts {
     var totalSkeletons = 0
+    var purpleSkeletons = 0
     var fireball = 0
     var lightning = 0
     var orbitalOrb = 0

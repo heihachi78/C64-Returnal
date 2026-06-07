@@ -27,10 +27,14 @@ struct GameTuning {
         let animationFrameDuration: TimeInterval
         let redOnlyLevel: Int
         let redOnlySpawnIntervalMultiplier: TimeInterval
+        let purpleOnlyLevel: Int
+        let purpleOnlySpawnIntervalMultiplier: TimeInterval
         let redHitPoints: Int
         let redKillInterval: Int
         let purpleHitPoints: Int
         let purpleKillInterval: Int
+        let blackHitPoints: Int
+        let blackPurpleKillInterval: Int
         let spatialIndexCellSize: CGFloat
     }
 
@@ -119,17 +123,21 @@ enum GameConfiguration {
         ),
         skeleton: GameTuning.Skeleton(
             speed: 82,
-            initialSpawnInterval: 0.95,
+            initialSpawnInterval: 0.91,
             intervalMultiplierPerLevel: 0.915,
             hitDistance: 24,
             spawnMargin: 72,
             animationFrameDuration: 0.20,
             redOnlyLevel: 66,
-            redOnlySpawnIntervalMultiplier: 2.0,
+            redOnlySpawnIntervalMultiplier: 3.0,
+            purpleOnlyLevel: 75,
+            purpleOnlySpawnIntervalMultiplier: 6.0,
             redHitPoints: 2,
             redKillInterval: 100,
             purpleHitPoints: 5,
             purpleKillInterval: 500,
+            blackHitPoints: 25,
+            blackPurpleKillInterval: 100,
             spatialIndexCellSize: 96
         ),
         fireball: GameTuning.Fireball(
@@ -204,10 +212,14 @@ enum GameConfiguration {
     static let skeletonAnimationFrameDuration = defaultTuning.skeleton.animationFrameDuration
     static let redOnlySkeletonLevel = defaultTuning.skeleton.redOnlyLevel
     static let redOnlySkeletonSpawnIntervalMultiplier = defaultTuning.skeleton.redOnlySpawnIntervalMultiplier
+    static let purpleOnlySkeletonLevel = defaultTuning.skeleton.purpleOnlyLevel
+    static let purpleOnlySkeletonSpawnIntervalMultiplier = defaultTuning.skeleton.purpleOnlySpawnIntervalMultiplier
     static let redSkeletonHitPoints = defaultTuning.skeleton.redHitPoints
     static let redSkeletonKillInterval = defaultTuning.skeleton.redKillInterval
     static let purpleSkeletonHitPoints = defaultTuning.skeleton.purpleHitPoints
     static let purpleSkeletonKillInterval = defaultTuning.skeleton.purpleKillInterval
+    static let blackSkeletonHitPoints = defaultTuning.skeleton.blackHitPoints
+    static let blackSkeletonPurpleKillInterval = defaultTuning.skeleton.blackPurpleKillInterval
 
     static let fireballSpeed = defaultTuning.fireball.speed
     static let initialFireballCastInterval = defaultTuning.fireball.initialCastInterval

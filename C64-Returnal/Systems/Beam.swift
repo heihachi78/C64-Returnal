@@ -12,7 +12,7 @@ struct Beam {
     let end: CGPoint
     let targets: [SKSpriteNode]
 
-    init(origin: CGPoint, direction: CGVector, length: CGFloat, hitWidth: CGFloat, killLimit: Int, targets: [SKSpriteNode]) {
+    init(origin: CGPoint, direction: CGVector, length: CGFloat, hitWidth: CGFloat, damageLimit: Int, targets: [SKSpriteNode]) {
         let normalizedDirection = direction.normalized
         start = origin
         end = CGPoint(
@@ -21,7 +21,7 @@ struct Beam {
         )
 
         var selectedTargets = [(target: SKSpriteNode, progress: CGFloat)]()
-        selectedTargets.reserveCapacity(killLimit)
+        selectedTargets.reserveCapacity(damageLimit)
 
         for target in targets {
             guard let progress = Self.progressAlongBeam(
@@ -34,7 +34,7 @@ struct Beam {
                 continue
             }
 
-            if selectedTargets.count < killLimit {
+            if selectedTargets.count < damageLimit {
                 selectedTargets.append((target, progress))
                 Self.moveNewestTargetIntoOrder(&selectedTargets)
             } else if let lastProgress = selectedTargets.last?.progress, progress < lastProgress {

@@ -25,6 +25,13 @@ final class SystemPolicyTests: XCTestCase {
         XCTAssertFalse(controller.isMovementKey(99))
     }
 
+    func testDefaultLevelUpThirdOptionUsesCKey() {
+        let controller = InputController(bindings: InputBindings())
+
+        XCTAssertEqual(controller.levelUpOptionIndex(for: 8), 2)
+        XCTAssertNil(controller.levelUpOptionIndex(for: 16))
+    }
+
     func testLevelUpChoicesDefaultToThreeAndChanceAddsFourth() {
         let alwaysThree = progressionSystem(extraOptionNumerator: 0, extraOptionDenominator: 1)
         let alwaysFour = progressionSystem(extraOptionNumerator: 1, extraOptionDenominator: 1)

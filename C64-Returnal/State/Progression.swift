@@ -61,11 +61,17 @@ struct Progression {
         let baseInterval = tuning.skeleton.initialSpawnInterval
             * pow(tuning.skeleton.intervalMultiplierPerLevel, Double(level - 1))
 
-        guard level >= tuning.skeleton.redOnlyLevel else {
-            return baseInterval
+        var interval = baseInterval
+
+        if level >= tuning.skeleton.redOnlyLevel {
+            interval *= tuning.skeleton.redOnlySpawnIntervalMultiplier
         }
 
-        return baseInterval * tuning.skeleton.redOnlySpawnIntervalMultiplier
+        if level >= tuning.skeleton.purpleOnlyLevel {
+            interval *= tuning.skeleton.purpleOnlySpawnIntervalMultiplier
+        }
+
+        return interval
     }
 
     var fireballCastInterval: TimeInterval {

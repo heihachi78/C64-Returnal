@@ -19,7 +19,7 @@ struct InputBindings {
         moveUp: UInt16 = 126,
         firstLevelUpOption: UInt16 = 12,
         secondLevelUpOption: UInt16 = 0,
-        thirdLevelUpOption: UInt16 = 16,
+        thirdLevelUpOption: UInt16 = 8,
         fourthLevelUpOption: UInt16 = 7,
         advanceChestReward: UInt16 = 12,
         killAllAndGrantExperience: Set<UInt16> = [18, 83]

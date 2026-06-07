@@ -2,7 +2,7 @@ import SpriteKit
 import XCTest
 
 final class CombatTargetingTests: XCTestCase {
-    func testBeamSelectsClosestTargetsAlongBeamUpToKillLimit() {
+    func testBeamSelectsClosestTargetsAlongBeamUpToDamageLimit() {
         let near = skeleton(at: CGPoint(x: 30, y: 0))
         let far = skeleton(at: CGPoint(x: 80, y: 0))
         let outsideWidth = skeleton(at: CGPoint(x: 20, y: 40))
@@ -12,7 +12,7 @@ final class CombatTargetingTests: XCTestCase {
             direction: CGVector(dx: 1, dy: 0),
             length: 100,
             hitWidth: 10,
-            killLimit: 1,
+            damageLimit: 1,
             targets: [far, outsideWidth, near]
         )
 

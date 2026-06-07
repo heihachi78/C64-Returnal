@@ -8,10 +8,11 @@ enum AttackKind {
     case meteor
 }
 
-enum SkeletonKind {
+enum SkeletonKind: String {
     case regular
     case red
     case purple
+    case black
 
     var hitPoints: Int {
         switch self {
@@ -21,6 +22,19 @@ enum SkeletonKind {
             return max(1, GameConfiguration.redSkeletonHitPoints)
         case .purple:
             return max(1, GameConfiguration.purpleSkeletonHitPoints)
+        case .black:
+            return max(1, GameConfiguration.blackSkeletonHitPoints)
+        }
+    }
+
+    var experienceReward: Int {
+        switch self {
+        case .regular, .red:
+            return 1
+        case .purple:
+            return 3
+        case .black:
+            return 10
         }
     }
 
@@ -32,6 +46,8 @@ enum SkeletonKind {
             return SKColor(calibratedRed: 0.95, green: 0.05, blue: 0.04, alpha: 1)
         case .purple:
             return SKColor(calibratedRed: 0.58, green: 0.12, blue: 0.95, alpha: 1)
+        case .black:
+            return SKColor(calibratedWhite: 0.02, alpha: 1)
         }
     }
 
@@ -43,10 +59,14 @@ enum SkeletonKind {
             return 0.68
         case .purple:
             return 0.72
+        case .black:
+            return 0.86
         }
     }
 }
 
 enum SkeletonUserDataKey {
+    static let kind = "skeletonKind"
     static let hitPoints = "skeletonHitPoints"
+    static let experienceReward = "skeletonExperienceReward"
 }
