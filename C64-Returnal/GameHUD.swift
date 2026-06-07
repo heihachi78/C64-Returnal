@@ -127,18 +127,23 @@ final class GameHUD {
     private let fireballIcon = SKSpriteNode()
     private let fireballCountLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let fireballIntervalLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let fireballKillsLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let lightningIcon = SKSpriteNode()
     private let lightningCountLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let lightningIntervalLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let lightningKillsLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let orbIcon = SKSpriteNode()
     private let orbCountLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let orbSpeedLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let orbKillsLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let beamIcon = SKSpriteNode()
     private let beamKillLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let beamIntervalLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let beamKillsLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let meteorIcon = SKSpriteNode()
     private let meteorCountLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let meteorIntervalLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    private let meteorKillsLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let skeletonIcon = SKSpriteNode()
     private let skeletonAliveLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     private let skeletonIntervalLabel = SKLabelNode(fontNamed: "Menlo-Bold")
@@ -219,18 +224,23 @@ final class GameHUD {
         parent.addChild(fireballIcon)
         parent.addChild(fireballCountLabel)
         parent.addChild(fireballIntervalLabel)
+        parent.addChild(fireballKillsLabel)
         parent.addChild(lightningIcon)
         parent.addChild(lightningCountLabel)
         parent.addChild(lightningIntervalLabel)
+        parent.addChild(lightningKillsLabel)
         parent.addChild(orbIcon)
         parent.addChild(orbCountLabel)
         parent.addChild(orbSpeedLabel)
+        parent.addChild(orbKillsLabel)
         parent.addChild(beamIcon)
         parent.addChild(beamKillLabel)
         parent.addChild(beamIntervalLabel)
+        parent.addChild(beamKillsLabel)
         parent.addChild(meteorIcon)
         parent.addChild(meteorCountLabel)
         parent.addChild(meteorIntervalLabel)
+        parent.addChild(meteorKillsLabel)
         parent.addChild(skeletonIcon)
         parent.addChild(skeletonAliveLabel)
         parent.addChild(skeletonIntervalLabel)
@@ -248,30 +258,35 @@ final class GameHUD {
         layoutTopStatusBackground(left: left, top: top)
 
         let bottom = -sceneSize.height / 2 + 18
-        fireballIcon.position = CGPoint(x: left + 9, y: bottom + 14)
-        fireballCountLabel.position = CGPoint(x: left + 28, y: bottom + 20)
-        fireballIntervalLabel.position = CGPoint(x: left + 28, y: bottom)
-        lightningIcon.position = CGPoint(x: left + 9, y: bottom + 58)
-        lightningCountLabel.position = CGPoint(x: left + 28, y: bottom + 64)
-        lightningIntervalLabel.position = CGPoint(x: left + 28, y: bottom + 44)
-        orbIcon.position = CGPoint(x: left + 9, y: bottom + 102)
-        orbCountLabel.position = CGPoint(x: left + 28, y: bottom + 108)
-        orbSpeedLabel.position = CGPoint(x: left + 28, y: bottom + 88)
-        beamIcon.position = CGPoint(x: left + 9, y: bottom + 146)
-        beamKillLabel.position = CGPoint(x: left + 28, y: bottom + 152)
-        beamIntervalLabel.position = CGPoint(x: left + 28, y: bottom + 132)
-        meteorIcon.position = CGPoint(x: left + 9, y: bottom + 190)
-        meteorCountLabel.position = CGPoint(x: left + 28, y: bottom + 196)
-        meteorIntervalLabel.position = CGPoint(x: left + 28, y: bottom + 176)
-        skeletonIcon.position = CGPoint(x: left + 9, y: bottom + 234)
-        skeletonAliveLabel.position = CGPoint(x: left + 28, y: bottom + 240)
-        skeletonIntervalLabel.position = CGPoint(x: left + 28, y: bottom + 220)
+        fireballIcon.position = CGPoint(x: left + 9, y: bottom + 20)
+        fireballCountLabel.position = CGPoint(x: left + 28, y: bottom + 30)
+        fireballIntervalLabel.position = CGPoint(x: left + 28, y: bottom + 14)
+        fireballKillsLabel.position = CGPoint(x: left + 28, y: bottom)
+        lightningIcon.position = CGPoint(x: left + 9, y: bottom + 74)
+        lightningCountLabel.position = CGPoint(x: left + 28, y: bottom + 84)
+        lightningIntervalLabel.position = CGPoint(x: left + 28, y: bottom + 68)
+        lightningKillsLabel.position = CGPoint(x: left + 28, y: bottom + 54)
+        orbIcon.position = CGPoint(x: left + 9, y: bottom + 128)
+        orbCountLabel.position = CGPoint(x: left + 28, y: bottom + 138)
+        orbSpeedLabel.position = CGPoint(x: left + 28, y: bottom + 122)
+        orbKillsLabel.position = CGPoint(x: left + 28, y: bottom + 108)
+        beamIcon.position = CGPoint(x: left + 9, y: bottom + 182)
+        beamKillLabel.position = CGPoint(x: left + 28, y: bottom + 192)
+        beamIntervalLabel.position = CGPoint(x: left + 28, y: bottom + 176)
+        beamKillsLabel.position = CGPoint(x: left + 28, y: bottom + 162)
+        meteorIcon.position = CGPoint(x: left + 9, y: bottom + 236)
+        meteorCountLabel.position = CGPoint(x: left + 28, y: bottom + 246)
+        meteorIntervalLabel.position = CGPoint(x: left + 28, y: bottom + 230)
+        meteorKillsLabel.position = CGPoint(x: left + 28, y: bottom + 216)
+        skeletonIcon.position = CGPoint(x: left + 9, y: bottom + 290)
+        skeletonAliveLabel.position = CGPoint(x: left + 28, y: bottom + 300)
+        skeletonIntervalLabel.position = CGPoint(x: left + 28, y: bottom + 284)
 
         layoutChestRewardItems()
 
         setPanel(
             combatStatusBackground,
-            rect: CGRect(x: left - 10, y: bottom - 15, width: 150, height: 274),
+            rect: CGRect(x: left - 10, y: bottom - 15, width: 176, height: 330),
             cornerRadius: Self.panelCornerRadius
         )
 
@@ -348,6 +363,14 @@ final class GameHUD {
     func updateSkeletonStatus(aliveCount: Int, spawnInterval: TimeInterval) {
         skeletonAliveLabel.text = "x\(aliveCount)"
         skeletonIntervalLabel.text = "\(Self.formattedSeconds(spawnInterval))s"
+    }
+
+    func updateAttackKillCounts(fireball: Int, lightning: Int, orb: Int, beam: Int, meteor: Int) {
+        fireballKillsLabel.text = "KILLS \(fireball)"
+        lightningKillsLabel.text = "KILLS \(lightning)"
+        orbKillsLabel.text = "KILLS \(orb)"
+        beamKillsLabel.text = "KILLS \(beam)"
+        meteorKillsLabel.text = "KILLS \(meteor)"
     }
 
     func showGameOver(level: Int) {
@@ -691,13 +714,7 @@ final class GameHUD {
         fireballIcon.size = CGSize(width: 18, height: 18)
         fireballIcon.zPosition = 90
 
-        for label in [fireballCountLabel, fireballIntervalLabel] {
-            label.fontSize = 14
-            label.fontColor = Self.primaryTextColor
-            label.horizontalAlignmentMode = .left
-            label.verticalAlignmentMode = .center
-            label.zPosition = 90
-        }
+        setupCombatStatusLabels([fireballCountLabel, fireballIntervalLabel, fireballKillsLabel])
     }
 
     private func setupSkeletonStatus(skeletonTexture: SKTexture) {
@@ -719,13 +736,7 @@ final class GameHUD {
         lightningIcon.size = CGSize(width: 18, height: 18)
         lightningIcon.zPosition = 90
 
-        for label in [lightningCountLabel, lightningIntervalLabel] {
-            label.fontSize = 14
-            label.fontColor = Self.primaryTextColor
-            label.horizontalAlignmentMode = .left
-            label.verticalAlignmentMode = .center
-            label.zPosition = 90
-        }
+        setupCombatStatusLabels([lightningCountLabel, lightningIntervalLabel, lightningKillsLabel])
     }
 
     private func setupOrbStatus(orbTexture: SKTexture) {
@@ -733,13 +744,7 @@ final class GameHUD {
         orbIcon.size = CGSize(width: 18, height: 18)
         orbIcon.zPosition = 90
 
-        for label in [orbCountLabel, orbSpeedLabel] {
-            label.fontSize = 14
-            label.fontColor = Self.primaryTextColor
-            label.horizontalAlignmentMode = .left
-            label.verticalAlignmentMode = .center
-            label.zPosition = 90
-        }
+        setupCombatStatusLabels([orbCountLabel, orbSpeedLabel, orbKillsLabel])
     }
 
     private func setupBeamStatus(beamTexture: SKTexture) {
@@ -747,13 +752,7 @@ final class GameHUD {
         beamIcon.size = CGSize(width: 18, height: 18)
         beamIcon.zPosition = 90
 
-        for label in [beamKillLabel, beamIntervalLabel] {
-            label.fontSize = 14
-            label.fontColor = Self.primaryTextColor
-            label.horizontalAlignmentMode = .left
-            label.verticalAlignmentMode = .center
-            label.zPosition = 90
-        }
+        setupCombatStatusLabels([beamKillLabel, beamIntervalLabel, beamKillsLabel])
     }
 
     private func setupMeteorStatus(meteorTexture: SKTexture) {
@@ -761,7 +760,11 @@ final class GameHUD {
         meteorIcon.size = CGSize(width: 18, height: 18)
         meteorIcon.zPosition = 90
 
-        for label in [meteorCountLabel, meteorIntervalLabel] {
+        setupCombatStatusLabels([meteorCountLabel, meteorIntervalLabel, meteorKillsLabel])
+    }
+
+    private func setupCombatStatusLabels(_ labels: [SKLabelNode]) {
+        for label in labels {
             label.fontSize = 14
             label.fontColor = Self.primaryTextColor
             label.horizontalAlignmentMode = .left

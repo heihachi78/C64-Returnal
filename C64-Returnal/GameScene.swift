@@ -7,6 +7,14 @@
 
 import SpriteKit
 
+private enum AttackKind {
+    case fireball
+    case lightning
+    case orbitalOrb
+    case beam
+    case meteor
+}
+
 final class GameScene: SKScene {
     private let worldNode = SKNode()
     private let cameraNode = SKCameraNode()
@@ -61,6 +69,11 @@ final class GameScene: SKScene {
     private var orbitalOrbAngle: CGFloat = 0
     private var pendingLevelUpChoices = 0
     private var totalSkeletonKills = 0
+    private var fireballKillCount = 0
+    private var lightningKillCount = 0
+    private var orbitalOrbKillCount = 0
+    private var beamKillCount = 0
+    private var meteorKillCount = 0
     private var nextChestMilestone = GameConfiguration.bronzeChestKillInterval
     private var isGameOver = false
     private var isLevelUpChoiceActive = false
@@ -94,11 +107,6 @@ final class GameScene: SKScene {
 
         if isLevelUpChoiceActive {
             selectLevelUpOption(with: event.keyCode)
-            return
-        }
-
-        if DebugKey.isLevelSetupShortcut(event.keyCode) {
-            advanceDebugExperience()
             return
         }
 
@@ -440,7 +448,7 @@ final class GameScene: SKScene {
         let travelDistance = GameConfiguration.fireballSpeed * CGFloat(deltaTime)
 
         guard distanceSquared > 0 else {
-            destroySkeleton(target)
+            destroySkeleton(target, killedBy: .fireball)
             removeFireball(at: index)
             return
         }
@@ -453,7 +461,7 @@ final class GameScene: SKScene {
 
         if distanceSquared <= hitDistance * hitDistance {
             fireballs[index].node.position = target.position
-            destroySkeleton(target)
+            destroySkeleton(target, killedBy: .fireball)
             removeFireball(at: index)
             return
         }
@@ -468,7 +476,7 @@ final class GameScene: SKScene {
 
         if let target = firstSkeletonHitByFireball(from: startPosition, to: fireballs[index].node.position) {
             fireballs[index].node.position = target.position
-            destroySkeleton(target)
+            destroySkeleton(target, killedBy: .fireball)
             removeFireball(at: index)
             return
         }
@@ -595,7 +603,7 @@ final class GameScene: SKScene {
             showLightningStrike(from: strike.start, to: strike.end)
             showLightningTargetHit(strike.target)
             didKill = true
-            levelUpCount += destroySkeleton(strike.target, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
+            levelUpCount += destroySkeleton(strike.target, killedBy: .lightning, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
         }
 
         if didKill {
@@ -646,7 +654,7 @@ final class GameScene: SKScene {
 
         for target in beam.targets {
             didKill = true
-            levelUpCount += destroySkeleton(target, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
+            levelUpCount += destroySkeleton(target, killedBy: .beam, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
         }
 
         if didKill {
@@ -732,7 +740,7 @@ final class GameScene: SKScene {
         var levelUpCount = 0
 
         for target in targets {
-            levelUpCount += destroySkeleton(target, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
+            levelUpCount += destroySkeleton(target, killedBy: .meteor, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
         }
 
         if !targets.isEmpty {
@@ -837,7 +845,7 @@ final class GameScene: SKScene {
 
             orbitalOrbs[index].deactivate()
             didKill = true
-            levelUpCount += destroySkeleton(skeleton, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
+            levelUpCount += destroySkeleton(skeleton, killedBy: .orbitalOrb, shouldTriggerLevelUpChoice: false, shouldUpdateHUD: false)
         }
 
         if didKill {
@@ -917,6 +925,11 @@ final class GameScene: SKScene {
         orbitalOrbAngle = 0
         pendingLevelUpChoices = 0
         totalSkeletonKills = 0
+        fireballKillCount = 0
+        lightningKillCount = 0
+        orbitalOrbKillCount = 0
+        beamKillCount = 0
+        meteorKillCount = 0
         nextChestMilestone = GameConfiguration.bronzeChestKillInterval
         progression.reset()
 
@@ -982,7 +995,7 @@ final class GameScene: SKScene {
     }
 
     @discardableResult
-    private func destroySkeleton(_ skeleton: SKSpriteNode, shouldTriggerLevelUpChoice: Bool = true, shouldUpdateHUD: Bool = true) -> Int {
+    private func destroySkeleton(_ skeleton: SKSpriteNode, killedBy attackKind: AttackKind? = nil, shouldTriggerLevelUpChoice: Bool = true, shouldUpdateHUD: Bool = true) -> Int {
         let identifier = ObjectIdentifier(skeleton)
 
         guard let index = skeletonIndices[identifier] else {
@@ -993,6 +1006,7 @@ final class GameScene: SKScene {
         skeleton.removeFromParent()
         removeSkeletonFromTracking(identifier: identifier, at: index)
         registerSkeletonKill()
+        registerAttackKill(attackKind)
 
         let levelUpCount = progression.gainExperience()
 
@@ -1005,6 +1019,23 @@ final class GameScene: SKScene {
         }
 
         return levelUpCount
+    }
+
+    private func registerAttackKill(_ attackKind: AttackKind?) {
+        switch attackKind {
+        case .fireball:
+            fireballKillCount += 1
+        case .lightning:
+            lightningKillCount += 1
+        case .orbitalOrb:
+            orbitalOrbKillCount += 1
+        case .beam:
+            beamKillCount += 1
+        case .meteor:
+            meteorKillCount += 1
+        case .none:
+            break
+        }
     }
 
     private func removeSkeletonFromTracking(identifier: ObjectIdentifier, at index: Int) {
@@ -1253,6 +1284,13 @@ final class GameScene: SKScene {
             count: progression.meteorCount,
             interval: progression.meteorCastInterval
         )
+        hud.updateAttackKillCounts(
+            fireball: fireballKillCount,
+            lightning: lightningKillCount,
+            orb: orbitalOrbKillCount,
+            beam: beamKillCount,
+            meteor: meteorKillCount
+        )
         updateHUDCombatStatus()
     }
 
@@ -1348,11 +1386,6 @@ final class GameScene: SKScene {
         }
 
         applyLevelUpOption(option)
-    }
-
-    private func advanceDebugExperience() {
-        progression.advanceToOneKillBeforeNextLevel()
-        updateHUDProgress()
     }
 
     private func availableSkeletonTargets(limit: Int) -> [SKSpriteNode] {

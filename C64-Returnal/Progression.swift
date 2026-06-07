@@ -191,10 +191,6 @@ struct Progression {
         return levelUpCount
     }
 
-    mutating func advanceToOneKillBeforeNextLevel() {
-        experience = max(experience, nextExperience - 1)
-    }
-
     mutating func applyLevelUpOption(_ option: LevelUpOption) {
         switch option {
         case .fireRate:

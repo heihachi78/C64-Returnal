@@ -74,15 +74,6 @@ enum ArrowKey {
     }
 }
 
-enum DebugKey {
-    static let one: UInt16 = 18
-    static let keypadOne: UInt16 = 83
-
-    static func isLevelSetupShortcut(_ keyCode: UInt16) -> Bool {
-        keyCode == one || keyCode == keypadOne
-    }
-}
-
 enum LevelUpSelectionKey {
     static let firstOption: UInt16 = 12
     static let secondOption: UInt16 = 0
