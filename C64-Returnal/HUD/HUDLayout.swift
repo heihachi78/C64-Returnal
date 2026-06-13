@@ -24,7 +24,9 @@ extension GameHUD {
 
         levelLabel.position = CGPoint(x: left, y: top)
         experienceLabel.position = CGPoint(x: left, y: top - 24)
-        lifeIconOrigin = CGPoint(x: left + 7, y: top - 50)
+        coinIcon.position = CGPoint(x: left + 8, y: top - 48)
+        coinAmountLabel.position = CGPoint(x: left + 24, y: top - 48)
+        lifeIconOrigin = CGPoint(x: left + 7, y: top - 74)
         layoutLifeIcons()
         layoutTopStatusBackground(left: left, top: top)
 
@@ -117,7 +119,7 @@ extension GameHUD {
 
     func layoutLevelUpBackground(optionCount: Int) {
         let clampedOptionCount = max(2, optionCount)
-        let height = CGFloat(178 + max(0, clampedOptionCount - 2) * 52)
+        let height = CGFloat(250 + max(0, clampedOptionCount - 2) * 52)
 
         setPanel(
             levelUpBackground,

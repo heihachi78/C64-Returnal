@@ -1,7 +1,7 @@
 import SpriteKit
 
 extension GameHUD {
-    func showLevelUp(level: Int, options: [LevelUpOption], beamKillUpgradeBonus: Int) {
+    func showLevelUp(level: Int, options: [LevelUpOption], coinCount: Int, redrawCost: Int, beamKillUpgradeBonus: Int) {
         hideLevelUpOptions()
         activeLevelUpOptions = Array(options.prefix(4))
         levelUpLabel.text = "LEVEL \(level)"
@@ -23,6 +23,8 @@ extension GameHUD {
                 beamKillUpgradeBonus: beamKillUpgradeBonus
             )
         }
+
+        showLevelUpRedrawStatus(coinCount: coinCount, redrawCost: redrawCost)
     }
 
     func hideLevelUp() {
@@ -32,6 +34,7 @@ extension GameHUD {
         levelUpLabel.alpha = 0
         levelUpLabel.setScale(1)
         hideLevelUpOptions()
+        hideLevelUpRedrawStatus()
         activeLevelUpOptions.removeAll()
     }
 
@@ -56,6 +59,42 @@ extension GameHUD {
         }
     }
 
+    func showLevelUpRedrawStatus(coinCount: Int, redrawCost: Int) {
+        let canRedraw = coinCount >= redrawCost
+        let textColor = canRedraw ? Self.keyHintTextColor : SKColor(calibratedRed: 0.58, green: 0.54, blue: 0.45, alpha: 1)
+        let yPosition = Self.redrawLevelUpYPosition(optionCount: activeLevelUpOptions.count)
+
+        redrawLevelUpLabel.text = "REDRAW \(redrawCost)  COINS \(max(0, coinCount))"
+        redrawLevelUpLabel.fontColor = textColor
+        redrawLevelUpKeyLabel.fontColor = textColor
+        redrawLevelUpCoinIcon.alpha = canRedraw ? 1 : 0.45
+        redrawLevelUpKeyLabel.position = CGPoint(x: -150, y: yPosition)
+        redrawLevelUpCoinIcon.position = CGPoint(x: -116, y: yPosition)
+        redrawLevelUpLabel.position = CGPoint(x: -78, y: yPosition)
+
+        for node in [redrawLevelUpKeyLabel, redrawLevelUpLabel, redrawLevelUpCoinIcon] {
+            node.removeAllActions()
+            node.run(SKAction.fadeIn(withDuration: 0.14))
+        }
+
+        guard !canRedraw else {
+            return
+        }
+
+        let pulse = SKAction.sequence([
+            SKAction.scale(to: 1.08, duration: 0.08),
+            SKAction.scale(to: 1, duration: 0.08)
+        ])
+        redrawLevelUpLabel.run(pulse)
+    }
+
+    func hideLevelUpRedrawStatus() {
+        for node in [redrawLevelUpKeyLabel, redrawLevelUpLabel, redrawLevelUpCoinIcon] {
+            node.removeAllActions()
+            node.alpha = 0
+            node.setScale(1)
+        }
+    }
 
     func levelUpOption(at point: CGPoint) -> LevelUpOption? {
         for option in activeLevelUpOptions {
@@ -67,6 +106,12 @@ extension GameHUD {
         return nil
     }
 
+    func isLevelUpRedraw(at point: CGPoint) -> Bool {
+        hitArea(for: redrawLevelUpLabel).contains(point)
+            || redrawLevelUpCoinIcon.frame.insetBy(dx: -14, dy: -14).contains(point)
+            || hitArea(for: redrawLevelUpKeyLabel).contains(point)
+    }
+
     func levelUpOption(atIndex index: Int) -> LevelUpOption? {
         guard activeLevelUpOptions.indices.contains(index) else {
             return nil
@@ -76,7 +121,7 @@ extension GameHUD {
     }
 
 
-    func setupLevelUpLabels(fireballTexture: SKTexture, lightningTexture: SKTexture, orbTexture: SKTexture, beamTexture: SKTexture, meteorTexture: SKTexture, lifeTexture: SKTexture, skeletonTexture: SKTexture) {
+    func setupLevelUpLabels(fireballTexture: SKTexture, lightningTexture: SKTexture, orbTexture: SKTexture, beamTexture: SKTexture, meteorTexture: SKTexture, lifeTexture: SKTexture, coinTexture: SKTexture, skeletonTexture: SKTexture) {
         levelUpLabel.fontSize = 40
         levelUpLabel.fontColor = Self.primaryTextColor
         levelUpLabel.horizontalAlignmentMode = .center
@@ -121,6 +166,9 @@ extension GameHUD {
         setupLevelUpKeyLabel(secondLevelUpKeyLabel, text: "[A]")
         setupLevelUpKeyLabel(thirdLevelUpKeyLabel, text: "[C]")
         setupLevelUpKeyLabel(fourthLevelUpKeyLabel, text: "[X]")
+        setupLevelUpKeyLabel(redrawLevelUpKeyLabel, text: "[R]")
+        setupLevelUpOption(redrawLevelUpLabel, text: "REDRAW")
+        setupLevelUpIcon(redrawLevelUpCoinIcon, texture: coinTexture)
     }
 
 
@@ -271,6 +319,10 @@ extension GameHUD {
 
     static func levelUpOptionYPosition(for index: Int) -> CGFloat {
         -4 - CGFloat(index) * 52
+    }
+
+    static func redrawLevelUpYPosition(optionCount: Int) -> CGFloat {
+        levelUpOptionYPosition(for: max(2, optionCount)) - 14
     }
 
 

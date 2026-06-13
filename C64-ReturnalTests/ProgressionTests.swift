@@ -106,6 +106,49 @@ final class ProgressionTests: XCTestCase {
         XCTAssertEqual(scene.session.progression.experience, 10)
     }
 
+    func testCoinSpawnsWellOutsideVisibleViewportOncePerLevel() {
+        let tuning = GameConfiguration.defaultTuning
+        let scene = GameScene(size: CGSize(width: 640, height: 480), tuning: tuning)
+
+        scene.spawnCoin(for: 1)
+        scene.spawnCoin(for: 1)
+
+        XCTAssertEqual(scene.coins.count, 1)
+
+        let position = scene.coins[0].node.position
+        let outsideHorizontalEdge = abs(position.x - scene.player.position.x) >= scene.size.width / 2 + tuning.coin.spawnMargin
+        let outsideVerticalEdge = abs(position.y - scene.player.position.y) >= scene.size.height / 2 + tuning.coin.spawnMargin
+
+        XCTAssertTrue(outsideHorizontalEdge || outsideVerticalEdge)
+    }
+
+    func testCoinPickupGrantsRewardAndRemovesCoin() {
+        let scene = GameScene(size: CGSize(width: 640, height: 480))
+
+        scene.spawnCoin(for: 1)
+        scene.coins[0].node.position = scene.player.position
+
+        let reward = scene.coins[0].amount
+        scene.checkCoinPickups()
+
+        XCTAssertTrue(GameConfiguration.minimumCoinReward...GameConfiguration.maximumCoinReward ~= reward)
+        XCTAssertEqual(scene.session.collectedCoins, reward)
+        XCTAssertTrue(scene.coins.isEmpty)
+    }
+
+    func testLevelUpRedrawCostsCurrentPlayerLevel() {
+        let scene = GameScene(size: CGSize(width: 640, height: 480))
+        scene.session.progression.advance(to: 5)
+
+        scene.session.collectedCoins = 4
+        XCTAssertFalse(scene.spendCoinsForLevelUpRedraw())
+        XCTAssertEqual(scene.session.collectedCoins, 4)
+
+        scene.session.collectedCoins = 5
+        XCTAssertTrue(scene.spendCoinsForLevelUpRedraw())
+        XCTAssertEqual(scene.session.collectedCoins, 0)
+    }
+
     func testBeamDamageBudgetCanPartiallyDamagePurpleSkeleton() {
         let scene = beamTestScene()
 

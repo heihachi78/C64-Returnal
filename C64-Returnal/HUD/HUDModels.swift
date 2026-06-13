@@ -3,7 +3,7 @@ enum GameOverOption {
     case exit
 }
 
-enum LevelUpOption: CaseIterable {
+enum LevelUpOption: CaseIterable, Hashable {
     case fireRate
     case extraFireball
     case extraLife

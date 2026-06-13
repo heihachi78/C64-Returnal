@@ -48,6 +48,7 @@ extension GameScene {
         hud.hideChestReward()
         hud.hideGameOver()
         spawnSkeleton()
+        spawnCoin(for: session.progression.level)
     }
 
 
@@ -75,6 +76,12 @@ extension GameScene {
             chest.node.removeFromParent()
         }
         chests.removeAll()
+
+        for coin in coins {
+            coin.node.removeAllActions()
+            coin.node.removeFromParent()
+        }
+        coins.removeAll()
 
         for index in orbitalOrbs.indices {
             orbitalOrbs[index].deactivate()

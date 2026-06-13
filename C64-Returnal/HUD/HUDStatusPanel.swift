@@ -6,6 +6,10 @@ extension GameHUD {
         experienceLabel.text = "XP \(experience)/\(nextExperience)"
     }
 
+    func updateCoins(_ coins: Int) {
+        coinAmountLabel.text = "\(max(0, coins))"
+    }
+
     func updateLives(_ lives: Int) {
         currentLives = max(0, lives)
         syncLifeIcons()
@@ -76,14 +80,18 @@ extension GameHUD {
     }
 
 
-    func setupProgressLabels() {
-        for label in [levelLabel, experienceLabel] {
+    func setupProgressLabels(coinTexture: SKTexture) {
+        for label in [levelLabel, experienceLabel, coinAmountLabel] {
             label.fontSize = 16
             label.fontColor = Self.primaryTextColor
             label.horizontalAlignmentMode = .left
             label.verticalAlignmentMode = .center
             label.zPosition = 90
         }
+
+        coinIcon.texture = coinTexture
+        coinIcon.size = CGSize(width: 16, height: 16)
+        coinIcon.zPosition = 90
     }
 
     func syncLifeIcons() {

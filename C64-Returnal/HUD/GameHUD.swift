@@ -37,6 +37,9 @@ final class GameHUD {
     let secondLevelUpKeyLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     let thirdLevelUpKeyLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     let fourthLevelUpKeyLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    let redrawLevelUpKeyLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    let redrawLevelUpLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    let redrawLevelUpCoinIcon = SKSpriteNode()
     let fireRateIcon = SKSpriteNode()
     let extraFireballIcon = SKSpriteNode()
     let extraLifeIcon = SKSpriteNode()
@@ -55,6 +58,8 @@ final class GameHUD {
     let meteorRateIcon = SKSpriteNode()
     let levelLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     let experienceLabel = SKLabelNode(fontNamed: "Menlo-Bold")
+    let coinIcon = SKSpriteNode()
+    let coinAmountLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     let fireballIcon = SKSpriteNode()
     let fireballCountLabel = SKLabelNode(fontNamed: "Menlo-Bold")
     let fireballIntervalLabel = SKLabelNode(fontNamed: "Menlo-Bold")
@@ -88,14 +93,14 @@ final class GameHUD {
     var currentSceneSize = CGSize(width: 800, height: 600)
     weak var parentNode: SKNode?
 
-    func add(to parent: SKNode, fireballTexture: SKTexture, lightningTexture: SKTexture, orbTexture: SKTexture, beamTexture: SKTexture, meteorTexture: SKTexture, lifeTexture: SKTexture, skeletonTexture: SKTexture) {
+    func add(to parent: SKNode, fireballTexture: SKTexture, lightningTexture: SKTexture, orbTexture: SKTexture, beamTexture: SKTexture, meteorTexture: SKTexture, lifeTexture: SKTexture, coinTexture: SKTexture, skeletonTexture: SKTexture) {
         parentNode = parent
         self.lifeTexture = lifeTexture
 
         setupGameOverLabel()
-        setupLevelUpLabels(fireballTexture: fireballTexture, lightningTexture: lightningTexture, orbTexture: orbTexture, beamTexture: beamTexture, meteorTexture: meteorTexture, lifeTexture: lifeTexture, skeletonTexture: skeletonTexture)
+        setupLevelUpLabels(fireballTexture: fireballTexture, lightningTexture: lightningTexture, orbTexture: orbTexture, beamTexture: beamTexture, meteorTexture: meteorTexture, lifeTexture: lifeTexture, coinTexture: coinTexture, skeletonTexture: skeletonTexture)
         setupChestRewardLabels()
-        setupProgressLabels()
+        setupProgressLabels(coinTexture: coinTexture)
         setupBackgroundPanels()
         setupFireballStatus(fireballTexture: fireballTexture)
         setupLightningStatus(lightningTexture: lightningTexture)
@@ -135,6 +140,9 @@ final class GameHUD {
         parent.addChild(secondLevelUpKeyLabel)
         parent.addChild(thirdLevelUpKeyLabel)
         parent.addChild(fourthLevelUpKeyLabel)
+        parent.addChild(redrawLevelUpKeyLabel)
+        parent.addChild(redrawLevelUpLabel)
+        parent.addChild(redrawLevelUpCoinIcon)
         parent.addChild(fireRateIcon)
         parent.addChild(extraFireballIcon)
         parent.addChild(extraLifeIcon)
@@ -153,6 +161,8 @@ final class GameHUD {
         parent.addChild(meteorRateIcon)
         parent.addChild(levelLabel)
         parent.addChild(experienceLabel)
+        parent.addChild(coinIcon)
+        parent.addChild(coinAmountLabel)
         parent.addChild(fireballIcon)
         parent.addChild(fireballCountLabel)
         parent.addChild(fireballIntervalLabel)

@@ -8,6 +8,9 @@ extension GameScene {
 
         let firstQueuedLevel = session.progression.level - count + 1
         session.pendingLevelUpLevels.append(contentsOf: firstQueuedLevel...session.progression.level)
+        for level in firstQueuedLevel...session.progression.level {
+            spawnCoin(for: level)
+        }
         presentNextLevelUpChoiceIfNeeded()
     }
 
@@ -23,6 +26,8 @@ extension GameScene {
         hud.showLevelUp(
             level: level,
             options: randomLevelUpOptions(),
+            coinCount: session.collectedCoins,
+            redrawCost: levelUpRedrawCost,
             beamKillUpgradeBonus: session.progression.beamKillUpgradeBonus
         )
     }
@@ -73,6 +78,11 @@ extension GameScene {
     }
 
     func selectLevelUpOption(with keyCode: UInt16) {
+        if inputController.isLevelUpRedraw(keyCode) {
+            redrawLevelUpOptions()
+            return
+        }
+
         guard let index = inputController.levelUpOptionIndex(for: keyCode),
               let option = hud.levelUpOption(atIndex: index) else {
             return
@@ -81,12 +91,51 @@ extension GameScene {
         applyLevelUpOption(option)
     }
 
+    func redrawLevelUpOptions() {
+        guard session.isLevelUpChoiceActive,
+              let level = session.pendingLevelUpLevels.first else {
+            return
+        }
+
+        guard spendCoinsForLevelUpRedraw() else {
+            hud.showLevelUpRedrawStatus(
+                coinCount: session.collectedCoins,
+                redrawCost: levelUpRedrawCost
+            )
+            return
+        }
+
+        let previousOptions = hud.activeLevelUpOptions
+        hud.showLevelUp(
+            level: level,
+            options: randomLevelUpOptions(excluding: previousOptions),
+            coinCount: session.collectedCoins,
+            redrawCost: levelUpRedrawCost,
+            beamKillUpgradeBonus: session.progression.beamKillUpgradeBonus
+        )
+        updateHUDProgress()
+    }
 
     func randomLevelUpOptions() -> [LevelUpOption] {
         ProgressionSystem(tuning: tuning).randomLevelUpOptions(
             from: session.progression.availableLevelUpOptions,
             hasSkeletons: !skeletons.isEmpty
         )
+    }
+
+    func randomLevelUpOptions(excluding previousOptions: [LevelUpOption]) -> [LevelUpOption] {
+        guard !previousOptions.isEmpty else {
+            return randomLevelUpOptions()
+        }
+
+        let previousSet = Set(previousOptions)
+        var options = randomLevelUpOptions()
+
+        for _ in 0..<8 where Set(options) == previousSet {
+            options = randomLevelUpOptions()
+        }
+
+        return options
     }
 
     func shouldShowHalveHordeOption() -> Bool {

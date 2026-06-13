@@ -43,6 +43,8 @@ struct GameSessionState {
     var pendingLevelUpLevels = [Int]()
     var kills = KillCounts()
     var nextChestMilestone: Int
+    var collectedCoins = 0
+    var spawnedCoinLevels = Set<Int>()
     var isGameOver = false
     var isLevelUpChoiceActive = false
     var isChestRewardActive = false
@@ -70,6 +72,8 @@ struct GameSessionState {
         pendingLevelUpLevels.removeAll(keepingCapacity: true)
         kills = KillCounts()
         nextChestMilestone = tuning.chest.bronzeKillInterval
+        collectedCoins = 0
+        spawnedCoinLevels.removeAll(keepingCapacity: true)
         isGameOver = false
         isLevelUpChoiceActive = false
         isChestRewardActive = false

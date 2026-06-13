@@ -90,6 +90,14 @@ struct GameTuning {
         let silverMaximumLevel: Int
     }
 
+    struct Coin {
+        let spawnMargin: CGFloat
+        let pickupDistance: CGFloat
+        let minimumReward: Int
+        let maximumReward: Int
+        let animationFrameDuration: TimeInterval
+    }
+
     struct Progression {
         let halveHordeChanceNumerator: Int
         let halveHordeChanceDenominator: Int
@@ -106,6 +114,7 @@ struct GameTuning {
     let beam: Beam
     let meteor: Meteor
     let chest: Chest
+    let coin: Coin
     let progression: Progression
 }
 
@@ -186,6 +195,13 @@ enum GameConfiguration {
             bronzeMaximumLevel: 33,
             silverMaximumLevel: 55
         ),
+        coin: GameTuning.Coin(
+            spawnMargin: 240,
+            pickupDistance: 30,
+            minimumReward: 1,
+            maximumReward: 100,
+            animationFrameDuration: 0.14
+        ),
         progression: GameTuning.Progression(
             halveHordeChanceNumerator: 5,
             halveHordeChanceDenominator: 100,
@@ -260,6 +276,12 @@ enum GameConfiguration {
     static let goldChestKillInterval = defaultTuning.chest.goldKillInterval
     static let bronzeChestMaximumLevel = defaultTuning.chest.bronzeMaximumLevel
     static let silverChestMaximumLevel = defaultTuning.chest.silverMaximumLevel
+
+    static let coinSpawnMargin = defaultTuning.coin.spawnMargin
+    static let coinPickupDistance = defaultTuning.coin.pickupDistance
+    static let minimumCoinReward = defaultTuning.coin.minimumReward
+    static let maximumCoinReward = defaultTuning.coin.maximumReward
+    static let coinAnimationFrameDuration = defaultTuning.coin.animationFrameDuration
 
     static let halveHordeLevelUpOptionChanceNumerator = defaultTuning.progression.halveHordeChanceNumerator
     static let halveHordeLevelUpOptionChanceDenominator = defaultTuning.progression.halveHordeChanceDenominator

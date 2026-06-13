@@ -11,6 +11,7 @@ final class SystemPolicyTests: XCTestCase {
             secondLevelUpOption: 11,
             thirdLevelUpOption: 12,
             fourthLevelUpOption: 13,
+            redrawLevelUpOptions: 98,
             advanceChestReward: 99,
             killAllAndGrantExperience: [42]
         )
@@ -20,6 +21,7 @@ final class SystemPolicyTests: XCTestCase {
         XCTAssertTrue(controller.isMovementKey(4))
         XCTAssertEqual(controller.levelUpOptionIndex(for: 11), 1)
         XCTAssertEqual(controller.levelUpOptionIndex(for: 13), 3)
+        XCTAssertTrue(controller.isLevelUpRedraw(98))
         XCTAssertTrue(controller.isChestRewardAdvance(99))
         XCTAssertTrue(controller.isKillAllAndGrantExperience(42))
         XCTAssertFalse(controller.isMovementKey(99))
@@ -29,21 +31,22 @@ final class SystemPolicyTests: XCTestCase {
         let controller = InputController(bindings: InputBindings())
 
         XCTAssertEqual(controller.levelUpOptionIndex(for: 8), 2)
+        XCTAssertTrue(controller.isLevelUpRedraw(15))
         XCTAssertNil(controller.levelUpOptionIndex(for: 16))
     }
 
-    func testLevelUpChoicesDefaultToThreeAndChanceAddsFourth() {
-        let alwaysThree = progressionSystem(extraOptionNumerator: 0, extraOptionDenominator: 1)
-        let alwaysFour = progressionSystem(extraOptionNumerator: 1, extraOptionDenominator: 1)
+    func testLevelUpChoicesDefaultToTwoAndChanceAddsThird() {
+        let alwaysTwo = progressionSystem(extraOptionNumerator: 0, extraOptionDenominator: 1)
+        let alwaysThree = progressionSystem(extraOptionNumerator: 1, extraOptionDenominator: 1)
         let options: [LevelUpOption] = [.fireRate, .extraFireball, .extraLife, .learnLightning]
 
         XCTAssertEqual(
-            alwaysThree.randomLevelUpOptions(from: options, hasSkeletons: false).count,
-            3
+            alwaysTwo.randomLevelUpOptions(from: options, hasSkeletons: false).count,
+            2
         )
         XCTAssertEqual(
-            alwaysFour.randomLevelUpOptions(from: options, hasSkeletons: false).count,
-            4
+            alwaysThree.randomLevelUpOptions(from: options, hasSkeletons: false).count,
+            3
         )
     }
 
@@ -96,6 +99,7 @@ final class SystemPolicyTests: XCTestCase {
                 beam: tuning.beam,
                 meteor: tuning.meteor,
                 chest: tuning.chest,
+                coin: tuning.coin,
                 progression: GameTuning.Progression(
                     halveHordeChanceNumerator: tuning.progression.halveHordeChanceNumerator,
                     halveHordeChanceDenominator: tuning.progression.halveHordeChanceDenominator,

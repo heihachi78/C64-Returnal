@@ -7,6 +7,7 @@ extension GameScene {
             experience: session.progression.experience,
             nextExperience: session.progression.nextExperience
         )
+        hud.updateCoins(session.collectedCoins)
         hud.updateLives(session.playerLives)
         hud.updateFireballStatus(
             count: session.progression.simultaneousFireballCount,

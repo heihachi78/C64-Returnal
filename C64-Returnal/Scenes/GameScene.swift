@@ -25,6 +25,7 @@ final class GameScene: SKScene {
     let beamTexture = PixelArtFactory.makeBeamTexture()
     let meteorTextures = PixelArtFactory.makeMeteorTextures()
     let lifeTexture = PixelArtFactory.makeLifeTexture()
+    let coinTextures = PixelArtFactory.makeCoinTextures()
     let chestTextures: [ChestTier: SKTexture] = [
         .bronze: PixelArtFactory.makeChestTexture(tier: .bronze),
         .silver: PixelArtFactory.makeChestTexture(tier: .silver),
@@ -38,6 +39,7 @@ final class GameScene: SKScene {
     var fireballs = [Fireball]()
     var meteors = [MeteorProjectile]()
     var chests = [Chest]()
+    var coins = [Coin]()
     var orbitalOrbs = [OrbitalOrb]()
 
     init(
@@ -148,6 +150,8 @@ final class GameScene: SKScene {
             case .none:
                 break
             }
+        } else if hud.isLevelUpRedraw(at: cameraPoint) {
+            redrawLevelUpOptions()
         } else if let option = hud.levelUpOption(at: cameraPoint) {
             applyLevelUpOption(option)
         }
@@ -162,6 +166,7 @@ final class GameScene: SKScene {
 
         if !session.isGameOver && !session.isLevelUpChoiceActive && !session.isChestRewardActive {
             updatePlayer(deltaTime: deltaTime)
+            checkCoinPickups()
             checkChestPickups()
 
             guard !session.isChestRewardActive else {
@@ -234,12 +239,14 @@ final class GameScene: SKScene {
             beamTexture: beamTexture,
             meteorTexture: meteorTextures[0],
             lifeTexture: lifeTexture,
+            coinTexture: coinTextures[0],
             skeletonTexture: skeletonTextures[0]
         )
         syncOrbitalOrbCount()
         updateHUDProgress()
 
         spawnSkeleton()
+        spawnCoin(for: session.progression.level)
     }
 
     static let skeletonDamageFlashActionKey = "skeletonDamageFlash"

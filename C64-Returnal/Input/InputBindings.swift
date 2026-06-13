@@ -9,6 +9,7 @@ struct InputBindings {
     let secondLevelUpOption: UInt16
     let thirdLevelUpOption: UInt16
     let fourthLevelUpOption: UInt16
+    let redrawLevelUpOptions: UInt16
     let advanceChestReward: UInt16
     let killAllAndGrantExperience: Set<UInt16>
 
@@ -21,6 +22,7 @@ struct InputBindings {
         secondLevelUpOption: UInt16 = 0,
         thirdLevelUpOption: UInt16 = 8,
         fourthLevelUpOption: UInt16 = 7,
+        redrawLevelUpOptions: UInt16 = 15,
         advanceChestReward: UInt16 = 12,
         killAllAndGrantExperience: Set<UInt16> = [18, 83]
     ) {
@@ -32,6 +34,7 @@ struct InputBindings {
         self.secondLevelUpOption = secondLevelUpOption
         self.thirdLevelUpOption = thirdLevelUpOption
         self.fourthLevelUpOption = fourthLevelUpOption
+        self.redrawLevelUpOptions = redrawLevelUpOptions
         self.advanceChestReward = advanceChestReward
         self.killAllAndGrantExperience = killAllAndGrantExperience
     }
@@ -64,6 +67,10 @@ struct InputController {
 
     func isChestRewardAdvance(_ keyCode: UInt16) -> Bool {
         keyCode == bindings.advanceChestReward
+    }
+
+    func isLevelUpRedraw(_ keyCode: UInt16) -> Bool {
+        keyCode == bindings.redrawLevelUpOptions
     }
 
     func isKillAllAndGrantExperience(_ keyCode: UInt16) -> Bool {

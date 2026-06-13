@@ -66,6 +66,12 @@ enum PixelArtFactory {
         nearestTexture(makeChestImageTexture(tier: tier))
     }
 
+    static func makeCoinTextures() -> [SKTexture] {
+        (0..<4).map { variant in
+            nearestTexture(makeCoinImageTexture(variant: variant))
+        }
+    }
+
     private static func nearestTexture(_ texture: SKTexture) -> SKTexture {
         texture.filteringMode = .nearest
         return texture
@@ -470,6 +476,56 @@ enum PixelArtFactory {
         drawPixelRect(x: 6, y: 5, width: 4, height: 3, color: outline)
         drawPixelRect(x: 7, y: 5, width: 2, height: 2, color: lock)
         drawPixelRect(x: 3, y: 8, width: 3, height: 1, color: colors.light)
+
+        image.unlockFocus()
+        return SKTexture(image: image)
+    }
+
+    private static func makeCoinImageTexture(variant: Int) -> SKTexture {
+        let image = NSImage(size: CGSize(width: 12, height: 12))
+        let outline = NSColor(calibratedRed: 0.42, green: 0.24, blue: 0.03, alpha: 1)
+        let dark = NSColor(calibratedRed: 0.72, green: 0.43, blue: 0.04, alpha: 1)
+        let gold = NSColor(calibratedRed: 1.0, green: 0.73, blue: 0.08, alpha: 1)
+        let yellow = NSColor(calibratedRed: 1.0, green: 0.92, blue: 0.24, alpha: 1)
+        let white = NSColor(calibratedRed: 1.0, green: 0.98, blue: 0.72, alpha: 1)
+
+        image.lockFocus()
+        NSColor.clear.setFill()
+        NSBezierPath(rect: NSRect(x: 0, y: 0, width: 12, height: 12)).fill()
+
+        switch variant {
+        case 0:
+            drawPixelRect(x: 3, y: 1, width: 6, height: 1, color: outline)
+            drawPixelRect(x: 2, y: 2, width: 8, height: 1, color: outline)
+            drawPixelRect(x: 1, y: 3, width: 10, height: 6, color: outline)
+            drawPixelRect(x: 2, y: 9, width: 8, height: 1, color: outline)
+            drawPixelRect(x: 3, y: 10, width: 6, height: 1, color: outline)
+            drawPixelRect(x: 2, y: 3, width: 8, height: 6, color: gold)
+            drawPixelRect(x: 3, y: 2, width: 6, height: 8, color: gold)
+            drawPixelRect(x: 3, y: 7, width: 5, height: 2, color: yellow)
+            drawPixelRect(x: 4, y: 4, width: 3, height: 2, color: dark)
+            drawPixelRect(x: 4, y: 8, width: 2, height: 1, color: white)
+        case 1, 3:
+            drawPixelRect(x: 4, y: 1, width: 4, height: 1, color: outline)
+            drawPixelRect(x: 3, y: 2, width: 6, height: 1, color: outline)
+            drawPixelRect(x: 3, y: 3, width: 6, height: 6, color: outline)
+            drawPixelRect(x: 3, y: 9, width: 6, height: 1, color: outline)
+            drawPixelRect(x: 4, y: 10, width: 4, height: 1, color: outline)
+            drawPixelRect(x: 4, y: 2, width: 4, height: 8, color: gold)
+            drawPixelRect(x: 5, y: 3, width: 2, height: 6, color: yellow)
+            drawPixelRect(x: 4, y: 4, width: 1, height: 4, color: dark)
+            drawPixelRect(x: 5, y: 8, width: 1, height: 1, color: white)
+        default:
+            drawPixelRect(x: 5, y: 1, width: 2, height: 1, color: outline)
+            drawPixelRect(x: 4, y: 2, width: 4, height: 1, color: outline)
+            drawPixelRect(x: 4, y: 3, width: 4, height: 6, color: outline)
+            drawPixelRect(x: 4, y: 9, width: 4, height: 1, color: outline)
+            drawPixelRect(x: 5, y: 10, width: 2, height: 1, color: outline)
+            drawPixelRect(x: 5, y: 2, width: 2, height: 8, color: gold)
+            drawPixelRect(x: 6, y: 3, width: 1, height: 6, color: yellow)
+            drawPixelRect(x: 5, y: 4, width: 1, height: 4, color: dark)
+            drawPixelRect(x: 6, y: 8, width: 1, height: 1, color: white)
+        }
 
         image.unlockFocus()
         return SKTexture(image: image)

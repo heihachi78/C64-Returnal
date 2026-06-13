@@ -5,7 +5,7 @@ struct ProgressionSystem {
         from availableOptions: [LevelUpOption],
         hasSkeletons: Bool
     ) -> [LevelUpOption] {
-        let optionCount = shouldShowExtraLevelUpOption() ? 4 : 3
+        let optionCount = shouldShowExtraLevelUpOption() ? 3 : 2
         var selectedOptions = Array(
             availableOptions
                 .filter { $0 != .halveSkeletons }
