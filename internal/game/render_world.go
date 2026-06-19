@@ -99,6 +99,66 @@ func (g *Game) drawChest(screen *ebiten.Image, chest Chest) {
 	x, y := g.worldToScreen(chest.Pos)
 	g.drawSprite(screen, g.assets.Chest[chest.Tier], x, y, 32, 28, false, color.RGBA{255, 255, 255, 255})
 }
+func (g *Game) drawPickupIndicators(screen *ebiten.Image) {
+	for _, chest := range g.chests {
+		x, y := g.worldToScreen(chest.Pos)
+		if spriteBoundsVisible(g.screenW, g.screenH, x, y, chestSpriteWidth, chestSpriteHeight, 0) {
+			continue
+		}
+		ix, iy := edgeIndicatorPosition(g.screenW, g.screenH, x, y, pickupIndicatorEdgeInset)
+		g.drawPickupIndicatorBacking(screen, ix, iy)
+		g.drawSpriteScreen(screen, g.assets.Chest[chest.Tier], ix, iy, pickupIndicatorChestWidth, pickupIndicatorChestHeight, false, color.RGBA{255, 255, 255, 255})
+	}
+	for _, coin := range g.coins {
+		x, y := g.worldToScreen(coin.Pos)
+		y += coinFloatOffset(coin.Phase)
+		if spriteBoundsVisible(g.screenW, g.screenH, x, y, coinSpriteSize, coinSpriteSize, 0) {
+			continue
+		}
+		ix, iy := edgeIndicatorPosition(g.screenW, g.screenH, x, y, pickupIndicatorEdgeInset)
+		frame := int(coin.Phase/g.tuning.CoinAnimationFrameTime) % len(g.assets.Coin)
+		alpha := coinShimmerAlpha(coin.Phase)
+		g.drawPickupIndicatorBacking(screen, ix, iy)
+		g.drawSpriteScreen(screen, g.assets.Coin[frame], ix, iy, pickupIndicatorCoinSize, pickupIndicatorCoinSize, false, color.RGBA{255, 255, 255, alpha})
+	}
+}
+func (g *Game) drawPickupIndicatorBacking(screen *ebiten.Image, x, y float64) {
+	panelColor := c64Panel
+	panelColor.A = 196
+	size := float64(pickupIndicatorBackingSize)
+	drawFilledRoundedRect(screen, x-size/2, y-size/2, size, size, 5, panelColor)
+}
+func edgeIndicatorPosition(screenW, screenH int, targetX, targetY, inset float64) (float64, float64) {
+	width := float64(screenW)
+	height := float64(screenH)
+	centerX := width / 2
+	centerY := height / 2
+	left := math.Min(inset, centerX)
+	right := math.Max(left, width-left)
+	top := math.Min(inset, centerY)
+	bottom := math.Max(top, height-top)
+	dx := targetX - centerX
+	dy := targetY - centerY
+	if dx == 0 && dy == 0 {
+		return centerX, centerY
+	}
+
+	scale := math.Inf(1)
+	if dx > 0 {
+		scale = math.Min(scale, (right-centerX)/dx)
+	} else if dx < 0 {
+		scale = math.Min(scale, (left-centerX)/dx)
+	}
+	if dy > 0 {
+		scale = math.Min(scale, (bottom-centerY)/dy)
+	} else if dy < 0 {
+		scale = math.Min(scale, (top-centerY)/dy)
+	}
+	if math.IsInf(scale, 1) || scale < 0 {
+		scale = 0
+	}
+	return centerX + dx*scale, centerY + dy*scale
+}
 func (g *Game) worldToScreen(pos Vec2) (float64, float64) {
 	return float64(g.screenW)/2 + pos.X - g.player.Pos.X, float64(g.screenH)/2 - (pos.Y - g.player.Pos.Y)
 }

@@ -7,6 +7,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.drawGrass(screen)
 	g.drawWorld(screen)
 	g.drawHUD(screen)
+	g.drawPickupIndicators(screen)
 
 	if g.session.LevelUpChoiceActive {
 		g.drawLevelUpOverlay(screen)

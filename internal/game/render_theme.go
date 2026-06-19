@@ -29,6 +29,15 @@ const (
 	gameOverTitleFontSize  = 40
 	gameOverOptionFontSize = 22
 
+	coinSpriteSize             = 28
+	chestSpriteWidth           = 32
+	chestSpriteHeight          = 28
+	pickupIndicatorBackingSize = 14
+	pickupIndicatorCoinSize    = 9
+	pickupIndicatorChestWidth  = 10
+	pickupIndicatorChestHeight = 9
+	pickupIndicatorEdgeInset   = 11
+
 	combatRowFirstOffsetY  = -10
 	combatRowSecondOffsetY = 6
 	combatRowKillsOffsetY  = 20

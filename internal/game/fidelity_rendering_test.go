@@ -124,6 +124,47 @@ func TestSpriteCullingMatchesOriginalNonVisibleNodeIntent(t *testing.T) {
 	}
 }
 
+func TestPickupIndicatorProjectsOffscreenItemsToScreenEdge(t *testing.T) {
+	tests := []struct {
+		name    string
+		targetX float64
+		targetY float64
+		wantX   float64
+		wantY   float64
+	}{
+		{name: "right", targetX: 900, targetY: 300, wantX: 789, wantY: 300},
+		{name: "left", targetX: -100, targetY: 300, wantX: 11, wantY: 300},
+		{name: "top", targetX: 400, targetY: -100, wantX: 400, wantY: 11},
+		{name: "bottom", targetX: 400, targetY: 900, wantX: 400, wantY: 589},
+		{name: "diagonal top edge", targetX: 1200, targetY: -500, wantX: 689, wantY: 11},
+	}
+	for _, tt := range tests {
+		gotX, gotY := edgeIndicatorPosition(800, 600, tt.targetX, tt.targetY, pickupIndicatorEdgeInset)
+		if math.Abs(gotX-tt.wantX) > 0.0001 || math.Abs(gotY-tt.wantY) > 0.0001 {
+			t.Fatalf("%s indicator = (%v,%v), want (%v,%v)", tt.name, gotX, gotY, tt.wantX, tt.wantY)
+		}
+	}
+}
+
+func TestPickupIndicatorDirectionUpdatesAsPlayerMoves(t *testing.T) {
+	g := New()
+	item := Vec2{X: 0, Y: 1000}
+
+	g.player.Pos = Vec2{}
+	x, y := g.worldToScreen(item)
+	indicatorX, indicatorY := edgeIndicatorPosition(g.screenW, g.screenH, x, y, pickupIndicatorEdgeInset)
+	if indicatorX != float64(g.screenW)/2 || indicatorY != pickupIndicatorEdgeInset {
+		t.Fatalf("indicator before moving = (%v,%v), want top edge center", indicatorX, indicatorY)
+	}
+
+	g.player.Pos = Vec2{X: 1000, Y: 1000}
+	x, y = g.worldToScreen(item)
+	indicatorX, indicatorY = edgeIndicatorPosition(g.screenW, g.screenH, x, y, pickupIndicatorEdgeInset)
+	if indicatorX != pickupIndicatorEdgeInset || indicatorY != float64(g.screenH)/2 {
+		t.Fatalf("indicator after moving = (%v,%v), want left edge center", indicatorX, indicatorY)
+	}
+}
+
 func TestWorldRenderLayerOrderMatchesOriginalZPositions(t *testing.T) {
 	want := []float64{-20, 8.5, 8.75, 9, 9.5, 10, 11, 12, 13, 14}
 	got := worldRenderLayerOrder()
