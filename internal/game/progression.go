@@ -23,6 +23,7 @@ type Progression struct {
 	beamKillLevel           int
 	upgradedBeamKillCount   int
 	upgradedMeteorCount     int
+	skeletonSpawnRate       float64
 }
 
 func NewProgression(t Tuning) Progression {
@@ -50,6 +51,7 @@ func (p *Progression) Reset() {
 	p.beamKillLevel = 1
 	p.upgradedBeamKillCount = 1
 	p.upgradedMeteorCount = 1
+	p.skeletonSpawnRate = 1
 }
 
 func ExperienceRequirement(level int) int {
@@ -67,7 +69,11 @@ func (p Progression) SkeletonSpawnInterval() float64 {
 	if p.Level >= p.tuning.BlackOnlyLevel {
 		interval *= p.tuning.BlackOnlySpawnMultiplier
 	}
-	return interval
+	return interval / math.Max(1, p.skeletonSpawnRate)
+}
+
+func (p *Progression) DoubleSkeletonSpawnRate() {
+	p.skeletonSpawnRate = math.Max(1, p.skeletonSpawnRate) * 2
 }
 
 func (p Progression) FireballCastInterval() float64 {

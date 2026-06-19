@@ -43,7 +43,8 @@ func (g *Game) drawPlayer(screen *ebiten.Image) {
 func (g *Game) drawSkeleton(screen *ebiten.Image, skeleton Skeleton) {
 	x, y := g.worldToScreen(skeleton.Pos)
 	presentation := skeletonSpritePresentation(skeleton)
-	g.drawSpriteRotatedBlend(screen, g.assets.Skeleton[skeleton.AnimFrame%len(g.assets.Skeleton)], x, y, 30, 42, 0, skeleton.Facing < 0, presentation.Tint, presentation.BlendFactor)
+	w, h := skeletonSpriteSize(skeleton.Kind)
+	g.drawSpriteRotatedBlend(screen, g.assets.Skeleton[skeleton.AnimFrame%len(g.assets.Skeleton)], x, y, w, h, 0, skeleton.Facing < 0, presentation.Tint, presentation.BlendFactor)
 }
 
 type spritePresentation struct {
@@ -72,6 +73,12 @@ func skeletonSpritePresentation(skeleton Skeleton) spritePresentation {
 		tint.A = flashActionAlpha(elapsed, skeletonDamageFlashDuration, 0.06, 0.06)
 	}
 	return spritePresentation{Tint: tint, BlendFactor: blendFactor}
+}
+func skeletonSpriteSize(kind SkeletonKind) (float64, float64) {
+	if kind == SkeletonBlue {
+		return 90, 126
+	}
+	return 30, 42
 }
 func (g *Game) drawFireball(screen *ebiten.Image, fire Fireball) {
 	x, y := g.worldToScreen(fire.Pos)

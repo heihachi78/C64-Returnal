@@ -41,6 +41,9 @@ type Tuning struct {
 	PurpleKillInterval         int
 	BlackHitPoints             int
 	BlackPurpleKillInterval    int
+	BlueMonsterMinimumLevel    int
+	BlueMonsterHitPoints       int
+	BlueMonsterMinimumEnemies  int
 	SpatialIndexCellSize       float64
 
 	FireballSpeed              float64
@@ -121,6 +124,9 @@ func DefaultTuning() Tuning {
 		PurpleKillInterval:         500,
 		BlackHitPoints:             25,
 		BlackPurpleKillInterval:    100,
+		BlueMonsterMinimumLevel:    101,
+		BlueMonsterHitPoints:       100,
+		BlueMonsterMinimumEnemies:  1000,
 		SpatialIndexCellSize:       96,
 
 		FireballSpeed:              280,

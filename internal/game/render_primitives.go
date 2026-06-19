@@ -68,6 +68,8 @@ func skeletonTintBlend(kind SkeletonKind) (color.RGBA, float64) {
 		return color.RGBA{148, 31, 242, 255}, 0.72
 	case SkeletonBlack:
 		return color.RGBA{5, 5, 5, 255}, 0.86
+	case SkeletonBlue:
+		return color.RGBA{18, 96, 255, 255}, 0.78
 	default:
 		return color.RGBA{255, 255, 255, 255}, 0
 	}

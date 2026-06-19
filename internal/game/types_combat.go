@@ -18,6 +18,7 @@ const (
 	SkeletonRed
 	SkeletonPurple
 	SkeletonBlack
+	SkeletonBlue
 )
 
 func (k SkeletonKind) HitPoints(t Tuning) int {
@@ -28,6 +29,8 @@ func (k SkeletonKind) HitPoints(t Tuning) int {
 		return max(1, t.PurpleHitPoints)
 	case SkeletonBlack:
 		return max(1, t.BlackHitPoints)
+	case SkeletonBlue:
+		return max(1, t.BlueMonsterHitPoints)
 	default:
 		return 1
 	}
@@ -38,6 +41,8 @@ func (k SkeletonKind) ExperienceReward() int {
 		return 3
 	case SkeletonBlack:
 		return 10
+	case SkeletonBlue:
+		return 75
 	default:
 		return 1
 	}

@@ -199,6 +199,87 @@ func TestBlackOnlyLevelIncreasesTimedSkeletonSpawnInterval(t *testing.T) {
 	}
 }
 
+func TestBlueMonsterOnlySpawnsAfterLevel100WithLargeHorde(t *testing.T) {
+	g := New()
+	g.session.Progression.Level = g.tuning.BlueMonsterMinimumLevel
+	g.skeleton = makeSkeletonHorde(g.tuning.BlueMonsterMinimumEnemies)
+	g.nextID = 10_000
+
+	g.spawnTimedSkeleton()
+
+	if got, want := len(g.skeleton), g.tuning.BlueMonsterMinimumEnemies+1; got != want {
+		t.Fatalf("skeleton count below blue threshold = %d, want %d", got, want)
+	}
+	if got := countSkeletonKind(g.skeleton, SkeletonBlue); got != 0 {
+		t.Fatalf("blue monsters below threshold = %d, want 0", got)
+	}
+	if got := countSkeletonKind(g.skeleton, SkeletonBlack); got != 1 {
+		t.Fatalf("black monsters below threshold = %d, want 1", got)
+	}
+
+	g = New()
+	g.session.Progression.Level = g.tuning.BlueMonsterMinimumLevel - 1
+	g.skeleton = makeSkeletonHorde(g.tuning.BlueMonsterMinimumEnemies + 1)
+	g.nextID = 10_000
+
+	g.spawnTimedSkeleton()
+
+	if got := countSkeletonKind(g.skeleton, SkeletonBlue); got != 0 {
+		t.Fatalf("blue monsters at level 100 = %d, want 0", got)
+	}
+}
+
+func TestBlueMonsterSpawnDoublesSpawnRateAndCullsHalfTheHorde(t *testing.T) {
+	g := New()
+	g.session.Progression.Level = g.tuning.BlueMonsterMinimumLevel
+	g.skeleton = makeSkeletonHorde(g.tuning.BlueMonsterMinimumEnemies + 1)
+	g.nextID = 10_000
+	beforeInterval := g.session.Progression.SkeletonSpawnInterval()
+
+	g.spawnTimedSkeleton()
+
+	if got, want := countSkeletonKind(g.skeleton, SkeletonBlue), 1; got != want {
+		t.Fatalf("blue monsters = %d, want %d", got, want)
+	}
+	if got, want := len(g.skeleton), 2502; got != want {
+		t.Fatalf("skeleton count after blue cull = %d, want %d", got, want)
+	}
+	afterInterval := g.session.Progression.SkeletonSpawnInterval()
+	if math.Abs(afterInterval-beforeInterval/2) > 0.0001 {
+		t.Fatalf("spawn interval after blue = %v, want half of %v", afterInterval, beforeInterval)
+	}
+	for _, skeleton := range g.skeleton {
+		if skeleton.Kind == SkeletonBlue {
+			if got, want := skeleton.HP, g.tuning.BlueMonsterHitPoints; got != want {
+				t.Fatalf("blue monster HP = %d, want %d", got, want)
+			}
+			if got, want := skeleton.Reward, 75; got != want {
+				t.Fatalf("blue monster reward = %d, want %d", got, want)
+			}
+			return
+		}
+	}
+	t.Fatal("blue monster was not preserved after cull")
+}
+
+func makeSkeletonHorde(count int) []Skeleton {
+	skeletons := make([]Skeleton, count)
+	for i := range skeletons {
+		skeletons[i] = Skeleton{ID: i + 1, Kind: SkeletonRegular, HP: 1, Reward: 1}
+	}
+	return skeletons
+}
+
+func countSkeletonKind(skeletons []Skeleton, kind SkeletonKind) int {
+	count := 0
+	for _, skeleton := range skeletons {
+		if skeleton.Kind == kind {
+			count++
+		}
+	}
+	return count
+}
+
 func TestBeamDamageBudgetCanPartiallyDamagePurpleSkeletonLikeOriginal(t *testing.T) {
 	g := beamTestGame()
 	g.session.Progression.ApplyLevelUpOption(BeamKillCount)

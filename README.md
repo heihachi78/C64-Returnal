@@ -12,7 +12,7 @@ C64-Returnal is a platform-independent Go/Ebitengine survival game with code-gen
 - Level progression with randomized upgrade choices.
 - Coins that can be collected and spent to redraw level-up choices.
 - Bronze, silver, and gold chest rewards at kill milestones.
-- Enemy escalation from regular skeletons to red, purple, and black variants.
+- Enemy escalation from regular skeletons to red, purple, black, and late-game blue giant variants.
 - Parallel skeleton movement updates for large hordes while combat mutation remains deterministic on the main update thread.
 - Go tests for progression, chest policy, and spatial indexing rules.
 
@@ -72,7 +72,7 @@ go test ./...
 
 You start with three lives and a single auto-cast fireball. Skeletons spawn outside the viewport and chase the player. Defeated skeletons grant experience; enough experience opens a level-up overlay with two choices, sometimes three.
 
-Upgrades can improve existing weapons, add lives, unlock new weapon families, or occasionally halve the current horde. Gold coins spawn once per level well outside the visible screen; collecting one grants 1 to 100 coins. During a level-up choice, redraw spends coins equal to your current level and replaces all visible upgrade options. As levels rise, skeleton spawn timing changes and stronger variants enter the rotation. Chests appear at kill milestones and grant skill-focused upgrades based on the weapons you have already learned.
+Upgrades can improve existing weapons, add lives, unlock new weapon families, or occasionally halve the current horde. Gold coins spawn once per level well outside the visible screen; collecting one grants 1 to 100 coins. During a level-up choice, redraw spends coins equal to your current level and replaces all visible upgrade options. As levels rise, skeleton spawn timing changes and stronger variants enter the rotation. After level 100, giant blue monsters can enter oversized hordes, thin the enemy count, and accelerate future spawns. Chests appear at kill milestones and grant skill-focused upgrades based on the weapons you have already learned.
 
 ## Project Layout
 

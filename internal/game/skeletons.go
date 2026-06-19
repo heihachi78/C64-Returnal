@@ -71,11 +71,21 @@ func (g *Game) updateSkeletonAnimation(dt float64) {
 }
 func (g *Game) updateSkeletonSpawning(dt float64) {
 	g.session.Casts.SkeletonSpawn += dt
-	interval := g.session.Progression.SkeletonSpawnInterval()
-	for g.session.Casts.SkeletonSpawn >= interval {
+	for {
+		interval := g.session.Progression.SkeletonSpawnInterval()
+		if g.session.Casts.SkeletonSpawn < interval {
+			break
+		}
 		g.session.Casts.SkeletonSpawn -= interval
-		g.spawnSkeleton(g.timedSkeletonSpawnKind())
+		g.spawnTimedSkeleton()
 	}
+}
+func (g *Game) spawnTimedSkeleton() {
+	if g.shouldSpawnBlueMonster() {
+		g.spawnBlueMonster()
+		return
+	}
+	g.spawnSkeleton(g.timedSkeletonSpawnKind())
 }
 func (g *Game) timedSkeletonSpawnKind() SkeletonKind {
 	if g.session.Progression.Level >= g.tuning.BlackOnlyLevel {
@@ -92,7 +102,17 @@ func (g *Game) timedSkeletonSpawnKind() SkeletonKind {
 func (g *Game) spawnSkeleton(kind SkeletonKind) {
 	g.addSkeleton(kind)
 }
-func (g *Game) addSkeleton(kind SkeletonKind) {
+func (g *Game) shouldSpawnBlueMonster() bool {
+	return g.session.Progression.Level >= g.tuning.BlueMonsterMinimumLevel &&
+		g.tuning.BlueMonsterMinimumEnemies > 0 &&
+		len(g.skeleton) > g.tuning.BlueMonsterMinimumEnemies
+}
+func (g *Game) spawnBlueMonster() {
+	blue := g.addSkeleton(SkeletonBlue)
+	g.session.Progression.DoubleSkeletonSpawnRate()
+	g.cullHalfEnemiesForBlueMonster(blue.ID)
+}
+func (g *Game) addSkeleton(kind SkeletonKind) Skeleton {
 	s := Skeleton{
 		ID:     g.nextID,
 		Pos:    g.skeletonSpawnPosition(),
@@ -103,6 +123,32 @@ func (g *Game) addSkeleton(kind SkeletonKind) {
 	}
 	g.nextID++
 	g.skeleton = append(g.skeleton, s)
+	return s
+}
+func (g *Game) cullHalfEnemiesForBlueMonster(blueID int) {
+	targetIDs := make([]int, 0, len(g.skeleton))
+	for _, skeleton := range g.skeleton {
+		if skeleton.ID != blueID {
+			targetIDs = append(targetIDs, skeleton.ID)
+		}
+	}
+	cullCount := len(targetIDs) / 2
+	if cullCount <= 0 {
+		return
+	}
+	g.rng.Shuffle(len(targetIDs), func(i, j int) { targetIDs[i], targetIDs[j] = targetIDs[j], targetIDs[i] })
+	cull := make(map[int]bool, cullCount)
+	for _, id := range targetIDs[:cullCount] {
+		cull[id] = true
+	}
+	remaining := g.skeleton[:0]
+	for _, skeleton := range g.skeleton {
+		if !cull[skeleton.ID] {
+			remaining = append(remaining, skeleton)
+		}
+	}
+	g.skeleton = remaining
+	g.spatial.Rebuild(g.skeleton)
 }
 func (g *Game) skeletonSpawnPosition() Vec2 {
 	halfW := float64(g.screenW) / 2

@@ -330,6 +330,7 @@ func TestSkeletonTintBlendFactorsMatchOriginalValues(t *testing.T) {
 		{kind: SkeletonRed, wantColor: [3]uint8{242, 13, 10}, wantFactor: 0.68},
 		{kind: SkeletonPurple, wantColor: [3]uint8{148, 31, 242}, wantFactor: 0.72},
 		{kind: SkeletonBlack, wantColor: [3]uint8{5, 5, 5}, wantFactor: 0.86},
+		{kind: SkeletonBlue, wantColor: [3]uint8{18, 96, 255}, wantFactor: 0.78},
 	}
 
 	for _, tt := range tests {
@@ -340,6 +341,15 @@ func TestSkeletonTintBlendFactorsMatchOriginalValues(t *testing.T) {
 		if math.Abs(factor-tt.wantFactor) > 0.0001 {
 			t.Fatalf("kind %v factor = %v, want %v", tt.kind, factor, tt.wantFactor)
 		}
+	}
+}
+
+func TestBlueMonsterSpriteSizeIsThreeTimesLarger(t *testing.T) {
+	regularW, regularH := skeletonSpriteSize(SkeletonRegular)
+	blueW, blueH := skeletonSpriteSize(SkeletonBlue)
+
+	if blueW < regularW*3 || blueH < regularH*3 {
+		t.Fatalf("blue size = %vx%v, want at least 3x regular %vx%v", blueW, blueH, regularW, regularH)
 	}
 }
 
