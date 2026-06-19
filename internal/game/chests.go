@@ -1,7 +1,6 @@
 package game
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
 	"math"
 	"slices"
 )
@@ -34,9 +33,6 @@ func (g *Game) checkChestPickups() {
 }
 func (g *Game) applyChestReward(tier ChestTier) {
 	skills := g.session.Progression.LearnedSkills()
-	if len(skills) == 0 {
-		return
-	}
 	items := []ChestRewardDisplayItem{}
 	switch tier {
 	case ChestBronze:
@@ -62,7 +58,7 @@ func (g *Game) applyChestReward(tier ChestTier) {
 		g.session.ActiveChestTier = tier
 		g.session.ActiveChestRewardItems = items
 		g.session.ChestRewardOverlayTimer = 0
-		g.suppressHeldMovementKeys(ebiten.IsKeyPressed)
+		g.suppressHeldMovementKeys(ebitenIsKeyPressed)
 		g.stopPlayerAnimation()
 	}
 }

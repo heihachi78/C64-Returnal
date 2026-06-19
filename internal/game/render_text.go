@@ -20,15 +20,19 @@ var (
 	hudFontFaces  = map[int]font.Face{}
 )
 
+var hudFontPaths = []string{
+	"/System/Library/Fonts/Menlo.ttc",
+	"/Library/Fonts/Menlo.ttc",
+}
+
+var newOpenTypeFace = opentype.NewFace
+
 func init() {
 	hudFont, hudFontSource = loadHUDFont()
 }
 func loadHUDFont() (*opentype.Font, string) {
 	if font, name := loadSystemFontByFullName(
-		[]string{
-			"/System/Library/Fonts/Menlo.ttc",
-			"/Library/Fonts/Menlo.ttc",
-		},
+		hudFontPaths,
 		[]string{"menlo", "bold"},
 	); font != nil {
 		return font, name
@@ -47,10 +51,7 @@ func loadSystemFontByFullName(paths, required []string) (*opentype.Font, string)
 			continue
 		}
 		for i := 0; i < collection.NumFonts(); i++ {
-			font, err := collection.Font(i)
-			if err != nil {
-				continue
-			}
+			font, _ := collection.Font(i)
 			name, err := font.Name(nil, sfnt.NameIDFull)
 			if err != nil || !fontNameMatches(name, required) {
 				continue
@@ -77,7 +78,7 @@ func fontFaceForSize(size float64) font.Face {
 	if face := hudFontFaces[key]; face != nil {
 		return face
 	}
-	face, err := opentype.NewFace(hudFont, &opentype.FaceOptions{
+	face, err := newOpenTypeFace(hudFont, &opentype.FaceOptions{
 		Size:    size,
 		DPI:     72,
 		Hinting: font.HintingFull,

@@ -21,6 +21,11 @@ var appIconPaths = []string{
 	"assets/appicon/AppIcon-1024.png",
 }
 
+var (
+	readIconFile = iconFiles.ReadFile
+	decodeIcon   = image.Decode
+)
+
 func WindowIcons() []image.Image {
 	icons, err := loadWindowIcons()
 	if err != nil {
@@ -32,11 +37,11 @@ func WindowIcons() []image.Image {
 func loadWindowIcons() ([]image.Image, error) {
 	icons := make([]image.Image, 0, len(appIconPaths))
 	for _, path := range appIconPaths {
-		data, err := iconFiles.ReadFile(path)
+		data, err := readIconFile(path)
 		if err != nil {
 			return nil, fmt.Errorf("read app icon %s: %w", path, err)
 		}
-		icon, _, err := image.Decode(bytes.NewReader(data))
+		icon, _, err := decodeIcon(bytes.NewReader(data))
 		if err != nil {
 			return nil, fmt.Errorf("decode app icon %s: %w", path, err)
 		}

@@ -5,18 +5,25 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
+var (
+	ebitenIsKeyPressed                = ebiten.IsKeyPressed
+	ebitenCursorPosition              = ebiten.CursorPosition
+	inpututilIsKeyJustPressed         = inpututil.IsKeyJustPressed
+	inpututilIsMouseButtonJustPressed = inpututil.IsMouseButtonJustPressed
+)
+
 func (g *Game) updateOverlayInput() (bool, error) {
 	if g.session.GameOver {
-		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-			x, y := ebiten.CursorPosition()
+		if inpututilIsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+			x, y := ebitenCursorPosition()
 			return g.selectGameOverOption(g.gameOverOptionAt(float64(x), float64(y)))
 		}
 		return false, nil
 	}
 
 	if g.session.ChestRewardActive {
-		g.suppressModalHeldMovementKeys(ebiten.IsKeyPressed)
-		if inpututil.IsKeyJustPressed(chestRewardAdvanceKey()) {
+		g.suppressModalHeldMovementKeys(ebitenIsKeyPressed)
+		if inpututilIsKeyJustPressed(chestRewardAdvanceKey()) {
 			return g.advanceChestReward(), nil
 		}
 		return false, nil
@@ -29,20 +36,20 @@ func (g *Game) updateOverlayInput() (bool, error) {
 		return false, nil
 	}
 
-	g.suppressModalHeldMovementKeys(ebiten.IsKeyPressed)
-	if inpututil.IsKeyJustPressed(levelUpRedrawKey()) {
+	g.suppressModalHeldMovementKeys(ebitenIsKeyPressed)
+	if inpututilIsKeyJustPressed(levelUpRedrawKey()) {
 		g.redrawLevelUpOptions()
 		return true, nil
 	}
 
 	for i, key := range levelUpOptionKeys() {
-		if inpututil.IsKeyJustPressed(key) && i < len(g.session.ActiveLevelUpOptions) {
+		if inpututilIsKeyJustPressed(key) && i < len(g.session.ActiveLevelUpOptions) {
 			return g.selectLevelUpOptionAt(i), nil
 		}
 	}
 
-	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-		x, y := ebiten.CursorPosition()
+	if inpututilIsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		x, y := ebitenCursorPosition()
 		if g.redrawRectContains(float64(x), float64(y)) {
 			g.redrawLevelUpOptions()
 			return true, nil
@@ -56,7 +63,7 @@ func (g *Game) updateOverlayInput() (bool, error) {
 func (g *Game) selectGameOverOption(option string) (bool, error) {
 	switch option {
 	case "restart":
-		g.restartGame(ebiten.IsKeyPressed)
+		g.restartGame(ebitenIsKeyPressed)
 		return true, nil
 	case "exit":
 		return true, ebiten.Termination
@@ -98,5 +105,5 @@ func isKillAllAndGrantExperienceKey(key ebiten.Key) bool {
 	return key == ebiten.KeyDigit1 || key == ebiten.KeyNumpad1
 }
 func isKillAllAndGrantExperienceJustPressed() bool {
-	return inpututil.IsKeyJustPressed(ebiten.KeyDigit1) || inpututil.IsKeyJustPressed(ebiten.KeyNumpad1)
+	return inpututilIsKeyJustPressed(ebiten.KeyDigit1) || inpututilIsKeyJustPressed(ebiten.KeyNumpad1)
 }

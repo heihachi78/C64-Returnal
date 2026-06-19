@@ -9,13 +9,27 @@ import (
 )
 
 func main() {
+	handleRunError(run())
+}
+
+var (
+	runEbitenGame  = ebiten.RunGame
+	handleRunError = logRunError
+	fatal          = log.Fatal
+)
+
+func logRunError(err error) {
+	if err != nil {
+		fatal(err)
+	}
+}
+
+func run() error {
 	ebiten.SetWindowTitle("C64-Returnal")
 	ebiten.SetWindowIcon(game.WindowIcons())
 	ebiten.SetWindowSize(game.ScreenWidth, game.ScreenHeight)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetTPS(game.TargetTPS)
 
-	if err := ebiten.RunGame(game.New()); err != nil {
-		log.Fatal(err)
-	}
+	return runEbitenGame(game.New())
 }

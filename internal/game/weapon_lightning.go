@@ -22,6 +22,10 @@ func (g *Game) updateLightningCasting(dt float64) {
 }
 func (g *Game) castLightning() {
 	strikes := g.chainLightningTargets()
+	levelUps := g.applyLightningStrikes(strikes)
+	g.queueLevelUpChoices(levelUps)
+}
+func (g *Game) applyLightningStrikes(strikes []lightningStrikeTarget) int {
 	levelUps := 0
 	start := g.player.Pos
 	for _, strike := range strikes {
@@ -50,7 +54,7 @@ func (g *Game) castLightning() {
 		levelUps += g.damageSkeleton(idx, 1, AttackLightning, false)
 		start = end
 	}
-	g.queueLevelUpChoices(levelUps)
+	return levelUps
 }
 
 type lightningStrikeTarget struct {

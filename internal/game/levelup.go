@@ -1,7 +1,6 @@
 package game
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
 	"slices"
 )
 
@@ -27,7 +26,7 @@ func (g *Game) presentNextLevelUpChoiceIfNeeded() {
 	g.session.LevelUpTitleScaleTimer = 0
 	g.session.LevelUpOptionFadeTimer = 0
 	g.showLevelUpRedrawPresentation(true)
-	g.suppressHeldMovementKeys(ebiten.IsKeyPressed)
+	g.suppressHeldMovementKeys(ebitenIsKeyPressed)
 	g.stopPlayerAnimation()
 }
 func (g *Game) randomLevelUpOptions(excluding []LevelUpOption) []LevelUpOption {

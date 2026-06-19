@@ -24,7 +24,11 @@ func (g *Game) castBeam() {
 	g.effects = append(g.effects, Effect{Kind: EffectBeam, Start: g.player.Pos, End: end, TTL: g.tuning.BeamEffectDuration, MaxTTL: g.tuning.BeamEffectDuration})
 
 	targets := g.beamTargets(direction, length, g.tuning.BeamHitWidth, g.session.Progression.BeamKillCount())
-	remainingDamage := g.session.Progression.BeamKillCount()
+	levelUps := g.applyBeamDamage(targets, g.session.Progression.BeamKillCount())
+	g.queueLevelUpChoices(levelUps)
+}
+func (g *Game) applyBeamDamage(targets []int, damageBudget int) int {
+	remainingDamage := damageBudget
 	levelUps := 0
 	for _, id := range targets {
 		idx := g.skeletonIndexByID(id)
@@ -35,7 +39,7 @@ func (g *Game) castBeam() {
 		remainingDamage -= damage
 		levelUps += g.damageSkeleton(idx, damage, AttackBeam, false)
 	}
-	g.queueLevelUpChoices(levelUps)
+	return levelUps
 }
 func (g *Game) playerBeamDirection() Vec2 {
 	if g.player.MoveDir != (Vec2{}) {

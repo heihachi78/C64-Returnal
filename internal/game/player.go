@@ -6,7 +6,7 @@ import (
 )
 
 func (g *Game) updatePlayer(dt float64) {
-	move := g.playerMovementVector(ebiten.IsKeyPressed)
+	move := g.playerMovementVector(ebitenIsKeyPressed)
 
 	if move.X != 0 || move.Y != 0 {
 		move = move.Normalized()
