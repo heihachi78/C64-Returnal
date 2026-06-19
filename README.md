@@ -1,75 +1,59 @@
 # C64-Returnal
 
-C64-Returnal is a native macOS SpriteKit survival game with code-generated pixel art, auto-casting weapons, level-up choices, and escalating skeleton hordes. You move the mage, survive as long as possible, and build a growing arsenal of fireballs, chain lightning, orbital orbs, beams, and meteors.
+C64-Returnal is a platform-independent Go/Ebitengine survival game with code-generated pixel art, auto-casting weapons, level-up choices, chest rewards, coins, and escalating skeleton hordes.
+
+The original macOS SpriteKit implementation is still present in the repository for reference, but the primary application is now the Go port under `cmd/c64-returnal` and `internal/game`.
 
 ## Features
 
-- Native Cocoa/SpriteKit macOS app with a resizable game window.
-- Procedural pixel-art sprites and grass tiles generated in Swift.
-- Infinite scrolling field centered on the player.
-- Auto-targeting combat with fireballs, chain lightning, orbital orbs, beams, and meteors.
+- Cross-platform Go game using Ebitengine.
+- Builds from the same source on macOS and Windows.
+- Procedural C64-style pixel rendering, with no external art assets required.
+- Infinite scrolling grass field centered on the player.
+- Auto-targeting fireballs, chain lightning, orbital orbs, beams, and meteors.
 - Level progression with randomized upgrade choices.
-- Gold coins that can be collected and spent to redraw level-up choices.
+- Coins that can be collected and spent to redraw level-up choices.
 - Bronze, silver, and gold chest rewards at kill milestones.
 - Enemy escalation from regular skeletons to red, purple, and black variants.
-- HUD overlays for lives, level, experience, weapon status, chest rewards, level-ups, and game over.
-- Unit tests for progression, combat targeting, spatial indexing, input bindings, and reward policies.
+- Parallel skeleton movement updates for large hordes while combat mutation remains deterministic on the main update thread.
+- Go tests for progression, chest policy, and spatial indexing rules.
 
 ## Requirements
 
-- macOS with an SDK/Xcode version that supports the project's configured deployment target.
-- Xcode command line tools.
-- Swift 5 as configured by the Xcode project.
+- Go 1.24 or newer.
+- macOS, Windows, or another Ebitengine-supported desktop platform.
 
-The project currently sets `MACOSX_DEPLOYMENT_TARGET` to `26.5` in `C64-Returnal.xcodeproj`.
-
-## Build And Run
-
-Use the helper script:
+## Run
 
 ```sh
-./script/build_and_run.sh
+go run ./cmd/c64-returnal
 ```
 
-The script builds the `C64-Returnal` scheme into `build/DerivedData` and launches the app.
+## Build
 
-Useful modes:
+Build for the current platform:
 
 ```sh
-./script/build_and_run.sh run
-./script/build_and_run.sh --verify
-./script/build_and_run.sh --debug
-./script/build_and_run.sh --logs
-./script/build_and_run.sh --telemetry
-./script/build_and_run.sh --test
+go build -o build/c64-returnal ./cmd/c64-returnal
 ```
 
-You can also build directly with Xcode:
+Build for macOS:
 
 ```sh
-xcodebuild \
-  -project C64-Returnal.xcodeproj \
-  -scheme C64-Returnal \
-  -configuration Debug \
-  build
+GOOS=darwin GOARCH=arm64 go build -o build/c64-returnal-macos-arm64 ./cmd/c64-returnal
+GOOS=darwin GOARCH=amd64 go build -o build/c64-returnal-macos-amd64 ./cmd/c64-returnal
+```
+
+Build for Windows:
+
+```sh
+GOOS=windows GOARCH=amd64 go build -o build/c64-returnal-windows-amd64.exe ./cmd/c64-returnal
 ```
 
 ## Test
 
-Run the test suite with:
-
 ```sh
-./script/build_and_run.sh --test
-```
-
-Or directly:
-
-```sh
-xcodebuild \
-  -project C64-Returnal.xcodeproj \
-  -scheme C64-Returnal \
-  -configuration Debug \
-  build test
+go test ./...
 ```
 
 ## Controls
@@ -80,11 +64,11 @@ xcodebuild \
 | Pick level-up option 1 | `Q` |
 | Pick level-up option 2 | `A` |
 | Pick level-up option 3 | `C` |
+| Pick level-up option 4 | `X` |
 | Redraw level-up options | `R` |
 | Advance chest reward overlay | `Q` |
 | Restart or exit after game over | Click the HUD option |
-
-There is also a development shortcut bound to `1` / keypad `1` that kills all current enemies and grants their experience.
+| Development kill-all shortcut | `1` / keypad `1` |
 
 ## Gameplay Notes
 
@@ -95,26 +79,14 @@ Upgrades can improve existing weapons, add lives, unlock new weapon families, or
 ## Project Layout
 
 ```text
-C64-Returnal/
-  App/              AppDelegate and macOS window setup
-  Configuration/    Game tuning and default input bindings
-  Entities/         Lightweight gameplay model types
-  HUD/              SpriteKit HUD panels and overlays
-  Input/            Keyboard binding and input helpers
-  Rendering/        Pixel-art and infinite grass rendering
-  Scenes/           Main GameScene
-  State/            Session and progression state
-  Systems/          Combat, spawning, chests, progression, and scene systems
-C64-ReturnalTests/  XCTest coverage for gameplay policies and targeting
-script/             Build, run, debug, logging, and test helper script
+cmd/c64-returnal/      Go application entrypoint
+internal/game/         Portable game simulation, rendering, input, and tests
+C64-Returnal/          Original Swift/SpriteKit source retained for reference
+C64-ReturnalTests/     Original XCTest coverage retained for reference
 ```
 
 ## Architecture
 
-`GameScene` owns the SpriteKit scene graph and the live session state. Most gameplay behavior is split into focused scene extensions under `C64-Returnal/Systems`, while reusable policy logic lives in small structs such as `ProgressionSystem`, `ChestSystem`, and `SkeletonSpatialIndex`.
+The Go version keeps the original game structure: a central `Tuning` table, a `Session` state, compact entity types, and focused systems for progression, spawning, combat, chests, coins, and rendering.
 
-`GameConfiguration.defaultTuning` is the central place to adjust movement speed, spawn cadence, weapon timing, hit distances, chest milestones, and progression probabilities.
-
-## License
-
-No license file is currently included.
+The most expensive horde operation, skeleton pursuit movement, is split into chunks and processed with goroutines when the enemy count crosses the configured threshold. State-changing operations such as damage, kills, chest spawning, and level-up queuing stay on the main update thread to avoid races and keep gameplay outcomes predictable.
