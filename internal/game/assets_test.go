@@ -39,6 +39,20 @@ func TestGeneratedAssetsMatchOriginalTextureDimensions(t *testing.T) {
 	}
 }
 
+func TestWindowIconsIncludeAppIconSizes(t *testing.T) {
+	icons := WindowIcons()
+	wantSizes := []int{16, 32, 64, 128, 256, 512, 1024}
+	if len(icons) != len(wantSizes) {
+		t.Fatalf("icon count = %d, want %d", len(icons), len(wantSizes))
+	}
+	for i, want := range wantSizes {
+		bounds := icons[i].Bounds()
+		if bounds.Dx() != want || bounds.Dy() != want {
+			t.Fatalf("icon %d bounds = %dx%d, want %dx%d", i, bounds.Dx(), bounds.Dy(), want, want)
+		}
+	}
+}
+
 func TestGeneratedAssetVariantCountsMatchOriginalFactories(t *testing.T) {
 	assets := NewAssets(64)
 	tests := []struct {

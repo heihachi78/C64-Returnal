@@ -2,8 +2,6 @@
 
 C64-Returnal is a platform-independent Go/Ebitengine survival game with code-generated pixel art, auto-casting weapons, level-up choices, chest rewards, coins, and escalating skeleton hordes.
 
-The original macOS SpriteKit implementation is still present in the repository for reference, but the primary application is now the Go port under `cmd/c64-returnal` and `internal/game`.
-
 ## Features
 
 - Cross-platform Go game using Ebitengine.
@@ -81,8 +79,7 @@ Upgrades can improve existing weapons, add lives, unlock new weapon families, or
 ```text
 cmd/c64-returnal/      Go application entrypoint
 internal/game/         Portable game simulation, rendering, input, and tests
-C64-Returnal/          Original Swift/SpriteKit source retained for reference
-C64-ReturnalTests/     Original XCTest coverage retained for reference
+internal/game/assets/  Embedded application assets, including app icons
 ```
 
 ## Architecture

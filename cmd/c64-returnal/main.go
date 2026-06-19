@@ -10,6 +10,7 @@ import (
 
 func main() {
 	ebiten.SetWindowTitle("C64-Returnal")
+	ebiten.SetWindowIcon(game.WindowIcons())
 	ebiten.SetWindowSize(game.ScreenWidth, game.ScreenHeight)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetTPS(game.TargetTPS)

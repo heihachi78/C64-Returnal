@@ -851,7 +851,7 @@ func fontSizeKey(size float64) int {
 	return int(math.Round(size * 10))
 }
 
-func spriteKitScaledTextLayout(face font.Face, s string, centered bool) scaledTextLayout {
+func baseScaledTextLayout(face font.Face, s string, centered bool) scaledTextLayout {
 	const padding = 4
 	metrics := face.Metrics()
 	textWidth := max(1, font.MeasureString(face, s).Ceil())
@@ -876,7 +876,7 @@ func (g *Game) scaledTextImage(s string, size float64, centered bool) scaledText
 	}
 
 	face := fontFaceForSize(size)
-	layout := spriteKitScaledTextLayout(face, s, centered)
+	layout := baseScaledTextLayout(face, s, centered)
 	img := ebiten.NewImage(layout.Width, layout.Height)
 	text.Draw(img, s, face, 4, layout.Baseline, color.White)
 	entry := scaledTextCacheEntry{Image: img, Layout: layout}

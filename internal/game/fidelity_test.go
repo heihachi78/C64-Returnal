@@ -40,13 +40,13 @@ func TestModalAndDebugKeysMatchOriginalInputBindings(t *testing.T) {
 	}
 }
 
-func TestInitialWindowSizeMatchesOriginalSwiftApp(t *testing.T) {
+func TestInitialWindowSizeMatchesOriginalApp(t *testing.T) {
 	if ScreenWidth != 800 || ScreenHeight != 600 {
 		t.Fatalf("initial screen size = %dx%d, want 800x600", ScreenWidth, ScreenHeight)
 	}
 }
 
-func TestHUDFontSizesMatchOriginalSwiftLabels(t *testing.T) {
+func TestHUDFontSizesMatchOriginalLabels(t *testing.T) {
 	tests := []struct {
 		name string
 		got  float64
@@ -104,7 +104,7 @@ func TestHUDIntervalFormattingMatchesOriginalStatusPanel(t *testing.T) {
 		t.Fatalf("formatted seconds below one = %q, want 0.91", got)
 	}
 	if got := formattedSeconds(0.955); got != "0.95" {
-		t.Fatalf("formatted seconds rounding below one = %q, want Swift-style 0.95", got)
+		t.Fatalf("formatted seconds rounding below one = %q, want original 0.95", got)
 	}
 }
 
@@ -159,7 +159,7 @@ func TestWorldRenderLayerOrderMatchesOriginalZPositions(t *testing.T) {
 	want := []float64{-20, 8.5, 8.75, 9, 9.5, 10, 11, 12, 13, 14}
 	got := worldRenderLayerOrder()
 	if !slices.Equal(got, want) {
-		t.Fatalf("world render layer order = %v, want SpriteKit z order %v", got, want)
+		t.Fatalf("world render layer order = %v, want original z order %v", got, want)
 	}
 	for i := 1; i < len(got); i++ {
 		if got[i] <= got[i-1] {
@@ -434,13 +434,13 @@ func TestTriggerGameOverMatchesOriginalSessionCleanup(t *testing.T) {
 }
 
 func TestWorldRotationConvertsToEbitenScreenSpaceLikeOriginalVisuals(t *testing.T) {
-	swiftClockwiseDeathRotation := -math.Pi / 2
-	if got, want := worldRotationToScreen(swiftClockwiseDeathRotation), math.Pi/2; math.Abs(got-want) > 0.0001 {
+	clockwiseDeathRotation := -math.Pi / 2
+	if got, want := worldRotationToScreen(clockwiseDeathRotation), math.Pi/2; math.Abs(got-want) > 0.0001 {
 		t.Fatalf("screen death rotation = %v, want %v", got, want)
 	}
 
-	swiftUpwardProjectileRotation := math.Pi / 2
-	if got, want := worldRotationToScreen(swiftUpwardProjectileRotation), -math.Pi/2; math.Abs(got-want) > 0.0001 {
+	upwardProjectileRotation := math.Pi / 2
+	if got, want := worldRotationToScreen(upwardProjectileRotation), -math.Pi/2; math.Abs(got-want) > 0.0001 {
 		t.Fatalf("screen projectile rotation = %v, want %v", got, want)
 	}
 }
@@ -495,7 +495,7 @@ func TestPresentingLevelUpStopsPlayerAnimationWithoutClearingDirectionLikeOrigin
 		t.Fatalf("player animation state = %+v, want stopped at frame 0", g.player)
 	}
 	if g.player.MoveDir != (Vec2{X: 1}) {
-		t.Fatalf("player move direction = %+v, want preserved like Swift currentPlayerMovementDirection", g.player.MoveDir)
+		t.Fatalf("player move direction = %+v, want original preserved movement direction", g.player.MoveDir)
 	}
 }
 
@@ -610,7 +610,7 @@ func TestShowingChestRewardStopsPlayerAnimationWithoutClearingDirectionLikeOrigi
 		t.Fatalf("player animation state = %+v, want stopped at frame 0", g.player)
 	}
 	if g.player.MoveDir != (Vec2{X: 1}) {
-		t.Fatalf("player move direction = %+v, want preserved like Swift currentPlayerMovementDirection", g.player.MoveDir)
+		t.Fatalf("player move direction = %+v, want original preserved movement direction", g.player.MoveDir)
 	}
 }
 
@@ -741,7 +741,7 @@ func TestLevelUpRedrawRetryRerunsFullOriginalOptionSelection(t *testing.T) {
 	redrawn := retry.randomLevelUpOptions(initial)
 
 	if len(redrawn) != 3 {
-		t.Fatalf("redrawn option count = %d, want Swift retry to rerun extra-option chance and keep 3", len(redrawn))
+		t.Fatalf("redrawn option count = %d, want retry to rerun extra-option chance and keep 3", len(redrawn))
 	}
 	hasHalve := false
 	for _, option := range redrawn {
@@ -933,18 +933,18 @@ func TestScaledTextUsesOriginalLabelScaleInsteadOfScaledFontSize(t *testing.T) {
 	baseWidth := font.MeasureString(baseFace, text).Ceil()
 	scaledWidth := font.MeasureString(scaledFace, text).Ceil()
 
-	layout := spriteKitScaledTextLayout(baseFace, text, true)
+	layout := baseScaledTextLayout(baseFace, text, true)
 
 	if layout.Width != baseWidth+8 {
 		t.Fatalf("scaled text backing width = %d, want base label width %d plus padding", layout.Width, baseWidth)
 	}
 	if layout.Width == scaledWidth+8 {
-		t.Fatalf("scaled text backing width matched scaled font width %d; want SpriteKit node scaling from base font", scaledWidth)
+		t.Fatalf("scaled text backing width matched scaled font width %d; want scaled base label image", scaledWidth)
 	}
 	if math.Abs(layout.AnchorX-(4+float64(baseWidth)/2)) > 0.0001 {
 		t.Fatalf("centered scaled text anchor X = %v, want label center", layout.AnchorX)
 	}
-	leftLayout := spriteKitScaledTextLayout(baseFace, text, false)
+	leftLayout := baseScaledTextLayout(baseFace, text, false)
 	if leftLayout.AnchorX != 4 {
 		t.Fatalf("left scaled text anchor X = %v, want left label origin plus padding", leftLayout.AnchorX)
 	}
@@ -1327,7 +1327,7 @@ func TestGameOverLayoutMatchesOriginalHUDRect(t *testing.T) {
 	face := fontFaceForSize(gameOverOptionFontSize)
 	restartOutsideX := 400 + float64(font.MeasureString(face, "RESTART").Ceil())/2 + 27
 	if got := g.gameOverOptionAt(restartOutsideX, 322); got != "" {
-		t.Fatalf("game over option outside restart label hit area = %q, want none like Swift", got)
+		t.Fatalf("game over option outside restart label hit area = %q, want none like original behavior", got)
 	}
 }
 
@@ -1398,7 +1398,7 @@ func TestLevelUpMouseHitAreasMatchOriginalLabelAndIconOnly(t *testing.T) {
 	g.session.ActiveLevelUpOptions = []LevelUpOption{FireRate}
 
 	if got := g.levelUpOptionAt(250, 304); got != -1 {
-		t.Fatalf("option at key hint center = %d, want no selection like Swift", got)
+		t.Fatalf("option at key hint center = %d, want no selection like original behavior", got)
 	}
 	if got := g.levelUpOptionAt(284, 304); got != 0 {
 		t.Fatalf("option at icon center = %d, want 0", got)
@@ -1438,7 +1438,7 @@ func TestRedrawMouseHitAreasMatchOriginalNodesOnly(t *testing.T) {
 	face := fontFaceForSize(levelUpOptionFontSize)
 	labelTailX := 322 + float64(font.MeasureString(face, label).Ceil()) + 20
 	if !g.redrawRectContains(labelTailX, 422) {
-		t.Fatal("redraw hit at long label tail = false, want true like Swift")
+		t.Fatal("redraw hit at long label tail = false, want true like original behavior")
 	}
 	if !g.redrawRectContains(250, 422) {
 		t.Fatal("redraw hit at key label center = false, want true")
@@ -1525,7 +1525,7 @@ func TestRedrawFailurePulseAdvancesWhileLevelUpPausesWorld(t *testing.T) {
 	}
 }
 
-func TestSkeletonTintBlendFactorsMatchOriginalSwiftValues(t *testing.T) {
+func TestSkeletonTintBlendFactorsMatchOriginalValues(t *testing.T) {
 	tests := []struct {
 		kind       SkeletonKind
 		wantColor  [3]uint8
@@ -1559,7 +1559,7 @@ func TestPlayerSpritePresentationMatchesOriginalDeathTint(t *testing.T) {
 
 	presentation = playerSpritePresentation(Player{HitFlash: playerHitFlashDuration, DeathRotation: -math.Pi / 2}, true)
 	if presentation.Tint != (color.RGBA{217, 13, 20, 115}) {
-		t.Fatalf("death tint = %+v, want SpriteKit red color with 0.45 alpha", presentation.Tint)
+		t.Fatalf("death tint = %+v, want original red color with 0.45 alpha", presentation.Tint)
 	}
 	if math.Abs(presentation.BlendFactor-0.65) > 0.0001 {
 		t.Fatalf("death blend factor = %v, want 0.65", presentation.BlendFactor)
@@ -2107,7 +2107,7 @@ func TestLightningEffectUsesSeparateOuterAndInnerBoltPathsLikeOriginal(t *testin
 		t.Fatalf("outer/inner endpoints = %v/%v and %v/%v, want shared start/end", effect.Points[0], effect.InnerPoints[0], effect.Points[last], effect.InnerPoints[last])
 	}
 	if slices.Equal(effect.Points, effect.InnerPoints) {
-		t.Fatalf("inner lightning path reused outer path; Swift creates separate random bolt shapes")
+		t.Fatalf("inner lightning path reused outer path; want separate random bolt shapes")
 	}
 }
 
