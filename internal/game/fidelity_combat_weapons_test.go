@@ -500,6 +500,52 @@ func TestFireballVolleySkipsAlreadyTargetedSkeletonsLikeOriginal(t *testing.T) {
 	}
 }
 
+func TestFireballVolleySkipsLightningReservedSkeletons(t *testing.T) {
+	g := New()
+	g.session.Progression.ApplyLevelUpOption(LearnLightning)
+	g.skeleton = []Skeleton{
+		{ID: 101, Pos: Vec2{X: 10, Y: 0}, HP: 2},
+		{ID: 202, Pos: Vec2{X: 20, Y: 0}, HP: 2},
+	}
+
+	g.castLightning()
+	g.spawnFireballs()
+
+	if len(g.fireball) != 1 {
+		t.Fatalf("fireball count = %d, want one fireball", len(g.fireball))
+	}
+	if g.fireball[0].TargetID != 202 {
+		t.Fatalf("fireball target = %d, want non-lightning target 202", g.fireball[0].TargetID)
+	}
+}
+
+func TestSameTickLightningAndFireballDoNotShareTargets(t *testing.T) {
+	g := New()
+	g.hasUpdated = true
+	g.session.Progression.ApplyLevelUpOption(LearnLightning)
+	g.session.Casts.Lightning = g.session.Progression.LightningCastInterval()
+	g.session.Casts.Fireball = g.session.Progression.FireballCastInterval()
+	g.skeleton = []Skeleton{
+		{ID: 101, Pos: Vec2{X: 100, Y: 0}, HP: 2, Facing: 1},
+		{ID: 202, Pos: Vec2{X: 200, Y: 0}, HP: 2, Facing: 1},
+	}
+	g.spatial.Rebuild(g.skeleton)
+
+	if err := g.Update(); err != nil {
+		t.Fatalf("Update error: %v", err)
+	}
+
+	if len(g.fireball) != 1 {
+		t.Fatalf("fireball count = %d, want one fireball", len(g.fireball))
+	}
+	if g.fireball[0].TargetID == 101 {
+		t.Fatalf("fireball targeted lightning-struck skeleton %d", g.fireball[0].TargetID)
+	}
+	if g.fireball[0].TargetID != 202 {
+		t.Fatalf("fireball target = %d, want 202", g.fireball[0].TargetID)
+	}
+}
+
 func TestBeamTargetSelectionPreservesOriginalTieOrder(t *testing.T) {
 	g := New()
 	g.skeleton = []Skeleton{

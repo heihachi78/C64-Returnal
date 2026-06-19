@@ -22,8 +22,20 @@ func (g *Game) updateLightningCasting(dt float64) {
 }
 func (g *Game) castLightning() {
 	strikes := g.chainLightningTargets()
+	g.reserveLightningTargets(strikes)
 	levelUps := g.applyLightningStrikes(strikes)
 	g.queueLevelUpChoices(levelUps)
+}
+func (g *Game) reserveLightningTargets(strikes []lightningStrikeTarget) {
+	if len(strikes) == 0 {
+		return
+	}
+	if g.lightningTargetReservations == nil {
+		g.lightningTargetReservations = map[int]bool{}
+	}
+	for _, strike := range strikes {
+		g.lightningTargetReservations[strike.targetID] = true
+	}
 }
 func (g *Game) applyLightningStrikes(strikes []lightningStrikeTarget) int {
 	levelUps := 0

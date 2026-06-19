@@ -14,16 +14,17 @@ type Game struct {
 	screenH int
 	nextID  int
 
-	player   Player
-	session  Session
-	spatial  SpatialIndex
-	skeleton []Skeleton
-	fireball []Fireball
-	orbs     []OrbitalOrb
-	meteors  []MeteorProjectile
-	chests   []Chest
-	coins    []Coin
-	effects  []Effect
+	player                      Player
+	session                     Session
+	spatial                     SpatialIndex
+	skeleton                    []Skeleton
+	fireball                    []Fireball
+	lightningTargetReservations map[int]bool
+	orbs                        []OrbitalOrb
+	meteors                     []MeteorProjectile
+	chests                      []Chest
+	coins                       []Coin
+	effects                     []Effect
 
 	skeletonAnimTimer  float64
 	skeletonAnimFrame  int
@@ -43,14 +44,15 @@ type Game struct {
 func New() *Game {
 	tuning := DefaultTuning()
 	g := &Game{
-		tuning:             tuning,
-		rng:                rand.New(rand.NewSource(rand.Int63())),
-		assets:             NewAssets(int(tuning.TileSize)),
-		screenW:            ScreenWidth,
-		screenH:            ScreenHeight,
-		spatial:            NewSpatialIndex(tuning.SpatialIndexCellSize),
-		suppressedMovement: map[ebiten.Key]bool{},
-		scaledTextCache:    map[scaledTextCacheKey]scaledTextCacheEntry{},
+		tuning:                      tuning,
+		rng:                         rand.New(rand.NewSource(rand.Int63())),
+		assets:                      NewAssets(int(tuning.TileSize)),
+		screenW:                     ScreenWidth,
+		screenH:                     ScreenHeight,
+		spatial:                     NewSpatialIndex(tuning.SpatialIndexCellSize),
+		lightningTargetReservations: map[int]bool{},
+		suppressedMovement:          map[ebiten.Key]bool{},
+		scaledTextCache:             map[scaledTextCacheKey]scaledTextCacheEntry{},
 	}
 	g.reset()
 	return g
@@ -61,6 +63,7 @@ func (g *Game) reset() {
 	g.session = NewSession(g.tuning)
 	g.skeleton = g.skeleton[:0]
 	g.fireball = g.fireball[:0]
+	clear(g.lightningTargetReservations)
 	g.orbs = g.orbs[:0]
 	g.meteors = g.meteors[:0]
 	g.chests = g.chests[:0]
@@ -89,6 +92,7 @@ func (g *Game) Update() error {
 	}
 	g.hasUpdated = true
 	g.totalTime += dt
+	clear(g.lightningTargetReservations)
 	consumedFrame, err := g.updateOverlayInput()
 	if err != nil {
 		return err

@@ -24,6 +24,9 @@ func (g *Game) spawnFireballs() {
 			reserved[fire.TargetID] = true
 		}
 	}
+	for id := range g.lightningTargetReservations {
+		reserved[id] = true
+	}
 	for _, idx := range g.closestSkeletons(g.player.Pos, reserved, g.session.Progression.SimultaneousFireball) {
 		target := g.skeleton[idx]
 		g.fireball = append(g.fireball, Fireball{
