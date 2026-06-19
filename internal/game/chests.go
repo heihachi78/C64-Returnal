@@ -1,0 +1,86 @@
+package game
+
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+	"math"
+	"slices"
+)
+
+func (g *Game) spawnChest(tier ChestTier) {
+	g.chests = append(g.chests, Chest{Pos: g.randomChestPosition(), Tier: tier})
+}
+func (g *Game) randomChestPosition() Vec2 {
+	halfW := math.Max(48, float64(g.screenW)/2-g.tuning.ChestSpawnMargin)
+	halfH := math.Max(48, float64(g.screenH)/2-g.tuning.ChestSpawnMargin)
+	minDistSq := g.tuning.ChestPickupDistance * g.tuning.ChestPickupDistance * 4
+	for range 12 {
+		pos := Vec2{X: g.player.Pos.X + g.randRange(-halfW, halfW), Y: g.player.Pos.Y + g.randRange(-halfH, halfH)}
+		if DistanceSq(pos, g.player.Pos) >= minDistSq {
+			return pos
+		}
+	}
+	return Vec2{X: g.player.Pos.X + halfW, Y: g.player.Pos.Y}
+}
+func (g *Game) checkChestPickups() {
+	distSq := g.tuning.ChestPickupDistance * g.tuning.ChestPickupDistance
+	for i := len(g.chests) - 1; i >= 0; i-- {
+		if DistanceSq(g.chests[i].Pos, g.player.Pos) <= distSq {
+			chest := g.chests[i]
+			g.chests = slices.Delete(g.chests, i, i+1)
+			g.applyChestReward(chest.Tier)
+			return
+		}
+	}
+}
+func (g *Game) applyChestReward(tier ChestTier) {
+	skills := g.session.Progression.LearnedSkills()
+	if len(skills) == 0 {
+		return
+	}
+	items := []ChestRewardDisplayItem{}
+	switch tier {
+	case ChestBronze:
+		skill := skills[g.rng.Intn(len(skills))]
+		options := skill.UpgradeOptions()
+		option := options[g.rng.Intn(len(options))]
+		items = append(items, g.chestRewardItemForSkill(option, skill))
+		g.applyUpgradeEffect(option)
+	case ChestSilver:
+		skill := skills[g.rng.Intn(len(skills))]
+		items = append(items, g.chestRewardItemsForSkill(skill)...)
+		g.session.Progression.UpgradeAllProperties(skill)
+	case ChestGold:
+		g.rng.Shuffle(len(skills), func(i, j int) { skills[i], skills[j] = skills[j], skills[i] })
+		for _, skill := range skills[:min(2, len(skills))] {
+			items = append(items, g.chestRewardItemsForSkill(skill)...)
+			g.session.Progression.UpgradeAllProperties(skill)
+		}
+	}
+	g.syncOrbitalOrbCount()
+	if len(items) > 0 {
+		g.session.ChestRewardActive = true
+		g.session.ActiveChestTier = tier
+		g.session.ActiveChestRewardItems = items
+		g.session.ChestRewardOverlayTimer = 0
+		g.suppressHeldMovementKeys(ebiten.IsKeyPressed)
+		g.stopPlayerAnimation()
+	}
+}
+func (g *Game) chestRewardItemsForSkill(skill LearnedSkill) []ChestRewardDisplayItem {
+	options := skill.UpgradeOptions()
+	items := make([]ChestRewardDisplayItem, 0, len(options))
+	for _, option := range options {
+		items = append(items, g.chestRewardItemForSkill(option, skill))
+	}
+	return items
+}
+func (g *Game) chestRewardItemForSkill(option LevelUpOption, skill LearnedSkill) ChestRewardDisplayItem {
+	beamKillBonus := 0
+	if skill == SkillBeam {
+		beamKillBonus = g.session.Progression.BeamKillUpgradeBonus()
+	}
+	return ChestRewardDisplayItem{
+		Option: option,
+		Title:  option.Title(beamKillBonus),
+	}
+}
