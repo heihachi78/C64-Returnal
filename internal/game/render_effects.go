@@ -68,7 +68,7 @@ type meteorImpactRenderMetrics struct {
 
 func meteorImpactPresentation(effect Effect) meteorImpactStyle {
 	if effect.MaxTTL <= 0 {
-		return meteorImpactStyle{Scale: 1.25, Alpha: 0}
+		return meteorImpactStyle{Scale: 1, Alpha: 0}
 	}
 	age := Clamp(effect.MaxTTL-effect.TTL, 0, effect.MaxTTL)
 	switch {
@@ -78,7 +78,7 @@ func meteorImpactPresentation(effect Effect) meteorImpactStyle {
 		return meteorImpactStyle{Scale: 1, Alpha: 1}
 	default:
 		fade := Clamp((age-0.16)/0.16, 0, 1)
-		return meteorImpactStyle{Scale: 1 + 0.25*fade, Alpha: 1 - fade}
+		return meteorImpactStyle{Scale: 1, Alpha: 1 - fade}
 	}
 }
 func meteorImpactRenderStyle(effect Effect) meteorImpactRenderMetrics {

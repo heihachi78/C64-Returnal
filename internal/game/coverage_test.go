@@ -574,13 +574,13 @@ func TestCoveragePresentationEdgeValues(t *testing.T) {
 	if got := linearPingPong(1, 0); got != 0 {
 		t.Fatalf("linearPingPong zero period = %v, want 0", got)
 	}
-	if got := meteorImpactPresentation(Effect{TTL: 1, MaxTTL: 0}); got != (meteorImpactStyle{Scale: 1.25, Alpha: 0}) {
+	if got := meteorImpactPresentation(Effect{TTL: 1, MaxTTL: 0}); got != (meteorImpactStyle{Scale: 1, Alpha: 0}) {
 		t.Fatalf("meteorImpactPresentation zero max = %+v", got)
 	}
 	if got := meteorImpactPresentation(Effect{TTL: 0.2, MaxTTL: 0.3}); got.Alpha != 1 || got.Scale != 1 {
 		t.Fatalf("meteorImpactPresentation hold = %+v", got)
 	}
-	if got := meteorImpactPresentation(Effect{TTL: 0, MaxTTL: 0.4}); got.Alpha != 0 || got.Scale != 1.25 {
+	if got := meteorImpactPresentation(Effect{TTL: 0, MaxTTL: 0.4}); got.Alpha != 0 || got.Scale != 1 {
 		t.Fatalf("meteorImpactPresentation fade = %+v", got)
 	}
 	if got := redrawPulseScale(0); got != 1 {

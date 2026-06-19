@@ -355,8 +355,8 @@ func TestMeteorImpactEffectMatchesOriginalActionSequence(t *testing.T) {
 		t.Fatalf("grown meteor presentation = %+v, want scale 1 alpha 1", got)
 	}
 	effect.TTL = 0
-	if got := meteorImpactPresentation(effect); math.Abs(got.Scale-1.25) > 0.0001 || math.Abs(got.Alpha) > 0.0001 {
-		t.Fatalf("final meteor presentation = %+v, want scale 1.25 alpha 0", got)
+	if got := meteorImpactPresentation(effect); math.Abs(got.Scale-1) > 0.0001 || math.Abs(got.Alpha) > 0.0001 {
+		t.Fatalf("final meteor presentation = %+v, want scale 1 alpha 0", got)
 	}
 }
 

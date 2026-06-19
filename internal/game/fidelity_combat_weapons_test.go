@@ -316,13 +316,14 @@ func TestMeteorProjectileDoesNotImpactBeforeOriginalFallDuration(t *testing.T) {
 	}
 }
 
-func TestMeteorImpactRadiusUsesOriginalInclusiveCircle(t *testing.T) {
+func TestMeteorImpactRadiusUsesInclusiveSkeletonBodyOverlap(t *testing.T) {
 	g := New()
 	g.tuning.MeteorImpactRadius = 48
+	g.tuning.SkeletonHitDistance = 24
 	g.skeleton = []Skeleton{
-		{ID: 101, Pos: Vec2{X: 48}, HP: 1},
-		{ID: 202, Pos: Vec2{X: 48.0001}, HP: 1},
-		{ID: 303, Pos: Vec2{Y: -48}, HP: 1},
+		{ID: 101, Pos: Vec2{X: 72}, HP: 1},
+		{ID: 202, Pos: Vec2{X: 72.0001}, HP: 1},
+		{ID: 303, Pos: Vec2{Y: -72}, HP: 1},
 	}
 	g.spatial.Rebuild(g.skeleton)
 
