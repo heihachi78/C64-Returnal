@@ -33,6 +33,8 @@ type Tuning struct {
 	RedOnlySpawnMultiplier     float64
 	PurpleOnlyLevel            int
 	PurpleOnlySpawnMultiplier  float64
+	BlackOnlyLevel             int
+	BlackOnlySpawnMultiplier   float64
 	RedHitPoints               int
 	RedKillInterval            int
 	PurpleHitPoints            int
@@ -111,6 +113,8 @@ func DefaultTuning() Tuning {
 		RedOnlySpawnMultiplier:     3,
 		PurpleOnlyLevel:            75,
 		PurpleOnlySpawnMultiplier:  6,
+		BlackOnlyLevel:             100,
+		BlackOnlySpawnMultiplier:   10,
 		RedHitPoints:               2,
 		RedKillInterval:            100,
 		PurpleHitPoints:            5,

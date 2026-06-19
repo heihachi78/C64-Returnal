@@ -78,6 +78,9 @@ func (g *Game) updateSkeletonSpawning(dt float64) {
 	}
 }
 func (g *Game) timedSkeletonSpawnKind() SkeletonKind {
+	if g.session.Progression.Level >= g.tuning.BlackOnlyLevel {
+		return SkeletonBlack
+	}
 	if g.session.Progression.Level >= g.tuning.PurpleOnlyLevel {
 		return SkeletonPurple
 	}

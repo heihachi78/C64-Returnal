@@ -64,6 +64,9 @@ func (p Progression) SkeletonSpawnInterval() float64 {
 	if p.Level >= p.tuning.PurpleOnlyLevel {
 		interval *= p.tuning.PurpleOnlySpawnMultiplier
 	}
+	if p.Level >= p.tuning.BlackOnlyLevel {
+		interval *= p.tuning.BlackOnlySpawnMultiplier
+	}
 	return interval
 }
 

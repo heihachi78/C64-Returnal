@@ -163,7 +163,7 @@ func TestUnlockAndUpgradeBeamMatchesOriginalKillCountAndInterval(t *testing.T) {
 	}
 }
 
-func TestTimedSkeletonSpawnKindTurnsRedThenPurpleAtOriginalThresholds(t *testing.T) {
+func TestTimedSkeletonSpawnKindTurnsRedThenPurpleThenBlackAtThresholds(t *testing.T) {
 	g := New()
 	g.session.Progression.Level = g.tuning.RedOnlyLevel
 	if got := g.timedSkeletonSpawnKind(); got != SkeletonRed {
@@ -173,6 +173,29 @@ func TestTimedSkeletonSpawnKindTurnsRedThenPurpleAtOriginalThresholds(t *testing
 	g.session.Progression.Level = g.tuning.PurpleOnlyLevel
 	if got := g.timedSkeletonSpawnKind(); got != SkeletonPurple {
 		t.Fatalf("spawn kind at purple threshold = %v, want purple", got)
+	}
+
+	g.session.Progression.Level = g.tuning.BlackOnlyLevel - 1
+	if got := g.timedSkeletonSpawnKind(); got != SkeletonPurple {
+		t.Fatalf("spawn kind before black threshold = %v, want purple", got)
+	}
+
+	g.session.Progression.Level = g.tuning.BlackOnlyLevel
+	if got := g.timedSkeletonSpawnKind(); got != SkeletonBlack {
+		t.Fatalf("spawn kind at black threshold = %v, want black", got)
+	}
+}
+
+func TestBlackOnlyLevelIncreasesTimedSkeletonSpawnInterval(t *testing.T) {
+	p := NewProgression(DefaultTuning())
+
+	p.Level = p.tuning.BlackOnlyLevel - 1
+	beforeBlack := p.SkeletonSpawnInterval()
+	p.Level = p.tuning.BlackOnlyLevel
+	black := p.SkeletonSpawnInterval()
+
+	if black <= beforeBlack {
+		t.Fatalf("black spawn interval = %v, want greater than level-before-black interval %v", black, beforeBlack)
 	}
 }
 
