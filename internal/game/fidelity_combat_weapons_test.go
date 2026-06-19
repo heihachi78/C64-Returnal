@@ -622,6 +622,25 @@ func TestLightningRemainingTargetsPreserveOriginalTieOrder(t *testing.T) {
 	}
 }
 
+func TestLightningChainsFromPreviouslyStruckEnemy(t *testing.T) {
+	g := New()
+	g.session.Progression.ApplyLevelUpOption(LearnLightning)
+	g.session.Progression.ApplyLevelUpOption(LightningBounce)
+	g.skeleton = []Skeleton{
+		{ID: 101, Pos: Vec2{X: 20, Y: 0}, HP: 1},
+		{ID: 202, Pos: Vec2{X: 35, Y: 0}, HP: 1},
+		{ID: 303, Pos: Vec2{X: 0, Y: 25}, HP: 1},
+	}
+
+	targets := g.chainLightningTargets()
+	if len(targets) != 2 {
+		t.Fatalf("target count = %d, want 2", len(targets))
+	}
+	if targets[0].targetID != 101 || targets[1].targetID != 202 {
+		t.Fatalf("chain lightning targets = %+v, want 101 then next closest from 101: 202", targets)
+	}
+}
+
 func TestLightningCastCreatesTargetHitDuplicateEffect(t *testing.T) {
 	g := New()
 	g.session.Progression.ApplyLevelUpOption(LearnLightning)
