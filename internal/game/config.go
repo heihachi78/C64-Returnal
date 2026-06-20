@@ -49,6 +49,7 @@ type Tuning struct {
 	BlueMonsterHitPoints       int
 	BlueMonsterMinimumEnemies  int
 	BlueMonsterSpawnRateFactor float64
+	BlueMonsterCullDivisor     int
 	SpatialIndexCellSize       float64
 
 	FireballSpeed              float64
@@ -122,7 +123,7 @@ func DefaultTuning() Tuning {
 		PurpleOnlyLevel:            75,
 		PurpleOnlySpawnMultiplier:  6,
 		BlackOnlyLevel:             100,
-		BlackOnlySpawnMultiplier:   6,
+		BlackOnlySpawnMultiplier:   5,
 		RedHitPoints:               2,
 		RedKillInterval:            100,
 		PurpleHitPoints:            5,
@@ -130,9 +131,10 @@ func DefaultTuning() Tuning {
 		BlackHitPoints:             30,
 		BlackPurpleKillInterval:    100,
 		BlueMonsterMinimumLevel:    101,
-		BlueMonsterHitPoints:       100,
+		BlueMonsterHitPoints:       1000,
 		BlueMonsterMinimumEnemies:  666,
-		BlueMonsterSpawnRateFactor: 0.8,
+		BlueMonsterSpawnRateFactor: 0.95,
+		BlueMonsterCullDivisor:     0,
 		SpatialIndexCellSize:       96,
 
 		FireballSpeed:              280,
