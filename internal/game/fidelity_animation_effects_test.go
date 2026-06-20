@@ -341,41 +341,27 @@ func TestHitFlashAlphaCurvesMatchOriginalActionSequences(t *testing.T) {
 	}
 }
 
-func TestMeteorImpactEffectMatchesOriginalActionSequence(t *testing.T) {
+func TestMeteorImpactEffectKeepsOriginalDuration(t *testing.T) {
 	if math.Abs(meteorImpactEffectDuration-0.32) > 0.0001 {
 		t.Fatalf("meteorImpactEffectDuration = %v, want 0.32", meteorImpactEffectDuration)
 	}
-
-	effect := Effect{Kind: EffectMeteorImpact, TTL: meteorImpactEffectDuration, MaxTTL: meteorImpactEffectDuration}
-	if got := meteorImpactPresentation(effect); math.Abs(got.Scale-0.25) > 0.0001 || math.Abs(got.Alpha-1) > 0.0001 {
-		t.Fatalf("initial meteor presentation = %+v, want scale 0.25 alpha 1", got)
-	}
-	effect.TTL = meteorImpactEffectDuration - 0.08
-	if got := meteorImpactPresentation(effect); math.Abs(got.Scale-1) > 0.0001 || math.Abs(got.Alpha-1) > 0.0001 {
-		t.Fatalf("grown meteor presentation = %+v, want scale 1 alpha 1", got)
-	}
-	effect.TTL = 0
-	if got := meteorImpactPresentation(effect); math.Abs(got.Scale-1) > 0.0001 || math.Abs(got.Alpha) > 0.0001 {
-		t.Fatalf("final meteor presentation = %+v, want scale 1 alpha 0", got)
-	}
 }
 
-func TestMeteorImpactRenderScalesWholeEffectNodeLikeOriginal(t *testing.T) {
+func TestMeteorImpactGroundShakeUsesSmallDecayingBackgroundOffset(t *testing.T) {
 	effect := Effect{Kind: EffectMeteorImpact, Radius: 48, TTL: meteorImpactEffectDuration, MaxTTL: meteorImpactEffectDuration}
-	style := meteorImpactRenderStyle(effect)
-	if math.Abs(style.Radius-12) > 0.0001 || math.Abs(style.CoreRadius-4.2) > 0.0001 {
-		t.Fatalf("initial meteor radii = %+v, want radius 12 core 4.2", style)
-	}
-	if math.Abs(style.GlowWidth-0.75) > 0.0001 || math.Abs(style.StrokeWidth-0.5) > 0.0001 {
-		t.Fatalf("initial meteor stroke widths = %+v, want glow 0.75 stroke 0.5", style)
+	shake := meteorImpactShakePresentation(effect)
+	if shake.Radius != 48 || shake.OffsetX != 0 || shake.OffsetY != 3 {
+		t.Fatalf("initial meteor shake = %+v, want radius 48 offset (0,3)", shake)
 	}
 
 	effect.TTL = meteorImpactEffectDuration - 0.08
-	style = meteorImpactRenderStyle(effect)
-	if math.Abs(style.Radius-48) > 0.0001 || math.Abs(style.CoreRadius-16.8) > 0.0001 {
-		t.Fatalf("grown meteor radii = %+v, want radius 48 core 16.8", style)
+	shake = meteorImpactShakePresentation(effect)
+	if shake.Radius != 48 || math.Hypot(shake.OffsetX, shake.OffsetY) >= 3 {
+		t.Fatalf("mid meteor shake = %+v, want same radius with smaller offset", shake)
 	}
-	if math.Abs(style.GlowWidth-3) > 0.0001 || math.Abs(style.StrokeWidth-2) > 0.0001 {
-		t.Fatalf("grown meteor stroke widths = %+v, want glow 3 stroke 2", style)
+
+	effect.TTL = 0
+	if shake = meteorImpactShakePresentation(effect); shake.OffsetX != 0 || shake.OffsetY != 0 {
+		t.Fatalf("final meteor shake = %+v, want settled ground", shake)
 	}
 }

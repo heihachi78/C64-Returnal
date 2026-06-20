@@ -44,52 +44,62 @@ func (g *Game) drawEffect(screen *ebiten.Image, effect Effect) {
 		vector.StrokeLine(screen, float32(startX), float32(startY), float32(endX), float32(endY), 7, color.RGBA{255, 240, 56, alpha / 3}, false)
 		vector.StrokeLine(screen, float32(startX), float32(startY), float32(endX), float32(endY), 4, color.RGBA{255, 240, 56, alpha}, false)
 		vector.StrokeLine(screen, float32(startX), float32(startY), float32(endX), float32(endY), 1, color.RGBA{255, 255, 255, alpha}, false)
-	case EffectMeteorImpact:
-		x, y := g.worldToScreen(effect.Pos)
-		style := meteorImpactRenderStyle(effect)
-		vector.DrawFilledCircle(screen, float32(x), float32(y), float32(style.Radius), color.RGBA{74, 43, 20, scaleAlpha(115, style.Alpha)}, false)
-		vector.DrawFilledCircle(screen, float32(x), float32(y), float32(style.CoreRadius), color.RGBA{156, 97, 43, scaleAlpha(166, style.Alpha)}, false)
-		vector.StrokeCircle(screen, float32(x), float32(y), float32(style.Radius), float32(style.GlowWidth), color.RGBA{194, 128, 61, scaleAlpha(64, style.Alpha)}, false)
-		vector.StrokeCircle(screen, float32(x), float32(y), float32(style.Radius), float32(style.StrokeWidth), color.RGBA{194, 128, 61, scaleAlpha(217, style.Alpha)}, false)
 	}
 }
 
-type meteorImpactStyle struct {
-	Scale float64
-	Alpha float64
-}
-type meteorImpactRenderMetrics struct {
-	Radius      float64
-	CoreRadius  float64
-	GlowWidth   float64
-	StrokeWidth float64
-	Alpha       float64
+type meteorImpactShake struct {
+	Radius  float64
+	OffsetX float64
+	OffsetY float64
 }
 
-func meteorImpactPresentation(effect Effect) meteorImpactStyle {
-	if effect.MaxTTL <= 0 {
-		return meteorImpactStyle{Scale: 1, Alpha: 0}
+func (g *Game) drawGroundEffects(screen *ebiten.Image) {
+	for _, effect := range g.effects {
+		if effect.Kind == EffectMeteorImpact {
+			g.drawMeteorImpactGroundShake(screen, effect)
+		}
+	}
+}
+
+func (g *Game) drawMeteorImpactGroundShake(screen *ebiten.Image, effect Effect) {
+	shake := meteorImpactShakePresentation(effect)
+	if shake.Radius <= 0 || (shake.OffsetX == 0 && shake.OffsetY == 0) {
+		return
+	}
+
+	tile := g.tuning.TileSize
+	startColumn := int(math.Floor((effect.Pos.X - shake.Radius) / tile))
+	endColumn := int(math.Floor((effect.Pos.X + shake.Radius) / tile))
+	startRow := int(math.Floor((effect.Pos.Y - shake.Radius) / tile))
+	endRow := int(math.Floor((effect.Pos.Y + shake.Radius) / tile))
+
+	for row := startRow; row <= endRow; row++ {
+		for column := startColumn; column <= endColumn; column++ {
+			tileCenter := Vec2{
+				X: float64(column)*tile + tile/2,
+				Y: float64(row)*tile + tile/2,
+			}
+			distance := tileCenter.Sub(effect.Pos).Len()
+			falloff := Clamp(1-distance/(shake.Radius+tile/2), 0, 1)
+			if falloff <= 0 {
+				continue
+			}
+			g.drawGrassTile(screen, column, row, math.Round(shake.OffsetX*falloff), math.Round(shake.OffsetY*falloff))
+		}
+	}
+}
+
+func meteorImpactShakePresentation(effect Effect) meteorImpactShake {
+	if effect.MaxTTL <= 0 || effect.Radius <= 0 {
+		return meteorImpactShake{}
 	}
 	age := Clamp(effect.MaxTTL-effect.TTL, 0, effect.MaxTTL)
-	switch {
-	case age < 0.08:
-		return meteorImpactStyle{Scale: 0.25 + 0.75*(age/0.08), Alpha: 1}
-	case age < 0.16:
-		return meteorImpactStyle{Scale: 1, Alpha: 1}
-	default:
-		fade := Clamp((age-0.16)/0.16, 0, 1)
-		return meteorImpactStyle{Scale: 1, Alpha: 1 - fade}
-	}
-}
-func meteorImpactRenderStyle(effect Effect) meteorImpactRenderMetrics {
-	presentation := meteorImpactPresentation(effect)
-	radius := effect.Radius * presentation.Scale
-	return meteorImpactRenderMetrics{
-		Radius:      radius,
-		CoreRadius:  radius * 0.35,
-		GlowWidth:   3 * presentation.Scale,
-		StrokeWidth: 2 * presentation.Scale,
-		Alpha:       presentation.Alpha,
+	progress := Clamp(age/effect.MaxTTL, 0, 1)
+	amplitude := 4 * (1 - progress) * (1 - progress)
+	return meteorImpactShake{
+		Radius:  effect.Radius,
+		OffsetX: math.Round(math.Sin(age*92) * amplitude),
+		OffsetY: math.Round(math.Cos(age*73) * amplitude * 0.65),
 	}
 }
 func scaleAlpha(base uint8, alpha float64) uint8 {

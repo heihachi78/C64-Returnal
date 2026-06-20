@@ -166,7 +166,7 @@ func TestPickupIndicatorDirectionUpdatesAsPlayerMoves(t *testing.T) {
 }
 
 func TestWorldRenderLayerOrderMatchesOriginalZPositions(t *testing.T) {
-	want := []float64{-20, 8.5, 8.75, 9, 9.5, 10, 11, 12, 13, 14}
+	want := []float64{-20, -19, 8.5, 8.75, 9, 9.5, 10, 11, 12, 13, 14}
 	got := worldRenderLayerOrder()
 	if !slices.Equal(got, want) {
 		t.Fatalf("world render layer order = %v, want original z order %v", got, want)

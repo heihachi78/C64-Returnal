@@ -75,8 +75,8 @@ func (p Progression) SkeletonSpawnInterval() float64 {
 	return interval / p.skeletonSpawnRate
 }
 
-func (p *Progression) SlowSkeletonSpawnRate() {
-	p.skeletonSpawnRate = math.Max(0, p.skeletonSpawnRate) / 2
+func (p *Progression) ScaleSkeletonSpawnRate(factor float64) {
+	p.skeletonSpawnRate = math.Max(0, p.skeletonSpawnRate) * math.Max(0, factor)
 }
 
 func (p Progression) FireballCastInterval() float64 {

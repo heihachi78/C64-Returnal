@@ -263,6 +263,22 @@ func TestBlueMonsterSpawnSlowsSpawnRateAndCullsHalfTheHorde(t *testing.T) {
 	t.Fatal("blue monster was not preserved after cull")
 }
 
+func TestBlueMonsterSpawnRateFactorIsConfigurable(t *testing.T) {
+	g := New()
+	g.tuning.BlueMonsterSpawnRateFactor = 0.25
+	g.session.Progression = NewProgression(g.tuning)
+	g.session.Progression.Level = g.tuning.BlueMonsterMinimumLevel
+	g.skeleton = makeSkeletonHorde(g.tuning.BlueMonsterMinimumEnemies + 1)
+	beforeInterval := g.session.Progression.SkeletonSpawnInterval()
+
+	g.spawnTimedSkeleton()
+
+	afterInterval := g.session.Progression.SkeletonSpawnInterval()
+	if math.Abs(afterInterval-beforeInterval*4) > 0.0001 {
+		t.Fatalf("spawn interval after blue = %v, want quadruple %v", afterInterval, beforeInterval)
+	}
+}
+
 func makeSkeletonHorde(count int) []Skeleton {
 	skeletons := make([]Skeleton, count)
 	for i := range skeletons {

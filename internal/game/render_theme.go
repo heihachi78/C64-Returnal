@@ -43,6 +43,7 @@ const (
 	combatRowKillsOffsetY  = 20
 
 	worldLayerGrass        = -20.0
+	worldLayerGroundEffect = -19.0
 	worldLayerChest        = 8.5
 	worldLayerCoin         = 8.75
 	worldLayerSkeleton     = 9.0

@@ -5,6 +5,7 @@ import "github.com/hajimehoshi/ebiten/v2"
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(c64Green)
 	g.drawGrass(screen)
+	g.drawGroundEffects(screen)
 	g.drawWorld(screen)
 	g.drawHUD(screen)
 	g.drawPickupIndicators(screen)
@@ -44,7 +45,7 @@ func (g *Game) drawWorld(screen *ebiten.Image) {
 		g.drawFireball(screen, fire)
 	}
 	for _, effect := range g.effects {
-		if effect.Kind != EffectLightningHit {
+		if effect.Kind != EffectLightningHit && effect.Kind != EffectMeteorImpact {
 			g.drawEffect(screen, effect)
 		}
 	}
@@ -55,6 +56,7 @@ func (g *Game) drawWorld(screen *ebiten.Image) {
 func worldRenderLayerOrder() []float64 {
 	return []float64{
 		worldLayerGrass,
+		worldLayerGroundEffect,
 		worldLayerChest,
 		worldLayerCoin,
 		worldLayerSkeleton,

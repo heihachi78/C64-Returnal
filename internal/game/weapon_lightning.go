@@ -94,17 +94,18 @@ func (g *Game) chainLightningTargets() []lightningStrikeTarget {
 	if count <= 0 {
 		return nil
 	}
-	reserved := map[int]bool{}
+	fireballFinishingTargets := map[int]bool{}
 	for _, fire := range g.fireball {
 		if fire.TargetID != 0 {
-			reserved[fire.TargetID] = true
+			fireballFinishingTargets[fire.TargetID] = true
 		}
 	}
 	remaining := make([]int, 0, len(g.skeleton))
 	for i := range g.skeleton {
-		if !reserved[g.skeleton[i].ID] {
-			remaining = append(remaining, i)
+		if fireballFinishingTargets[g.skeleton[i].ID] && g.skeleton[i].HP <= 1 {
+			continue
 		}
+		remaining = append(remaining, i)
 	}
 	targets := make([]lightningStrikeTarget, 0, count)
 	origin := g.player.Pos

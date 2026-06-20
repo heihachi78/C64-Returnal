@@ -14,17 +14,21 @@ func (g *Game) drawGrass(screen *ebiten.Image) {
 		for columnOffset := 0; columnOffset < columns; columnOffset++ {
 			column := startColumn + columnOffset
 			row := startRow + rowOffset
-			world := Vec2{
-				X: float64(column)*tile + tile/2,
-				Y: float64(row)*tile + tile/2,
-			}
-			sx, sy := g.worldToScreen(world)
-			img := g.assets.Grass[g.grassHash(column, row, 17)%len(g.assets.Grass)]
-			flip := g.grassHash(column, row, 31)%2 == 1
-			tint := g.grassTint(column, row)
-			g.drawSpriteRotatedBlend(screen, img, sx, sy, tile, tile, 0, flip, tint, grassTintBlendFactor)
+			g.drawGrassTile(screen, column, row, 0, 0)
 		}
 	}
+}
+func (g *Game) drawGrassTile(screen *ebiten.Image, column, row int, offsetX, offsetY float64) {
+	tile := g.tuning.TileSize
+	world := Vec2{
+		X: float64(column)*tile + tile/2,
+		Y: float64(row)*tile + tile/2,
+	}
+	sx, sy := g.worldToScreen(world)
+	img := g.assets.Grass[g.grassHash(column, row, 17)%len(g.assets.Grass)]
+	flip := g.grassHash(column, row, 31)%2 == 1
+	tint := g.grassTint(column, row)
+	g.drawSpriteRotatedBlend(screen, img, sx+offsetX, sy+offsetY, tile, tile, 0, flip, tint, grassTintBlendFactor)
 }
 func grassGrid(screenW, screenH int, tile float64, center Vec2) (startColumn, startRow, columns, rows int) {
 	columns = max(6, int(math.Ceil(float64(screenW)/tile))+4)

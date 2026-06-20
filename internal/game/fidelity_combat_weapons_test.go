@@ -582,7 +582,27 @@ func TestLightningTargetsUseStableSkeletonIdentifiers(t *testing.T) {
 	}
 }
 
-func TestLightningTargetsSkipFireballReservedSkeletonsLikeOriginal(t *testing.T) {
+func TestLightningTargetsNearestFireballReservedSkeletonWithMoreThanOneHP(t *testing.T) {
+	g := New()
+	g.session.Progression.ApplyLevelUpOption(LearnLightning)
+	g.session.Progression.ApplyLevelUpOption(LightningBounce)
+	g.skeleton = []Skeleton{
+		{ID: 101, Pos: Vec2{X: 10, Y: 0}, HP: 2},
+		{ID: 202, Pos: Vec2{X: 20, Y: 0}, HP: 1},
+		{ID: 303, Pos: Vec2{X: 30, Y: 0}, HP: 1},
+	}
+	g.fireball = []Fireball{{TargetID: 101}}
+
+	targets := g.chainLightningTargets()
+	if len(targets) != 2 {
+		t.Fatalf("target count = %d, want nearest two targets", len(targets))
+	}
+	if targets[0].targetID != 101 || targets[1].targetID != 202 {
+		t.Fatalf("lightning targets = %+v, want nearest targets 101 then 202", targets)
+	}
+}
+
+func TestLightningSkipsFireballReservedSkeletonWithOneHP(t *testing.T) {
 	g := New()
 	g.session.Progression.ApplyLevelUpOption(LearnLightning)
 	g.session.Progression.ApplyLevelUpOption(LightningBounce)
@@ -595,10 +615,10 @@ func TestLightningTargetsSkipFireballReservedSkeletonsLikeOriginal(t *testing.T)
 
 	targets := g.chainLightningTargets()
 	if len(targets) != 2 {
-		t.Fatalf("target count = %d, want two non-reserved targets", len(targets))
+		t.Fatalf("target count = %d, want two non-finishing-fireball targets", len(targets))
 	}
 	if targets[0].targetID != 202 || targets[1].targetID != 303 {
-		t.Fatalf("lightning targets = %+v, want non-fireball targets 202 then 303", targets)
+		t.Fatalf("lightning targets = %+v, want non-finishing-fireball targets 202 then 303", targets)
 	}
 }
 

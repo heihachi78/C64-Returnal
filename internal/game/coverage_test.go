@@ -427,7 +427,7 @@ func TestCoverageWeaponBranches(t *testing.T) {
 	g.session.Progression.LightningBounceCount = 1
 	g.fireball = []Fireball{{TargetID: 4}}
 	if targets := g.chainLightningTargets(); len(targets) != 0 {
-		t.Fatalf("reserved lightning targets = %v, want none", targets)
+		t.Fatalf("fireball-finishing lightning targets = %v, want none", targets)
 	}
 	g.session.Progression.LightningUnlocked = false
 	if targets := g.chainLightningTargets(); targets != nil {
@@ -574,14 +574,14 @@ func TestCoveragePresentationEdgeValues(t *testing.T) {
 	if got := linearPingPong(1, 0); got != 0 {
 		t.Fatalf("linearPingPong zero period = %v, want 0", got)
 	}
-	if got := meteorImpactPresentation(Effect{TTL: 1, MaxTTL: 0}); got != (meteorImpactStyle{Scale: 1, Alpha: 0}) {
-		t.Fatalf("meteorImpactPresentation zero max = %+v", got)
+	if got := meteorImpactShakePresentation(Effect{TTL: 1, MaxTTL: 0, Radius: 48}); got != (meteorImpactShake{}) {
+		t.Fatalf("meteorImpactShakePresentation zero max = %+v", got)
 	}
-	if got := meteorImpactPresentation(Effect{TTL: 0.2, MaxTTL: 0.3}); got.Alpha != 1 || got.Scale != 1 {
-		t.Fatalf("meteorImpactPresentation hold = %+v", got)
+	if got := meteorImpactShakePresentation(Effect{TTL: 0.2, MaxTTL: 0.3, Radius: 48}); got.Radius != 48 {
+		t.Fatalf("meteorImpactShakePresentation active = %+v, want radius 48", got)
 	}
-	if got := meteorImpactPresentation(Effect{TTL: 0, MaxTTL: 0.4}); got.Alpha != 0 || got.Scale != 1 {
-		t.Fatalf("meteorImpactPresentation fade = %+v", got)
+	if got := meteorImpactShakePresentation(Effect{TTL: 0, MaxTTL: 0.4, Radius: 48}); got.OffsetX != 0 || got.OffsetY != 0 {
+		t.Fatalf("meteorImpactShakePresentation final = %+v, want settled ground", got)
 	}
 	if got := redrawPulseScale(0); got != 1 {
 		t.Fatalf("redrawPulseScale idle = %v, want 1", got)

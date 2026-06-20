@@ -16,8 +16,8 @@ const (
 	meteorImpactEffectDuration  = 0.32
 	debugLevelJumpTarget        = 100
 	debugLevelJumpCoins         = 5000
-	debugLevelJumpGoldChests    = 25
-	debugLevelJumpChestRadius   = 72
+	debugLevelJumpGoldChests    = 40
+	debugLevelJumpChestRadius   = 56
 )
 
 type Tuning struct {
@@ -48,6 +48,7 @@ type Tuning struct {
 	BlueMonsterMinimumLevel    int
 	BlueMonsterHitPoints       int
 	BlueMonsterMinimumEnemies  int
+	BlueMonsterSpawnRateFactor float64
 	SpatialIndexCellSize       float64
 
 	FireballSpeed              float64
@@ -121,16 +122,17 @@ func DefaultTuning() Tuning {
 		PurpleOnlyLevel:            75,
 		PurpleOnlySpawnMultiplier:  6,
 		BlackOnlyLevel:             100,
-		BlackOnlySpawnMultiplier:   10,
+		BlackOnlySpawnMultiplier:   6,
 		RedHitPoints:               2,
 		RedKillInterval:            100,
 		PurpleHitPoints:            5,
 		PurpleKillInterval:         500,
-		BlackHitPoints:             25,
+		BlackHitPoints:             30,
 		BlackPurpleKillInterval:    100,
 		BlueMonsterMinimumLevel:    101,
 		BlueMonsterHitPoints:       100,
 		BlueMonsterMinimumEnemies:  666,
+		BlueMonsterSpawnRateFactor: 0.8,
 		SpatialIndexCellSize:       96,
 
 		FireballSpeed:              280,
