@@ -164,7 +164,7 @@ func TestUnlockAndUpgradeBeamMatchesOriginalKillCountAndInterval(t *testing.T) {
 	}
 }
 
-func TestAttackSpawnRateOptionsStopBeforeOneSixtiethSecond(t *testing.T) {
+func TestAttackSpeedOptionsStopBeforeOneSixtiethSecond(t *testing.T) {
 	tuning := DefaultTuning()
 	tuning.InitialFireballCast = 0.018
 	tuning.FireballIntervalMultiplier = 0.9
@@ -180,19 +180,19 @@ func TestAttackSpawnRateOptionsStopBeforeOneSixtiethSecond(t *testing.T) {
 	p.ApplyLevelUpOption(LearnMeteor)
 
 	options := p.AvailableLevelUpOptions()
-	for _, option := range []LevelUpOption{FireRate, ExtraFireball, LightningRate, LightningBounce, BeamRate, MeteorRate, ExtraMeteor} {
+	for _, option := range []LevelUpOption{FireRate, LightningRate, BeamRate, MeteorRate} {
 		if slices.Contains(options, option) {
-			t.Fatalf("options = %v, want capped spawn-rate option %v removed", options, option)
+			t.Fatalf("options = %v, want capped speed option %v removed", options, option)
 		}
 	}
-	for _, option := range []LevelUpOption{ExtraLife, HalveSkeletons, BeamKillCount, LearnOrb} {
+	for _, option := range []LevelUpOption{ExtraFireball, LightningBounce, ExtraMeteor, ExtraLife, HalveSkeletons, BeamKillCount, LearnOrb} {
 		if !slices.Contains(options, option) {
 			t.Fatalf("options = %v, want remaining upgrade %v available", options, option)
 		}
 	}
 }
 
-func TestAttackSpawnRateUpgradeCanLandExactlyOnOneSixtiethSecond(t *testing.T) {
+func TestAttackSpeedUpgradeCanLandExactlyOnOneSixtiethSecond(t *testing.T) {
 	tuning := DefaultTuning()
 	tuning.InitialFireballCast = minAttackSpawnInterval / 0.5
 	tuning.FireballIntervalMultiplier = 0.5
@@ -210,7 +210,7 @@ func TestAttackSpawnRateUpgradeCanLandExactlyOnOneSixtiethSecond(t *testing.T) {
 	}
 }
 
-func TestCappedAttackSpawnRateOptionsDoNotApplyDirectly(t *testing.T) {
+func TestCappedAttackSpeedOptionsDoNotApplyDirectly(t *testing.T) {
 	tuning := DefaultTuning()
 	tuning.InitialFireballCast = 0.018
 	tuning.FireballIntervalMultiplier = 0.9
@@ -236,23 +236,23 @@ func TestCappedAttackSpawnRateOptionsDoNotApplyDirectly(t *testing.T) {
 	if got, want := p.FireballCastInterval(), tuning.InitialFireballCast; got != want {
 		t.Fatalf("fireball interval = %v, want unchanged %v", got, want)
 	}
-	if got, want := p.SimultaneousFireball, 1; got != want {
-		t.Fatalf("fireball count = %d, want unchanged %d", got, want)
+	if got, want := p.SimultaneousFireball, 2; got != want {
+		t.Fatalf("fireball count = %d, want upgraded %d", got, want)
 	}
 	if got, want := p.LightningCastInterval(), tuning.InitialLightningCast; got != want {
 		t.Fatalf("lightning interval = %v, want unchanged %v", got, want)
 	}
-	if got, want := p.LightningStrikeCount(), 1; got != want {
-		t.Fatalf("lightning strike count = %d, want unchanged %d", got, want)
+	if got, want := p.LightningStrikeCount(), 2; got != want {
+		t.Fatalf("lightning strike count = %d, want upgraded %d", got, want)
 	}
 	if got, want := p.BeamCastInterval(), tuning.InitialBeamCast; got != want {
 		t.Fatalf("beam interval = %v, want unchanged %v", got, want)
 	}
-	if got, want := p.MeteorSpawnInterval(), tuning.InitialMeteorCast; got != want {
-		t.Fatalf("meteor spawn interval = %v, want unchanged %v", got, want)
+	if got, want := p.MeteorCastInterval(), tuning.InitialMeteorCast; got != want {
+		t.Fatalf("meteor interval = %v, want unchanged %v", got, want)
 	}
-	if got, want := p.MeteorCount(), 1; got != want {
-		t.Fatalf("meteor count = %d, want unchanged %d", got, want)
+	if got, want := p.MeteorCount(), 2; got != want {
+		t.Fatalf("meteor count = %d, want upgraded %d", got, want)
 	}
 }
 

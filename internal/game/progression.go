@@ -214,55 +214,16 @@ func (p Progression) LevelUpOptionAvailable(option LevelUpOption) bool {
 func (p Progression) attackSpawnIntervalAfterOption(option LevelUpOption) (float64, bool) {
 	switch option {
 	case FireRate:
-		return fireballSpawnInterval(
-			p.tuning.InitialFireballCast*math.Pow(p.tuning.FireballIntervalMultiplier, float64(p.fireRateUpgrades+1)),
-			p.SimultaneousFireball,
-		), true
-	case ExtraFireball:
-		return fireballSpawnInterval(p.FireballCastInterval(), p.SimultaneousFireball+1), true
+		return p.tuning.InitialFireballCast * math.Pow(p.tuning.FireballIntervalMultiplier, float64(p.fireRateUpgrades+1)), true
 	case LightningRate:
-		return lightningSpawnInterval(
-			p.tuning.InitialLightningCast*math.Pow(p.tuning.LightningIntervalMultiplier, float64(p.lightningRateUpgrades+1)),
-			p.lightningStrikeCountRaw(),
-		), true
-	case LightningBounce:
-		return lightningSpawnInterval(p.LightningCastInterval(), p.lightningStrikeCountRaw()+1), true
+		return p.tuning.InitialLightningCast * math.Pow(p.tuning.LightningIntervalMultiplier, float64(p.lightningRateUpgrades+1)), true
 	case BeamRate:
 		return p.tuning.InitialBeamCast * math.Pow(p.tuning.BeamIntervalMultiplier, float64(p.beamRateUpgrades+1)), true
 	case MeteorRate:
-		interval := p.tuning.InitialMeteorCast * math.Pow(p.tuning.MeteorIntervalMultiplier, float64(p.meteorRateUpgrades+1))
-		count := p.MeteorCount()
-		if count <= 0 {
-			return interval, true
-		}
-		return interval / float64(count), true
-	case ExtraMeteor:
-		count := p.MeteorCount() + 1
-		if count <= 0 {
-			return p.MeteorCastInterval(), true
-		}
-		return p.MeteorCastInterval() / float64(count), true
+		return p.tuning.InitialMeteorCast * math.Pow(p.tuning.MeteorIntervalMultiplier, float64(p.meteorRateUpgrades+1)), true
 	default:
 		return 0, false
 	}
-}
-
-func fireballSpawnInterval(castInterval float64, fireballCount int) float64 {
-	if fireballCount <= 0 {
-		return math.Inf(1)
-	}
-	return castInterval / float64(fireballCount)
-}
-
-func (p Progression) lightningStrikeCountRaw() int {
-	return p.LightningBounceCount + 1
-}
-
-func lightningSpawnInterval(castInterval float64, strikeCount int) float64 {
-	if strikeCount <= 0 {
-		return math.Inf(1)
-	}
-	return castInterval / float64(strikeCount)
 }
 
 func (p *Progression) GainExperience(amount int) int {
@@ -295,15 +256,11 @@ func (p *Progression) ApplyLevelUpOption(option LevelUpOption) {
 			p.fireRateUpgrades++
 		}
 	case ExtraFireball:
-		if p.LevelUpOptionAvailable(option) {
-			p.SimultaneousFireball++
-		}
+		p.SimultaneousFireball++
 	case LearnLightning:
 		p.LightningUnlocked = true
 	case LightningBounce:
-		if p.LevelUpOptionAvailable(option) {
-			p.LightningBounceCount++
-		}
+		p.LightningBounceCount++
 	case LightningRate:
 		if p.LevelUpOptionAvailable(option) {
 			p.lightningRateUpgrades++
@@ -326,9 +283,7 @@ func (p *Progression) ApplyLevelUpOption(option LevelUpOption) {
 	case LearnMeteor:
 		p.MeteorUnlocked = true
 	case ExtraMeteor:
-		if p.LevelUpOptionAvailable(option) {
-			p.upgradedMeteorCount++
-		}
+		p.upgradedMeteorCount++
 	case MeteorRate:
 		if p.LevelUpOptionAvailable(option) {
 			p.meteorRateUpgrades++
