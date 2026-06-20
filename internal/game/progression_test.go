@@ -229,7 +229,7 @@ func TestBlueMonsterOnlySpawnsAfterLevel100WithLargeHorde(t *testing.T) {
 	}
 }
 
-func TestBlueMonsterSpawnDoublesSpawnRateAndCullsHalfTheHorde(t *testing.T) {
+func TestBlueMonsterSpawnSlowsSpawnRateAndCullsHalfTheHorde(t *testing.T) {
 	g := New()
 	g.session.Progression.Level = g.tuning.BlueMonsterMinimumLevel
 	g.skeleton = makeSkeletonHorde(g.tuning.BlueMonsterMinimumEnemies + 1)
@@ -241,12 +241,13 @@ func TestBlueMonsterSpawnDoublesSpawnRateAndCullsHalfTheHorde(t *testing.T) {
 	if got, want := countSkeletonKind(g.skeleton, SkeletonBlue), 1; got != want {
 		t.Fatalf("blue monsters = %d, want %d", got, want)
 	}
-	if got, want := len(g.skeleton), 2502; got != want {
+	wantCount := g.tuning.BlueMonsterMinimumEnemies + 2 - (g.tuning.BlueMonsterMinimumEnemies+1)/2
+	if got, want := len(g.skeleton), wantCount; got != want {
 		t.Fatalf("skeleton count after blue cull = %d, want %d", got, want)
 	}
 	afterInterval := g.session.Progression.SkeletonSpawnInterval()
-	if math.Abs(afterInterval-beforeInterval/2) > 0.0001 {
-		t.Fatalf("spawn interval after blue = %v, want half of %v", afterInterval, beforeInterval)
+	if math.Abs(afterInterval-beforeInterval*2) > 0.0001 {
+		t.Fatalf("spawn interval after blue = %v, want double %v", afterInterval, beforeInterval)
 	}
 	for _, skeleton := range g.skeleton {
 		if skeleton.Kind == SkeletonBlue {

@@ -72,7 +72,7 @@ go test ./...
 
 You start with three lives and a single auto-cast fireball. Skeletons spawn outside the viewport and chase the player. Defeated skeletons grant experience; enough experience opens a level-up overlay with two choices, sometimes three.
 
-Upgrades can improve existing weapons, add lives, unlock new weapon families, or occasionally halve the current horde. Gold coins spawn once per level well outside the visible screen; collecting one grants 1 to 100 coins. During a level-up choice, redraw spends coins equal to your current level and replaces all visible upgrade options. As levels rise, skeleton spawn timing changes and stronger variants enter the rotation. After level 100, giant blue monsters can enter oversized hordes, thin the enemy count, and accelerate future spawns. Chests appear at kill milestones and grant skill-focused upgrades based on the weapons you have already learned.
+Upgrades can improve existing weapons, add lives, unlock new weapon families, or occasionally halve the current horde. Gold coins spawn once per level well outside the visible screen; collecting one grants 1 to 100 coins. During a level-up choice, redraw spends coins equal to your current level and replaces all visible upgrade options. As levels rise, skeleton spawn timing changes and stronger variants enter the rotation. After level 100, giant blue monsters can enter oversized hordes, thin the enemy count, and slow future spawns. Chests appear at kill milestones and grant skill-focused upgrades based on the weapons you have already learned.
 
 ## Project Layout
 

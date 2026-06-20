@@ -109,7 +109,7 @@ func (g *Game) shouldSpawnBlueMonster() bool {
 }
 func (g *Game) spawnBlueMonster() {
 	blue := g.addSkeleton(SkeletonBlue)
-	g.session.Progression.DoubleSkeletonSpawnRate()
+	g.session.Progression.SlowSkeletonSpawnRate()
 	g.cullHalfEnemiesForBlueMonster(blue.ID)
 }
 func (g *Game) addSkeleton(kind SkeletonKind) Skeleton {

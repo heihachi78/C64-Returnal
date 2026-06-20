@@ -69,11 +69,14 @@ func (p Progression) SkeletonSpawnInterval() float64 {
 	if p.Level >= p.tuning.BlackOnlyLevel {
 		interval *= p.tuning.BlackOnlySpawnMultiplier
 	}
-	return interval / math.Max(1, p.skeletonSpawnRate)
+	if p.skeletonSpawnRate <= 0 {
+		return math.Inf(1)
+	}
+	return interval / p.skeletonSpawnRate
 }
 
-func (p *Progression) DoubleSkeletonSpawnRate() {
-	p.skeletonSpawnRate = math.Max(1, p.skeletonSpawnRate) * 2
+func (p *Progression) SlowSkeletonSpawnRate() {
+	p.skeletonSpawnRate = math.Max(0, p.skeletonSpawnRate) / 2
 }
 
 func (p Progression) FireballCastInterval() float64 {
