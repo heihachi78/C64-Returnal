@@ -109,8 +109,17 @@ func (g *Game) shouldSpawnBlueMonster() bool {
 }
 func (g *Game) spawnBlueMonster() {
 	blue := g.addSkeleton(SkeletonBlue)
+	g.session.BlueMonstersSpawned++
+	g.skeleton[len(g.skeleton)-1].HP = blueMonsterHitPoints(g.tuning.BlueMonsterHitPoints, g.session.BlueMonstersSpawned)
 	g.session.Progression.ScaleSkeletonSpawnRate(g.tuning.BlueMonsterSpawnRateFactor)
-	g.cullHalfEnemiesForBlueMonster(blue.ID)
+	g.cullEnemiesForBlueMonster(blue.ID)
+}
+func blueMonsterHitPoints(baseHitPoints, spawnCount int) int {
+	hitPoints := max(1, baseHitPoints)
+	for i := 1; i < spawnCount; i++ {
+		hitPoints = int(math.Ceil(float64(hitPoints) * 1.25))
+	}
+	return hitPoints
 }
 func (g *Game) addSkeleton(kind SkeletonKind) Skeleton {
 	s := Skeleton{
@@ -125,14 +134,14 @@ func (g *Game) addSkeleton(kind SkeletonKind) Skeleton {
 	g.skeleton = append(g.skeleton, s)
 	return s
 }
-func (g *Game) cullHalfEnemiesForBlueMonster(blueID int) {
+func (g *Game) cullEnemiesForBlueMonster(blueID int) {
 	targetIDs := make([]int, 0, len(g.skeleton))
 	for _, skeleton := range g.skeleton {
 		if skeleton.ID != blueID {
 			targetIDs = append(targetIDs, skeleton.ID)
 		}
 	}
-	cullCount := len(targetIDs) / 2
+	cullCount := blueMonsterCullCount(len(targetIDs), g.tuning.BlueMonsterCullDivisor)
 	if cullCount <= 0 {
 		return
 	}
@@ -149,6 +158,12 @@ func (g *Game) cullHalfEnemiesForBlueMonster(blueID int) {
 	}
 	g.skeleton = remaining
 	g.spatial.Rebuild(g.skeleton)
+}
+func blueMonsterCullCount(enemyCount, divisor int) int {
+	if divisor <= 0 {
+		return 0
+	}
+	return enemyCount / divisor
 }
 func (g *Game) skeletonSpawnPosition() Vec2 {
 	halfW := float64(g.screenW) / 2

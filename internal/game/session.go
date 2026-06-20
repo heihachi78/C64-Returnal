@@ -26,6 +26,7 @@ type Session struct {
 	OrbitalOrbAngle            float64
 	PendingLevelUpLevels       []int
 	Kills                      KillCounts
+	BlueMonstersSpawned        int
 	NextChestMilestone         int
 	CollectedCoins             int
 	SpawnedCoinLevels          map[int]bool

@@ -6,6 +6,8 @@ import (
 	"math"
 )
 
+const fireballProjectileSpriteSize = 9
+
 func (g *Game) drawGrass(screen *ebiten.Image) {
 	tile := g.tuning.TileSize
 	startColumn, startRow, columns, rows := grassGrid(g.screenW, g.screenH, tile, g.player.Pos)
@@ -87,7 +89,7 @@ func skeletonSpriteSize(kind SkeletonKind) (float64, float64) {
 func (g *Game) drawFireball(screen *ebiten.Image, fire Fireball) {
 	x, y := g.worldToScreen(fire.Pos)
 	angle := worldRotationToScreen(math.Atan2(fire.Velocity.Y, fire.Velocity.X))
-	g.drawSpriteRotated(screen, g.assets.Fireball[fire.AnimFrame%len(g.assets.Fireball)], x, y, 18, 18, angle, false, color.RGBA{255, 255, 255, 255})
+	g.drawSpriteRotated(screen, g.assets.Fireball[fire.AnimFrame%len(g.assets.Fireball)], x, y, fireballProjectileSpriteSize, fireballProjectileSpriteSize, angle, false, color.RGBA{255, 255, 255, 255})
 }
 func (g *Game) drawOrb(screen *ebiten.Image, orb OrbitalOrb) {
 	x, y := g.worldToScreen(orb.Pos)

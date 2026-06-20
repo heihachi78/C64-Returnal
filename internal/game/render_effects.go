@@ -7,6 +7,8 @@ import (
 	"math"
 )
 
+const lightningBoltStrokeScale = 0.25
+
 func (g *Game) drawEffect(screen *ebiten.Image, effect Effect) {
 	alpha := effectFadeAlpha(effect.TTL, effect.MaxTTL)
 	switch effect.Kind {
@@ -15,10 +17,10 @@ func (g *Game) drawEffect(screen *ebiten.Image, effect Effect) {
 		if len(innerPoints) == 0 {
 			innerPoints = effect.Points
 		}
-		g.drawBolt(screen, effect.Points, g.tuning.LightningBranchWidth+5, color.RGBA{33, 163, 255, alpha / 2})
-		g.drawBolt(screen, effect.Points, g.tuning.LightningBranchWidth, color.RGBA{33, 163, 255, alpha})
-		g.drawBolt(screen, innerPoints, 2, color.RGBA{255, 255, 255, alpha / 2})
-		g.drawBolt(screen, innerPoints, 1, color.RGBA{255, 255, 255, alpha})
+		g.drawBolt(screen, effect.Points, (g.tuning.LightningBranchWidth+5)*lightningBoltStrokeScale, color.RGBA{33, 163, 255, alpha / 2})
+		g.drawBolt(screen, effect.Points, g.tuning.LightningBranchWidth*lightningBoltStrokeScale, color.RGBA{33, 163, 255, alpha})
+		g.drawBolt(screen, innerPoints, 2*lightningBoltStrokeScale, color.RGBA{255, 255, 255, alpha / 2})
+		g.drawBolt(screen, innerPoints, 1*lightningBoltStrokeScale, color.RGBA{255, 255, 255, alpha})
 		endX, endY := g.worldToScreen(effect.End)
 		g.drawSpriteScreen(screen, g.assets.Lightning, endX, endY, 24, 24, false, color.RGBA{255, 255, 255, alpha})
 	case EffectLightningHit:

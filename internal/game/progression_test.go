@@ -229,7 +229,7 @@ func TestBlueMonsterOnlySpawnsAfterLevel100WithLargeHorde(t *testing.T) {
 	}
 }
 
-func TestBlueMonsterSpawnSlowsSpawnRateAndCullsHalfTheHorde(t *testing.T) {
+func TestBlueMonsterSpawnSlowsSpawnRateAndCullsConfiguredShareOfHorde(t *testing.T) {
 	g := New()
 	g.session.Progression.Level = g.tuning.BlueMonsterMinimumLevel
 	g.skeleton = makeSkeletonHorde(g.tuning.BlueMonsterMinimumEnemies + 1)
@@ -241,13 +241,14 @@ func TestBlueMonsterSpawnSlowsSpawnRateAndCullsHalfTheHorde(t *testing.T) {
 	if got, want := countSkeletonKind(g.skeleton, SkeletonBlue), 1; got != want {
 		t.Fatalf("blue monsters = %d, want %d", got, want)
 	}
-	wantCount := g.tuning.BlueMonsterMinimumEnemies + 2 - (g.tuning.BlueMonsterMinimumEnemies+1)/2
+	wantCount := g.tuning.BlueMonsterMinimumEnemies + 2 - (g.tuning.BlueMonsterMinimumEnemies+1)/g.tuning.BlueMonsterCullDivisor
 	if got, want := len(g.skeleton), wantCount; got != want {
 		t.Fatalf("skeleton count after blue cull = %d, want %d", got, want)
 	}
 	afterInterval := g.session.Progression.SkeletonSpawnInterval()
-	if math.Abs(afterInterval-beforeInterval*2) > 0.0001 {
-		t.Fatalf("spawn interval after blue = %v, want double %v", afterInterval, beforeInterval)
+	wantInterval := beforeInterval / g.tuning.BlueMonsterSpawnRateFactor
+	if math.Abs(afterInterval-wantInterval) > 0.0001 {
+		t.Fatalf("spawn interval after blue = %v, want %v", afterInterval, wantInterval)
 	}
 	for _, skeleton := range g.skeleton {
 		if skeleton.Kind == SkeletonBlue {
@@ -261,6 +262,70 @@ func TestBlueMonsterSpawnSlowsSpawnRateAndCullsHalfTheHorde(t *testing.T) {
 		}
 	}
 	t.Fatal("blue monster was not preserved after cull")
+}
+
+func TestBlueMonsterCullDivisorIsConfigurable(t *testing.T) {
+	g := New()
+	g.tuning.BlueMonsterCullDivisor = 4
+	g.skeleton = makeSkeletonHorde(12)
+	g.nextID = 100
+
+	g.spawnBlueMonster()
+
+	if got, want := len(g.skeleton), 10; got != want {
+		t.Fatalf("skeleton count after blue cull divisor 4 = %d, want %d", got, want)
+	}
+	if got, want := countSkeletonKind(g.skeleton, SkeletonBlue), 1; got != want {
+		t.Fatalf("blue monsters after configured cull = %d, want %d", got, want)
+	}
+}
+
+func TestBlueMonsterCullDivisorCanDisableCull(t *testing.T) {
+	g := New()
+	g.tuning.BlueMonsterCullDivisor = 0
+	g.skeleton = makeSkeletonHorde(12)
+
+	g.spawnBlueMonster()
+
+	if got, want := len(g.skeleton), 13; got != want {
+		t.Fatalf("skeleton count after disabled blue cull = %d, want %d", got, want)
+	}
+}
+
+func TestBlueMonsterHitPointsGrowByTwentyFivePercentPerSpawn(t *testing.T) {
+	tests := []struct {
+		spawns int
+		want   int
+	}{
+		{spawns: 1, want: 1000},
+		{spawns: 2, want: 1250},
+		{spawns: 3, want: 1563},
+		{spawns: 4, want: 1954},
+	}
+	for _, tt := range tests {
+		if got := blueMonsterHitPoints(1000, tt.spawns); got != tt.want {
+			t.Fatalf("blue monster HP after %d spawns = %d, want %d", tt.spawns, got, tt.want)
+		}
+	}
+}
+
+func TestRepeatedBlueMonsterSpawnsUseIncreasingHitPoints(t *testing.T) {
+	g := New()
+	g.skeleton = nil
+	g.nextID = 1
+	wantHP := []int{1000, 1250, 1563}
+
+	for _, want := range wantHP {
+		g.spawnBlueMonster()
+		newID := g.nextID - 1
+		idx := findSkeletonByID(g.skeleton, newID)
+		if idx < 0 {
+			t.Fatalf("new blue monster %d was not preserved", newID)
+		}
+		if got := g.skeleton[idx].HP; got != want {
+			t.Fatalf("blue monster %d HP = %d, want %d", newID, got, want)
+		}
+	}
 }
 
 func TestBlueMonsterSpawnRateFactorIsConfigurable(t *testing.T) {
@@ -285,6 +350,15 @@ func makeSkeletonHorde(count int) []Skeleton {
 		skeletons[i] = Skeleton{ID: i + 1, Kind: SkeletonRegular, HP: 1, Reward: 1}
 	}
 	return skeletons
+}
+
+func findSkeletonByID(skeletons []Skeleton, id int) int {
+	for i, skeleton := range skeletons {
+		if skeleton.ID == id {
+			return i
+		}
+	}
+	return -1
 }
 
 func countSkeletonKind(skeletons []Skeleton, kind SkeletonKind) int {
