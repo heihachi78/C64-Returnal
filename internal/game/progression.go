@@ -185,6 +185,17 @@ func (p *Progression) GainExperience(amount int) int {
 	return levelUps
 }
 
+func (p *Progression) GainExperienceToLevel(targetLevel int) int {
+	if targetLevel <= p.Level {
+		return 0
+	}
+	amount := p.NextExperience - p.Experience
+	for level := p.Level + 1; level < targetLevel; level++ {
+		amount += ExperienceRequirement(level)
+	}
+	return p.GainExperience(amount)
+}
+
 func (p *Progression) ApplyLevelUpOption(option LevelUpOption) {
 	switch option {
 	case FireRate:

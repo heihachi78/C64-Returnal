@@ -21,6 +21,10 @@ func (g *Game) updateOverlayInput() (bool, error) {
 		return false, nil
 	}
 
+	if isJumpToLevel100DebugJustPressed() {
+		return g.handleJumpToLevel100DebugKeyDown(), nil
+	}
+
 	if g.session.ChestRewardActive {
 		g.suppressModalHeldMovementKeys(ebitenIsKeyPressed)
 		if inpututilIsKeyJustPressed(chestRewardAdvanceKey()) {
@@ -106,4 +110,10 @@ func isKillAllAndGrantExperienceKey(key ebiten.Key) bool {
 }
 func isKillAllAndGrantExperienceJustPressed() bool {
 	return inpututilIsKeyJustPressed(ebiten.KeyDigit1) || inpututilIsKeyJustPressed(ebiten.KeyNumpad1)
+}
+func isJumpToLevel100DebugKey(key ebiten.Key) bool {
+	return key == ebiten.KeyDigit0 || key == ebiten.KeyNumpad0
+}
+func isJumpToLevel100DebugJustPressed() bool {
+	return inpututilIsKeyJustPressed(ebiten.KeyDigit0) || inpututilIsKeyJustPressed(ebiten.KeyNumpad0)
 }

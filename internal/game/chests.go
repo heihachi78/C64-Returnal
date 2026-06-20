@@ -8,6 +8,22 @@ import (
 func (g *Game) spawnChest(tier ChestTier) {
 	g.chests = append(g.chests, Chest{Pos: g.randomChestPosition(), Tier: tier})
 }
+func (g *Game) spawnGoldChestsAroundPlayer(count int, radius float64) {
+	if count <= 0 {
+		return
+	}
+	radius = math.Max(0, radius)
+	for i := 0; i < count; i++ {
+		angle := math.Pi * 2 * float64(i) / float64(count)
+		g.chests = append(g.chests, Chest{
+			Pos: Vec2{
+				X: g.player.Pos.X + math.Cos(angle)*radius,
+				Y: g.player.Pos.Y + math.Sin(angle)*radius,
+			},
+			Tier: ChestGold,
+		})
+	}
+}
 func (g *Game) randomChestPosition() Vec2 {
 	halfW := math.Max(48, float64(g.screenW)/2-g.tuning.ChestSpawnMargin)
 	halfH := math.Max(48, float64(g.screenH)/2-g.tuning.ChestSpawnMargin)

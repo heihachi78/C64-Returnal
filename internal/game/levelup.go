@@ -135,3 +135,26 @@ func (g *Game) hideLevelUpPresentation() {
 	g.session.LevelUpTitleScaleTimer = 0
 	g.session.LevelUpOptionFadeTimer = 0
 }
+
+func (g *Game) handleJumpToLevel100DebugKeyDown() bool {
+	g.jumpToLevel100Debug()
+	return false
+}
+
+func (g *Game) jumpToLevel100Debug() {
+	levelUps := g.session.Progression.GainExperienceToLevel(debugLevelJumpTarget)
+	g.session.CollectedCoins += debugLevelJumpCoins
+	g.spawnGoldChestsAroundPlayer(debugLevelJumpGoldChests, debugLevelJumpChestRadius)
+	g.clearDebugJumpPresentationState()
+	g.queueLevelUpChoices(levelUps)
+	g.presentNextLevelUpChoiceIfNeeded()
+}
+
+func (g *Game) clearDebugJumpPresentationState() {
+	g.session.LevelUpChoiceActive = false
+	g.session.ChestRewardActive = false
+	g.session.ActiveLevelUpOptions = nil
+	g.session.ActiveChestRewardItems = nil
+	g.hideLevelUpPresentation()
+	g.session.ChestRewardOverlayTimer = 0
+}

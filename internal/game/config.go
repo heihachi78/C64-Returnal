@@ -14,6 +14,10 @@ const (
 	playerDeathRotationDuration = 0.16
 	skeletonDamageFlashDuration = 0.24
 	meteorImpactEffectDuration  = 0.32
+	debugLevelJumpTarget        = 100
+	debugLevelJumpCoins         = 5000
+	debugLevelJumpGoldChests    = 25
+	debugLevelJumpChestRadius   = 72
 )
 
 type Tuning struct {
@@ -126,7 +130,7 @@ func DefaultTuning() Tuning {
 		BlackPurpleKillInterval:    100,
 		BlueMonsterMinimumLevel:    101,
 		BlueMonsterHitPoints:       100,
-		BlueMonsterMinimumEnemies:  1000,
+		BlueMonsterMinimumEnemies:  666,
 		SpatialIndexCellSize:       96,
 
 		FireballSpeed:              280,

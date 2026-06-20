@@ -32,6 +32,12 @@ func TestModalAndDebugKeysMatchOriginalInputBindings(t *testing.T) {
 	if isKillAllAndGrantExperienceKey(ebiten.KeyDigit2) {
 		t.Fatalf("kill-all accepted digit 2, want only original 1 bindings")
 	}
+	if !isJumpToLevel100DebugKey(ebiten.KeyDigit0) || !isJumpToLevel100DebugKey(ebiten.KeyNumpad0) {
+		t.Fatalf("level-100 debug keys did not include main and numpad 0")
+	}
+	if isJumpToLevel100DebugKey(ebiten.KeyDigit1) {
+		t.Fatalf("level-100 debug accepted digit 1, want only 0 bindings")
+	}
 }
 
 func TestFirstUpdateEstablishesTimeWithoutAdvancingSimulationLikeOriginal(t *testing.T) {
@@ -113,6 +119,70 @@ func TestDebugKillAllKeyDownDoesNotConsumeUpdateFrameLikeOriginal(t *testing.T) 
 	g.updatePausedAnimations(1.0 / float64(TargetTPS))
 	if math.Abs(g.session.LevelUpOverlayTimer-1.0/float64(TargetTPS)) > 0.0001 {
 		t.Fatalf("level-up overlay timer after non-consumed keyDown = %v, want one frame", g.session.LevelUpOverlayTimer)
+	}
+}
+
+func TestDebugJumpToLevel100QueuesProgressionChoicesAndGold(t *testing.T) {
+	g := New()
+	g.player.Pos = Vec2{X: 25, Y: -40}
+	g.session.Progression.GainExperienceToLevel(3)
+	g.session.LevelUpChoiceActive = true
+	g.session.ChestRewardActive = true
+	g.session.PendingLevelUpLevels = []int{2, 3}
+	g.session.ActiveLevelUpOptions = []LevelUpOption{FireRate}
+	g.session.ActiveChestRewardItems = []ChestRewardDisplayItem{{Option: FireRate, Title: "FASTER FIRE"}}
+	g.chests = []Chest{{Tier: ChestBronze, Pos: Vec2{X: 999, Y: 999}}}
+
+	if g.handleJumpToLevel100DebugKeyDown() {
+		t.Fatal("level-100 debug consumed frame, want scene update to continue")
+	}
+
+	if got := g.session.Progression.Level; got != debugLevelJumpTarget {
+		t.Fatalf("level after debug jump = %d, want %d", got, debugLevelJumpTarget)
+	}
+	if got := g.session.Progression.Experience; got != 0 {
+		t.Fatalf("experience remainder after debug jump = %d, want 0", got)
+	}
+	if got, want := g.session.Progression.NextExperience, ExperienceRequirement(debugLevelJumpTarget); got != want {
+		t.Fatalf("next experience after debug jump = %d, want %d", got, want)
+	}
+	if got := g.session.CollectedCoins; got != debugLevelJumpCoins {
+		t.Fatalf("coins after debug jump = %d, want %d", got, debugLevelJumpCoins)
+	}
+	if got, want := len(g.chests), debugLevelJumpGoldChests+1; got != want {
+		t.Fatalf("chests after debug jump = %d, want %d", got, want)
+	}
+	if g.chests[0].Tier != ChestBronze {
+		t.Fatalf("existing chest tier after debug jump = %v, want preserved bronze", g.chests[0].Tier)
+	}
+	for i, chest := range g.chests[1:] {
+		if chest.Tier != ChestGold {
+			t.Fatalf("debug chest %d tier = %v, want gold", i, chest.Tier)
+		}
+		if got := math.Sqrt(DistanceSq(chest.Pos, g.player.Pos)); math.Abs(got-debugLevelJumpChestRadius) > 0.0001 {
+			t.Fatalf("debug chest %d radius = %v, want %v", i, got, debugLevelJumpChestRadius)
+		}
+	}
+	if g.session.Progression.LightningUnlocked || g.session.Progression.OrbitalOrbUnlocked || g.session.Progression.BeamUnlocked || g.session.Progression.MeteorUnlocked {
+		t.Fatal("debug jump unlocked skills before the player chose them")
+	}
+	if g.session.Progression.SimultaneousFireball != 1 || g.session.PlayerLives != g.tuning.InitialPlayerLives {
+		t.Fatalf("debug jump applied upgrades before choice: fireballs=%d lives=%d", g.session.Progression.SimultaneousFireball, g.session.PlayerLives)
+	}
+	if !g.session.LevelUpChoiceActive || g.session.ChestRewardActive {
+		t.Fatalf("debug jump modal state active levelUp=%v chest=%v, want level-up only", g.session.LevelUpChoiceActive, g.session.ChestRewardActive)
+	}
+	if got, want := len(g.session.PendingLevelUpLevels), debugLevelJumpTarget-1; got != want {
+		t.Fatalf("pending choices after debug jump = %d, want %d", got, want)
+	}
+	if got := g.session.CurrentLevelUpPresentation; got != 2 {
+		t.Fatalf("current level-up presentation after debug jump = %d, want existing pending level 2", got)
+	}
+	if len(g.session.ActiveLevelUpOptions) == 0 {
+		t.Fatal("debug jump did not present level-up options")
+	}
+	if len(g.session.ActiveChestRewardItems) != 0 {
+		t.Fatalf("chest reward items after debug jump = %v, want cleared", g.session.ActiveChestRewardItems)
 	}
 }
 

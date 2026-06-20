@@ -67,6 +67,7 @@ go test ./...
 | Advance chest reward overlay | `Q` |
 | Restart or exit after game over | Click the HUD option |
 | Development kill-all shortcut | `1` / keypad `1` |
+| Development jump to level 100 | `0` / keypad `0` |
 
 ## Gameplay Notes
 
