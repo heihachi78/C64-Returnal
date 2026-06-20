@@ -63,8 +63,9 @@ func (g *Game) impactMeteor(pos Vec2) {
 func (g *Game) meteorImpactTargetIDs(pos Vec2) []int {
 	targets := []int{}
 	damageRadius := g.meteorImpactDamageRadius()
-	radiusSq := damageRadius * damageRadius
 	g.spatial.ForEachNear(pos, damageRadius, g.skeleton, func(i int) bool {
+		radius := g.tuning.MeteorImpactRadius + skeletonBodyRadius(g.tuning, g.skeleton[i].Kind)
+		radiusSq := radius * radius
 		if DistanceSq(pos, g.skeleton[i].Pos) <= radiusSq {
 			targets = append(targets, g.skeleton[i].ID)
 		}
@@ -73,7 +74,7 @@ func (g *Game) meteorImpactTargetIDs(pos Vec2) []int {
 	return targets
 }
 func (g *Game) meteorImpactDamageRadius() float64 {
-	return g.tuning.MeteorImpactRadius + g.tuning.SkeletonHitDistance
+	return g.tuning.MeteorImpactRadius + skeletonBodyRadius(g.tuning, SkeletonBlue)
 }
 func (g *Game) updateMeteorAnimation(dt float64) {
 	if len(g.meteors) == 0 {

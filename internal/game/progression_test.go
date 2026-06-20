@@ -3,6 +3,7 @@ package game
 import (
 	"math"
 	"math/rand"
+	"slices"
 	"testing"
 )
 
@@ -160,6 +161,98 @@ func TestUnlockAndUpgradeBeamMatchesOriginalKillCountAndInterval(t *testing.T) {
 	}
 	if got := p.BeamCastInterval(); got >= tuning.InitialBeamCast {
 		t.Fatalf("BeamCastInterval = %v, want less than original %v after rate upgrade", got, tuning.InitialBeamCast)
+	}
+}
+
+func TestAttackSpawnRateOptionsStopBeforeOneSixtiethSecond(t *testing.T) {
+	tuning := DefaultTuning()
+	tuning.InitialFireballCast = 0.018
+	tuning.FireballIntervalMultiplier = 0.9
+	tuning.InitialLightningCast = 0.018
+	tuning.LightningIntervalMultiplier = 0.9
+	tuning.InitialBeamCast = 0.018
+	tuning.BeamIntervalMultiplier = 0.9
+	tuning.InitialMeteorCast = 0.018
+	tuning.MeteorIntervalMultiplier = 0.9
+	p := NewProgression(tuning)
+	p.ApplyLevelUpOption(LearnLightning)
+	p.ApplyLevelUpOption(LearnBeam)
+	p.ApplyLevelUpOption(LearnMeteor)
+
+	options := p.AvailableLevelUpOptions()
+	for _, option := range []LevelUpOption{FireRate, ExtraFireball, LightningRate, LightningBounce, BeamRate, MeteorRate, ExtraMeteor} {
+		if slices.Contains(options, option) {
+			t.Fatalf("options = %v, want capped spawn-rate option %v removed", options, option)
+		}
+	}
+	for _, option := range []LevelUpOption{ExtraLife, HalveSkeletons, BeamKillCount, LearnOrb} {
+		if !slices.Contains(options, option) {
+			t.Fatalf("options = %v, want remaining upgrade %v available", options, option)
+		}
+	}
+}
+
+func TestAttackSpawnRateUpgradeCanLandExactlyOnOneSixtiethSecond(t *testing.T) {
+	tuning := DefaultTuning()
+	tuning.InitialFireballCast = minAttackSpawnInterval / 0.5
+	tuning.FireballIntervalMultiplier = 0.5
+	p := NewProgression(tuning)
+
+	if !p.LevelUpOptionAvailable(FireRate) {
+		t.Fatal("fire rate upgrade that lands exactly on 1/60s was unavailable")
+	}
+	p.ApplyLevelUpOption(FireRate)
+	if math.Abs(p.FireballCastInterval()-minAttackSpawnInterval) > 0.000001 {
+		t.Fatalf("fireball interval = %v, want %v", p.FireballCastInterval(), minAttackSpawnInterval)
+	}
+	if p.LevelUpOptionAvailable(FireRate) {
+		t.Fatal("fire rate upgrade below 1/60s remained available")
+	}
+}
+
+func TestCappedAttackSpawnRateOptionsDoNotApplyDirectly(t *testing.T) {
+	tuning := DefaultTuning()
+	tuning.InitialFireballCast = 0.018
+	tuning.FireballIntervalMultiplier = 0.9
+	tuning.InitialLightningCast = 0.018
+	tuning.LightningIntervalMultiplier = 0.9
+	tuning.InitialBeamCast = 0.018
+	tuning.BeamIntervalMultiplier = 0.9
+	tuning.InitialMeteorCast = 0.018
+	tuning.MeteorIntervalMultiplier = 0.9
+	p := NewProgression(tuning)
+	p.ApplyLevelUpOption(LearnLightning)
+	p.ApplyLevelUpOption(LearnBeam)
+	p.ApplyLevelUpOption(LearnMeteor)
+
+	p.ApplyLevelUpOption(FireRate)
+	p.ApplyLevelUpOption(ExtraFireball)
+	p.ApplyLevelUpOption(LightningRate)
+	p.ApplyLevelUpOption(LightningBounce)
+	p.ApplyLevelUpOption(BeamRate)
+	p.ApplyLevelUpOption(MeteorRate)
+	p.ApplyLevelUpOption(ExtraMeteor)
+
+	if got, want := p.FireballCastInterval(), tuning.InitialFireballCast; got != want {
+		t.Fatalf("fireball interval = %v, want unchanged %v", got, want)
+	}
+	if got, want := p.SimultaneousFireball, 1; got != want {
+		t.Fatalf("fireball count = %d, want unchanged %d", got, want)
+	}
+	if got, want := p.LightningCastInterval(), tuning.InitialLightningCast; got != want {
+		t.Fatalf("lightning interval = %v, want unchanged %v", got, want)
+	}
+	if got, want := p.LightningStrikeCount(), 1; got != want {
+		t.Fatalf("lightning strike count = %d, want unchanged %d", got, want)
+	}
+	if got, want := p.BeamCastInterval(), tuning.InitialBeamCast; got != want {
+		t.Fatalf("beam interval = %v, want unchanged %v", got, want)
+	}
+	if got, want := p.MeteorSpawnInterval(), tuning.InitialMeteorCast; got != want {
+		t.Fatalf("meteor spawn interval = %v, want unchanged %v", got, want)
+	}
+	if got, want := p.MeteorCount(), 1; got != want {
+		t.Fatalf("meteor count = %d, want unchanged %d", got, want)
 	}
 }
 

@@ -337,6 +337,58 @@ func TestMeteorImpactRadiusUsesInclusiveSkeletonBodyOverlap(t *testing.T) {
 	}
 }
 
+func TestBlueMonsterHitboxScalesWithLargerSprite(t *testing.T) {
+	g := New()
+	g.tuning.SkeletonHitDistance = 24
+
+	if got, want := skeletonBodyRadius(g.tuning, SkeletonBlue), skeletonBodyRadius(g.tuning, SkeletonRegular)*skeletonSpriteScale(SkeletonBlue); got != want {
+		t.Fatalf("blue body radius = %v, want %v", got, want)
+	}
+
+	g.skeleton = []Skeleton{{ID: 101, Kind: SkeletonRegular, Pos: Vec2{X: 72}, HP: 1}}
+	g.spatial.Rebuild(g.skeleton)
+	if idx := g.firstSkeletonHitByPoint(Vec2{}, g.tuning.SkeletonHitDistance); idx >= 0 {
+		t.Fatalf("regular skeleton hit at blue-only distance index %d, want miss", idx)
+	}
+
+	g.skeleton = []Skeleton{{ID: 202, Kind: SkeletonBlue, Pos: Vec2{X: 72}, HP: 1}}
+	g.spatial.Rebuild(g.skeleton)
+	if idx := g.firstSkeletonHitByPoint(Vec2{}, g.tuning.SkeletonHitDistance); idx != 0 {
+		t.Fatalf("blue skeleton hit at larger boundary index %d, want 0", idx)
+	}
+}
+
+func TestBlueMonsterLargerHitboxAppliesToWeaponHits(t *testing.T) {
+	g := New()
+	g.tuning.SkeletonHitDistance = 24
+	g.tuning.FireballHitDistance = 20
+	g.tuning.BeamHitWidth = 18
+	g.tuning.MeteorImpactRadius = 48
+
+	g.skeleton = []Skeleton{{ID: 101, Kind: SkeletonBlue, Pos: Vec2{X: 68}, HP: 1}}
+	g.spatial.Rebuild(g.skeleton)
+	if idx := g.firstSkeletonHitBySegment(Vec2{Y: -10}, Vec2{Y: 10}, g.tuning.FireballHitDistance); idx != 0 {
+		t.Fatalf("fireball segment blue hit index = %d, want 0", idx)
+	}
+
+	g.skeleton = []Skeleton{{ID: 202, Kind: SkeletonBlue, Pos: Vec2{X: 100, Y: 66}, HP: 1}}
+	g.spatial.Rebuild(g.skeleton)
+	targets := g.beamTargets(Vec2{X: 1}, 140, g.tuning.BeamHitWidth, 1)
+	if len(targets) != 1 || targets[0] != 202 {
+		t.Fatalf("beam blue targets = %v, want [202]", targets)
+	}
+
+	g.skeleton = []Skeleton{
+		{ID: 303, Kind: SkeletonBlue, Pos: Vec2{X: 120}, HP: 1},
+		{ID: 404, Kind: SkeletonBlue, Pos: Vec2{X: 120.0001}, HP: 1},
+	}
+	g.spatial.Rebuild(g.skeleton)
+	targets = g.meteorImpactTargetIDs(Vec2{})
+	if len(targets) != 1 || targets[0] != 303 {
+		t.Fatalf("meteor blue targets = %v, want [303]", targets)
+	}
+}
+
 func TestMeteorImpactTargetsPreserveSpatialCandidateOrderByIdentity(t *testing.T) {
 	g := New()
 	g.skeleton = []Skeleton{

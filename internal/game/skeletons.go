@@ -188,10 +188,44 @@ func (g *Game) checkSkeletonCollisions() {
 	if g.session.PlayerHitInvulnerability > 0 {
 		return
 	}
-	idx := g.spatial.FirstNear(g.player.Pos, g.tuning.SkeletonHitDistance, g.skeleton, func(int) bool { return true })
+	idx := g.firstSkeletonHitByPoint(g.player.Pos, g.tuning.SkeletonHitDistance)
 	if idx >= 0 {
 		g.damagePlayer()
 	}
+}
+func (g *Game) firstSkeletonHitByPoint(pos Vec2, hitDistance float64) int {
+	searchRadius := g.maxSkeletonCollisionRadius(hitDistance)
+	found := -1
+	g.spatial.ForEachNear(pos, searchRadius, g.skeleton, func(i int) bool {
+		radius := g.skeletonCollisionRadius(hitDistance, g.skeleton[i].Kind)
+		if DistanceSq(pos, g.skeleton[i].Pos) <= radius*radius {
+			found = i
+			return false
+		}
+		return true
+	})
+	return found
+}
+func (g *Game) skeletonCollisionRadius(hitDistance float64, kind SkeletonKind) float64 {
+	return hitDistance + skeletonHitboxBonus(g.tuning, kind)
+}
+func (g *Game) maxSkeletonCollisionRadius(hitDistance float64) float64 {
+	return hitDistance + skeletonHitboxBonus(g.tuning, SkeletonBlue)
+}
+func skeletonHitboxBonus(t Tuning, kind SkeletonKind) float64 {
+	return skeletonBodyRadius(t, kind) - t.SkeletonHitDistance
+}
+func skeletonBodyRadius(t Tuning, kind SkeletonKind) float64 {
+	if kind == SkeletonBlue {
+		return t.SkeletonHitDistance * skeletonSpriteScale(kind)
+	}
+	return t.SkeletonHitDistance
+}
+func skeletonSpriteScale(kind SkeletonKind) float64 {
+	if kind == SkeletonBlue {
+		return 3
+	}
+	return 1
 }
 func (g *Game) damageSkeleton(index, amount int, attack AttackKind, queueLevelUp bool) int {
 	if index < 0 || index >= len(g.skeleton) || amount <= 0 {

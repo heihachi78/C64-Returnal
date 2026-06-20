@@ -18,6 +18,7 @@ const (
 	debugLevelJumpCoins         = 5000
 	debugLevelJumpGoldChests    = 40
 	debugLevelJumpChestRadius   = 56
+	minAttackSpawnInterval      = 1.0 / 60.0
 )
 
 type Tuning struct {

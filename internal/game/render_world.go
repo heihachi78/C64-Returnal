@@ -81,10 +81,8 @@ func skeletonSpritePresentation(skeleton Skeleton) spritePresentation {
 	return spritePresentation{Tint: tint, BlendFactor: blendFactor}
 }
 func skeletonSpriteSize(kind SkeletonKind) (float64, float64) {
-	if kind == SkeletonBlue {
-		return 90, 126
-	}
-	return 30, 42
+	scale := skeletonSpriteScale(kind)
+	return 30 * scale, 42 * scale
 }
 func (g *Game) drawFireball(screen *ebiten.Image, fire Fireball) {
 	x, y := g.worldToScreen(fire.Pos)

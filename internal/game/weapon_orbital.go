@@ -55,7 +55,7 @@ func (g *Game) checkOrbitalOrbCollisions() {
 		if !g.orbs[i].Active {
 			continue
 		}
-		idx := g.spatial.FirstNear(g.orbs[i].Pos, g.tuning.OrbitalHitDistance, g.skeleton, func(int) bool { return true })
+		idx := g.firstSkeletonHitByPoint(g.orbs[i].Pos, g.tuning.OrbitalHitDistance)
 		if idx < 0 {
 			continue
 		}

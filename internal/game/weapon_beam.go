@@ -60,7 +60,8 @@ func (g *Game) beamTargets(direction Vec2, length, hitWidth float64, limit int) 
 			continue
 		}
 		closest := g.player.Pos.Add(direction.Mul(progress))
-		if DistanceSq(closest, g.skeleton[i].Pos) > hitWidth*hitWidth {
+		radius := g.skeletonCollisionRadius(hitWidth, g.skeleton[i].Kind)
+		if DistanceSq(closest, g.skeleton[i].Pos) > radius*radius {
 			continue
 		}
 		if len(hits) < limit {

@@ -124,6 +124,14 @@ func (p Progression) MeteorCastInterval() float64 {
 	return p.tuning.InitialMeteorCast * math.Pow(p.tuning.MeteorIntervalMultiplier, float64(p.meteorRateUpgrades))
 }
 
+func (p Progression) MeteorSpawnInterval() float64 {
+	count := p.MeteorCount()
+	if count <= 0 {
+		return math.Inf(1)
+	}
+	return p.MeteorCastInterval() / float64(count)
+}
+
 func (p Progression) MeteorCount() int {
 	if !p.MeteorUnlocked {
 		return 0
@@ -149,28 +157,112 @@ func (p Progression) LearnedSkills() []LearnedSkill {
 }
 
 func (p Progression) AvailableLevelUpOptions() []LevelUpOption {
-	options := []LevelUpOption{FireRate, ExtraFireball, ExtraLife, HalveSkeletons}
+	options := []LevelUpOption{}
+	for _, option := range []LevelUpOption{FireRate, ExtraFireball, ExtraLife, HalveSkeletons} {
+		if p.LevelUpOptionAvailable(option) {
+			options = append(options, option)
+		}
+	}
 	if p.LightningUnlocked {
-		options = append(options, LightningBounce, LightningRate)
+		options = appendAvailableLevelUpOptions(p, options, LightningBounce, LightningRate)
 	} else {
 		options = append(options, LearnLightning)
 	}
 	if p.OrbitalOrbUnlocked {
-		options = append(options, ExtraOrb, OrbitalSpeed)
+		options = appendAvailableLevelUpOptions(p, options, ExtraOrb, OrbitalSpeed)
 	} else {
 		options = append(options, LearnOrb)
 	}
 	if p.BeamUnlocked {
-		options = append(options, BeamRate, BeamKillCount)
+		options = appendAvailableLevelUpOptions(p, options, BeamRate, BeamKillCount)
 	} else {
 		options = append(options, LearnBeam)
 	}
 	if p.MeteorUnlocked {
-		options = append(options, ExtraMeteor, MeteorRate)
+		options = appendAvailableLevelUpOptions(p, options, ExtraMeteor, MeteorRate)
 	} else {
 		options = append(options, LearnMeteor)
 	}
 	return options
+}
+
+func appendAvailableLevelUpOptions(p Progression, options []LevelUpOption, candidates ...LevelUpOption) []LevelUpOption {
+	for _, option := range candidates {
+		if p.LevelUpOptionAvailable(option) {
+			options = append(options, option)
+		}
+	}
+	return options
+}
+
+func (p Progression) AvailableUpgradeOptionsForSkill(skill LearnedSkill) []LevelUpOption {
+	options := skill.UpgradeOptions()
+	filtered := make([]LevelUpOption, 0, len(options))
+	for _, option := range options {
+		if p.LevelUpOptionAvailable(option) {
+			filtered = append(filtered, option)
+		}
+	}
+	return filtered
+}
+
+func (p Progression) LevelUpOptionAvailable(option LevelUpOption) bool {
+	interval, ok := p.attackSpawnIntervalAfterOption(option)
+	return !ok || interval >= minAttackSpawnInterval
+}
+
+func (p Progression) attackSpawnIntervalAfterOption(option LevelUpOption) (float64, bool) {
+	switch option {
+	case FireRate:
+		return fireballSpawnInterval(
+			p.tuning.InitialFireballCast*math.Pow(p.tuning.FireballIntervalMultiplier, float64(p.fireRateUpgrades+1)),
+			p.SimultaneousFireball,
+		), true
+	case ExtraFireball:
+		return fireballSpawnInterval(p.FireballCastInterval(), p.SimultaneousFireball+1), true
+	case LightningRate:
+		return lightningSpawnInterval(
+			p.tuning.InitialLightningCast*math.Pow(p.tuning.LightningIntervalMultiplier, float64(p.lightningRateUpgrades+1)),
+			p.lightningStrikeCountRaw(),
+		), true
+	case LightningBounce:
+		return lightningSpawnInterval(p.LightningCastInterval(), p.lightningStrikeCountRaw()+1), true
+	case BeamRate:
+		return p.tuning.InitialBeamCast * math.Pow(p.tuning.BeamIntervalMultiplier, float64(p.beamRateUpgrades+1)), true
+	case MeteorRate:
+		interval := p.tuning.InitialMeteorCast * math.Pow(p.tuning.MeteorIntervalMultiplier, float64(p.meteorRateUpgrades+1))
+		count := p.MeteorCount()
+		if count <= 0 {
+			return interval, true
+		}
+		return interval / float64(count), true
+	case ExtraMeteor:
+		count := p.MeteorCount() + 1
+		if count <= 0 {
+			return p.MeteorCastInterval(), true
+		}
+		return p.MeteorCastInterval() / float64(count), true
+	default:
+		return 0, false
+	}
+}
+
+func fireballSpawnInterval(castInterval float64, fireballCount int) float64 {
+	if fireballCount <= 0 {
+		return math.Inf(1)
+	}
+	return castInterval / float64(fireballCount)
+}
+
+func (p Progression) lightningStrikeCountRaw() int {
+	return p.LightningBounceCount + 1
+}
+
+func lightningSpawnInterval(castInterval float64, strikeCount int) float64 {
+	if strikeCount <= 0 {
+		return math.Inf(1)
+	}
+	return castInterval / float64(strikeCount)
 }
 
 func (p *Progression) GainExperience(amount int) int {
@@ -199,15 +291,23 @@ func (p *Progression) GainExperienceToLevel(targetLevel int) int {
 func (p *Progression) ApplyLevelUpOption(option LevelUpOption) {
 	switch option {
 	case FireRate:
-		p.fireRateUpgrades++
+		if p.LevelUpOptionAvailable(option) {
+			p.fireRateUpgrades++
+		}
 	case ExtraFireball:
-		p.SimultaneousFireball++
+		if p.LevelUpOptionAvailable(option) {
+			p.SimultaneousFireball++
+		}
 	case LearnLightning:
 		p.LightningUnlocked = true
 	case LightningBounce:
-		p.LightningBounceCount++
+		if p.LevelUpOptionAvailable(option) {
+			p.LightningBounceCount++
+		}
 	case LightningRate:
-		p.lightningRateUpgrades++
+		if p.LevelUpOptionAvailable(option) {
+			p.lightningRateUpgrades++
+		}
 	case LearnOrb:
 		p.OrbitalOrbUnlocked = true
 	case ExtraOrb:
@@ -217,44 +317,53 @@ func (p *Progression) ApplyLevelUpOption(option LevelUpOption) {
 	case LearnBeam:
 		p.BeamUnlocked = true
 	case BeamRate:
-		p.beamRateUpgrades++
+		if p.LevelUpOptionAvailable(option) {
+			p.beamRateUpgrades++
+		}
 	case BeamKillCount:
 		p.beamKillLevel++
 		p.upgradedBeamKillCount += p.beamKillLevel
 	case LearnMeteor:
 		p.MeteorUnlocked = true
 	case ExtraMeteor:
-		p.upgradedMeteorCount++
+		if p.LevelUpOptionAvailable(option) {
+			p.upgradedMeteorCount++
+		}
 	case MeteorRate:
-		p.meteorRateUpgrades++
+		if p.LevelUpOptionAvailable(option) {
+			p.meteorRateUpgrades++
+		}
 	}
 }
 
-func (p *Progression) UpgradeAllProperties(skill LearnedSkill) {
+func (p *Progression) UpgradeAllProperties(skill LearnedSkill) []LevelUpOption {
+	if !p.skillUnlocked(skill) {
+		return nil
+	}
+	applied := []LevelUpOption{}
+	for _, option := range skill.UpgradeOptions() {
+		if !p.LevelUpOptionAvailable(option) {
+			continue
+		}
+		p.ApplyLevelUpOption(option)
+		applied = append(applied, option)
+	}
+	return applied
+}
+
+func (p Progression) skillUnlocked(skill LearnedSkill) bool {
 	switch skill {
 	case SkillFireball:
-		p.fireRateUpgrades++
-		p.SimultaneousFireball++
+		return true
 	case SkillLightning:
-		if p.LightningUnlocked {
-			p.LightningBounceCount++
-			p.lightningRateUpgrades++
-		}
+		return p.LightningUnlocked
 	case SkillOrbitalOrb:
-		if p.OrbitalOrbUnlocked {
-			p.upgradedOrbitalOrbCount++
-			p.orbitalSpeedUpgrades++
-		}
+		return p.OrbitalOrbUnlocked
 	case SkillBeam:
-		if p.BeamUnlocked {
-			p.beamRateUpgrades++
-			p.beamKillLevel++
-			p.upgradedBeamKillCount += p.beamKillLevel
-		}
+		return p.BeamUnlocked
 	case SkillMeteor:
-		if p.MeteorUnlocked {
-			p.upgradedMeteorCount++
-			p.meteorRateUpgrades++
-		}
+		return p.MeteorUnlocked
+	default:
+		return false
 	}
 }

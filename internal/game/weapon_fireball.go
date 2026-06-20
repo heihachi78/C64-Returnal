@@ -89,7 +89,8 @@ func (g *Game) updateHomingFireball(i, targetIndex int, dt float64) {
 	toTarget := g.skeleton[targetIndex].Pos.Sub(fire.Pos)
 	distanceSq := toTarget.LenSq()
 	travel := g.tuning.FireballSpeed * dt
-	if distanceSq == 0 || distanceSq <= (g.tuning.FireballHitDistance+travel)*(g.tuning.FireballHitDistance+travel) {
+	hitDistance := g.skeletonCollisionRadius(g.tuning.FireballHitDistance, g.skeleton[targetIndex].Kind) + travel
+	if distanceSq == 0 || distanceSq <= hitDistance*hitDistance {
 		g.damageSkeleton(targetIndex, 1, AttackFireball, true)
 		g.removeFireball(i)
 		return
@@ -114,9 +115,9 @@ func (g *Game) updateUntargetedFireball(i int, dt float64) {
 func (g *Game) firstSkeletonHitBySegment(start, end Vec2, radius float64) int {
 	delta := end.Sub(start)
 	lengthSq := delta.LenSq()
-	minPos := Vec2{X: math.Min(start.X, end.X) - radius, Y: math.Min(start.Y, end.Y) - radius}
-	maxPos := Vec2{X: math.Max(start.X, end.X) + radius, Y: math.Max(start.Y, end.Y) + radius}
-	hitRadiusSq := radius * radius
+	searchRadius := g.maxSkeletonCollisionRadius(radius)
+	minPos := Vec2{X: math.Min(start.X, end.X) - searchRadius, Y: math.Min(start.Y, end.Y) - searchRadius}
+	maxPos := Vec2{X: math.Max(start.X, end.X) + searchRadius, Y: math.Max(start.Y, end.Y) + searchRadius}
 	bestIndex := -1
 	bestProgress := math.Inf(1)
 	g.spatial.ForEachRect(minPos, maxPos, func(i int) bool {
@@ -125,6 +126,8 @@ func (g *Game) firstSkeletonHitBySegment(start, end Vec2, radius float64) int {
 			progress = Clamp(g.skeleton[i].Pos.Sub(start).X*delta.X/lengthSq+g.skeleton[i].Pos.Sub(start).Y*delta.Y/lengthSq, 0, 1)
 		}
 		closest := start.Add(delta.Mul(progress))
+		hitRadius := g.skeletonCollisionRadius(radius, g.skeleton[i].Kind)
+		hitRadiusSq := hitRadius * hitRadius
 		if DistanceSq(closest, g.skeleton[i].Pos) <= hitRadiusSq && progress < bestProgress {
 			bestIndex = i
 			bestProgress = progress

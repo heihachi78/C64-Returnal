@@ -48,24 +48,29 @@ func (g *Game) checkChestPickups() {
 	}
 }
 func (g *Game) applyChestReward(tier ChestTier) {
-	skills := g.session.Progression.LearnedSkills()
+	skills := g.availableChestRewardSkills()
 	items := []ChestRewardDisplayItem{}
+	if len(skills) == 0 {
+		return
+	}
 	switch tier {
 	case ChestBronze:
 		skill := skills[g.rng.Intn(len(skills))]
-		options := skill.UpgradeOptions()
+		options := g.session.Progression.AvailableUpgradeOptionsForSkill(skill)
 		option := options[g.rng.Intn(len(options))]
 		items = append(items, g.chestRewardItemForSkill(option, skill))
 		g.applyUpgradeEffect(option)
 	case ChestSilver:
 		skill := skills[g.rng.Intn(len(skills))]
-		items = append(items, g.chestRewardItemsForSkill(skill)...)
-		g.session.Progression.UpgradeAllProperties(skill)
+		for _, option := range g.session.Progression.UpgradeAllProperties(skill) {
+			items = append(items, g.chestRewardItemForSkill(option, skill))
+		}
 	case ChestGold:
 		g.rng.Shuffle(len(skills), func(i, j int) { skills[i], skills[j] = skills[j], skills[i] })
 		for _, skill := range skills[:min(2, len(skills))] {
-			items = append(items, g.chestRewardItemsForSkill(skill)...)
-			g.session.Progression.UpgradeAllProperties(skill)
+			for _, option := range g.session.Progression.UpgradeAllProperties(skill) {
+				items = append(items, g.chestRewardItemForSkill(option, skill))
+			}
 		}
 	}
 	g.syncOrbitalOrbCount()
@@ -78,8 +83,18 @@ func (g *Game) applyChestReward(tier ChestTier) {
 		g.stopPlayerAnimation()
 	}
 }
+func (g *Game) availableChestRewardSkills() []LearnedSkill {
+	learned := g.session.Progression.LearnedSkills()
+	skills := make([]LearnedSkill, 0, len(learned))
+	for _, skill := range learned {
+		if len(g.session.Progression.AvailableUpgradeOptionsForSkill(skill)) > 0 {
+			skills = append(skills, skill)
+		}
+	}
+	return skills
+}
 func (g *Game) chestRewardItemsForSkill(skill LearnedSkill) []ChestRewardDisplayItem {
-	options := skill.UpgradeOptions()
+	options := g.session.Progression.AvailableUpgradeOptionsForSkill(skill)
 	items := make([]ChestRewardDisplayItem, 0, len(options))
 	for _, option := range options {
 		items = append(items, g.chestRewardItemForSkill(option, skill))
