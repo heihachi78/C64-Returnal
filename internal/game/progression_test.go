@@ -231,11 +231,22 @@ func TestMageRawDPSIncludesUnlockedWeaponRates(t *testing.T) {
 
 	want := windowedDamageRate(1, p.FireballCastInterval()) +
 		windowedDamageRate(2, p.LightningCastInterval()) +
-		windowedDamageRate(2, orbitalOrbHitInterval(p.OrbitalAngularSpeed())) +
+		windowedCooldownDamageRate(2, orbitalOrbHitInterval(p.OrbitalAngularSpeed())) +
 		windowedDamageRate(3, p.BeamCastInterval()) +
 		windowedDamageRate(2, p.MeteorCastInterval())
 	if got := p.MageRawDPS(); math.Abs(got-want) > 0.000001 {
 		t.Fatalf("unlocked MageRawDPS = %v, want %v", got, want)
+	}
+}
+
+func TestMageRawDPSCountsOrbRespawnOrbitAfterHit(t *testing.T) {
+	p := NewProgression(DefaultTuning())
+	p.ApplyLevelUpOption(LearnOrb)
+
+	want := windowedDamageRate(1, p.FireballCastInterval()) +
+		windowedCooldownDamageRate(1, orbitalOrbHitInterval(p.OrbitalAngularSpeed()))
+	if got := p.MageRawDPS(); math.Abs(got-want) > 0.000001 {
+		t.Fatalf("orb MageRawDPS = %v, want %v", got, want)
 	}
 }
 
