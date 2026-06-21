@@ -302,7 +302,7 @@ func TestDeathWaveRemovesHalfHPFromTouchedNonWhiteSkeletons(t *testing.T) {
 	if g.skeleton[2].HP != 29 {
 		t.Fatalf("outside black skeleton HP = %d, want 29", g.skeleton[2].HP)
 	}
-	if got, want := g.actualDamageWindowTotal, 1; got != want {
+	if got, want := g.actualDamageLevelTotal, 1; got != want {
 		t.Fatalf("recorded death wave damage = %d, want %d", got, want)
 	}
 	if !slices.Equal(wave.HitIDs, []int{101}) {
@@ -321,7 +321,7 @@ func TestDeathWaveLeavesMinimumOneHP(t *testing.T) {
 	if g.skeleton[0].HP != 1 {
 		t.Fatalf("red skeleton HP = %d, want minimum 1", g.skeleton[0].HP)
 	}
-	if got, want := g.actualDamageWindowTotal, 1; got != want {
+	if got, want := g.actualDamageLevelTotal, 1; got != want {
 		t.Fatalf("recorded death wave damage = %d, want %d", got, want)
 	}
 }

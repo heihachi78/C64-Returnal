@@ -4,26 +4,27 @@ func (g *Game) recordActualDamage(amount int) {
 	if amount <= 0 {
 		return
 	}
-	g.actualDamage = append(g.actualDamage, actualDamageSample{Time: g.totalTime, Amount: amount})
-	g.actualDamageWindowTotal += amount
-	g.pruneActualDamageSamples()
-	g.maxActualDPS = max(g.maxActualDPS, g.ActualDPS())
+	g.actualDamageLevelTotal += amount
 }
 
 func (g *Game) ActualDPS() float64 {
-	g.pruneActualDamageSamples()
-	return float64(g.actualDamageWindowTotal) / actualDPSWindow
+	if g.actualDamageLevelTotal <= 0 {
+		return 0
+	}
+	elapsed := g.totalTime - g.actualDamageLevelStartTime - g.actualDamageLevelPausedTime
+	elapsed = max(elapsed, 1.0)
+	return float64(g.actualDamageLevelTotal) / elapsed
 }
 
-func (g *Game) pruneActualDamageSamples() {
-	cutoff := g.totalTime - actualDPSWindow
-	first := 0
-	for first < len(g.actualDamage) && g.actualDamage[first].Time < cutoff {
-		g.actualDamageWindowTotal -= g.actualDamage[first].Amount
-		first++
+func (g *Game) pauseActualDamageLevelStats(dt float64) {
+	if dt <= 0 {
+		return
 	}
-	g.actualDamage = g.actualDamage[first:]
-	if g.actualDamageWindowTotal < 0 {
-		g.actualDamageWindowTotal = 0
-	}
+	g.actualDamageLevelPausedTime += dt
+}
+
+func (g *Game) resetActualDamageLevelStats() {
+	g.actualDamageLevelTotal = 0
+	g.actualDamageLevelStartTime = g.totalTime
+	g.actualDamageLevelPausedTime = 0
 }

@@ -29,9 +29,9 @@ type Game struct {
 	chests                      []Chest
 	coins                       []Coin
 	effects                     []Effect
-	actualDamage                []actualDamageSample
-	actualDamageWindowTotal     int
-	maxActualDPS                float64
+	actualDamageLevelTotal      int
+	actualDamageLevelStartTime  float64
+	actualDamageLevelPausedTime float64
 	pendingSpawnPressureActual  float64
 	pendingSpawnPressureLevels  int
 	skeletonHPPerSecond         float64
@@ -95,9 +95,9 @@ func (g *Game) reset() {
 	g.chests = g.chests[:0]
 	g.coins = g.coins[:0]
 	g.effects = g.effects[:0]
-	g.actualDamage = g.actualDamage[:0]
-	g.actualDamageWindowTotal = 0
-	g.maxActualDPS = 0
+	g.actualDamageLevelTotal = 0
+	g.actualDamageLevelStartTime = 0
+	g.actualDamageLevelPausedTime = 0
 	g.pendingSpawnPressureActual = 0
 	g.pendingSpawnPressureLevels = 0
 	g.skeletonHPPerSecond = initialSkeletonHPPerSecond(g.tuning)

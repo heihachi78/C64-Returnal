@@ -2,6 +2,10 @@ package game
 
 func (g *Game) Update() error {
 	dt := g.beginFrame()
+	wasWorldPaused := g.worldPaused()
+	if wasWorldPaused {
+		g.pauseActualDamageLevelStats(dt)
+	}
 
 	consumedFrame, err := g.updateOverlayInput()
 	if err != nil {

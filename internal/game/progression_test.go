@@ -308,10 +308,12 @@ func TestInitialDynamicSkeletonSpawnRateUsesConfiguredHPPerSecond(t *testing.T) 
 	}
 }
 
-func TestDynamicSpawnPressureUsesPeakActualDPSPlusOne(t *testing.T) {
+func TestDynamicSpawnPressureUsesLevelActualDPSPlusBonus(t *testing.T) {
 	g := New()
 	g.skeletonHPPerSecond = 0.1
-	g.maxActualDPS = 8
+	g.totalTime = 2
+	g.actualDamageLevelStartTime = 1
+	g.actualDamageLevelTotal = 8
 	g.session.Progression.GainExperience(1)
 
 	g.queueLevelUpChoices(1)
@@ -322,12 +324,12 @@ func TestDynamicSpawnPressureUsesPeakActualDPSPlusOne(t *testing.T) {
 
 	g.applyLevelUpOption(ExtraFireball)
 
-	want := 8.0 + 1.0
+	want := 8.0 + g.tuning.SkeletonHPPerSecondLevelUpBonus
 	if got := g.SkeletonHPPerSecond(); math.Abs(got-want) > 0.000001 {
 		t.Fatalf("dynamic skeleton hp/sec = %v, want %v", got, want)
 	}
-	if g.maxActualDPS != 0 {
-		t.Fatalf("max actual dps after level transition = %v, want reset", g.maxActualDPS)
+	if g.actualDamageLevelTotal != 0 {
+		t.Fatalf("actual damage total after level transition = %d, want reset", g.actualDamageLevelTotal)
 	}
 	if g.pendingSpawnPressureLevels != 0 || g.pendingSpawnPressureActual != 0 {
 		t.Fatalf("pending pressure = levels %d actual %v, want cleared", g.pendingSpawnPressureLevels, g.pendingSpawnPressureActual)
@@ -338,7 +340,9 @@ func TestDynamicSpawnPressureUsesConfiguredLevelUpBonus(t *testing.T) {
 	g := New()
 	g.tuning.SkeletonHPPerSecondLevelUpBonus = 2.5
 	g.skeletonHPPerSecond = 4
-	g.maxActualDPS = 8
+	g.totalTime = 2
+	g.actualDamageLevelStartTime = 1
+	g.actualDamageLevelTotal = 8
 	g.session.Progression.GainExperience(1)
 
 	g.queueLevelUpChoices(1)
@@ -349,21 +353,23 @@ func TestDynamicSpawnPressureUsesConfiguredLevelUpBonus(t *testing.T) {
 	}
 }
 
-func TestDynamicSpawnPressureUsesCurrentHPPlusOneWhenItIsHigher(t *testing.T) {
+func TestDynamicSpawnPressureUsesCurrentHPPlusBonusWhenItIsHigher(t *testing.T) {
 	g := New()
 	g.skeletonHPPerSecond = 12
-	g.maxActualDPS = 3
+	g.totalTime = 2
+	g.actualDamageLevelStartTime = 1
+	g.actualDamageLevelTotal = 3
 	g.session.Progression.GainExperience(1)
 
 	g.queueLevelUpChoices(1)
 	g.applyLevelUpOption(ExtraLife)
 
-	if got, want := g.SkeletonHPPerSecond(), 13.0; math.Abs(got-want) > 0.000001 {
-		t.Fatalf("skeleton hp/sec = %v, want current-plus-one %v", got, want)
+	if got, want := g.SkeletonHPPerSecond(), 12.0+g.tuning.SkeletonHPPerSecondLevelUpBonus; math.Abs(got-want) > 0.000001 {
+		t.Fatalf("skeleton hp/sec = %v, want current-plus-bonus %v", got, want)
 	}
 }
 
-func TestDynamicSpawnPressureAddsOneWhenNoDamageWasRecorded(t *testing.T) {
+func TestDynamicSpawnPressureAddsBonusWhenNoDamageWasRecorded(t *testing.T) {
 	g := New()
 	g.skeletonHPPerSecond = 0.5
 	g.session.Progression.GainExperience(1)
@@ -371,25 +377,27 @@ func TestDynamicSpawnPressureAddsOneWhenNoDamageWasRecorded(t *testing.T) {
 	g.queueLevelUpChoices(1)
 	g.applyLevelUpOption(ExtraLife)
 
-	if got, want := g.SkeletonHPPerSecond(), 1.5; math.Abs(got-want) > 0.000001 {
-		t.Fatalf("skeleton hp/sec = %v, want current-plus-one %v", got, want)
+	if got, want := g.SkeletonHPPerSecond(), 0.5+g.tuning.SkeletonHPPerSecondLevelUpBonus; math.Abs(got-want) > 0.000001 {
+		t.Fatalf("skeleton hp/sec = %v, want current-plus-bonus %v", got, want)
 	}
 }
 
-func TestDynamicSpawnPressureAppliesOneForEachQueuedLevel(t *testing.T) {
+func TestDynamicSpawnPressureAppliesBonusForEachQueuedLevel(t *testing.T) {
 	g := New()
 	g.skeletonHPPerSecond = 1
-	g.maxActualDPS = 5
+	g.totalTime = 2
+	g.actualDamageLevelStartTime = 1
+	g.actualDamageLevelTotal = 5
 	g.session.Progression.GainExperience(3)
 
 	g.queueLevelUpChoices(2)
 	g.applyLevelUpOption(ExtraLife)
-	if got, want := g.SkeletonHPPerSecond(), 6.0; math.Abs(got-want) > 0.000001 {
+	if got, want := g.SkeletonHPPerSecond(), 5.0+g.tuning.SkeletonHPPerSecondLevelUpBonus; math.Abs(got-want) > 0.000001 {
 		t.Fatalf("first queued skeleton hp/sec = %v, want %v", got, want)
 	}
 
 	g.applyLevelUpOption(ExtraLife)
-	if got, want := g.SkeletonHPPerSecond(), 7.0; math.Abs(got-want) > 0.000001 {
+	if got, want := g.SkeletonHPPerSecond(), 5.0+2*g.tuning.SkeletonHPPerSecondLevelUpBonus; math.Abs(got-want) > 0.000001 {
 		t.Fatalf("second queued skeleton hp/sec = %v, want %v", got, want)
 	}
 }

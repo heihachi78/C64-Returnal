@@ -89,14 +89,16 @@ func TestCoverageHUDDrawsDPSReadout(t *testing.T) {
 	g.screenW = ScreenWidth
 	g.screenH = ScreenHeight
 	g.skeletonHPPerSecond = 3.5
-	g.maxActualDPS = 4.25
+	g.actualDamageLevelStartTime = 2
+	g.totalTime = 6
+	g.actualDamageLevelTotal = 17
 
 	screen := ebiten.NewImage(ScreenWidth, ScreenHeight)
 	g.drawHUD(screen)
 
 	hpRate, maxActual := g.dpsPanelReadouts()
-	if hpRate != "HP/S 3.50" || maxActual != "MAX 4.25" {
-		t.Fatalf("DPS readouts = %q, %q; want HP/S 3.50 and MAX 4.25", hpRate, maxActual)
+	if hpRate != "HP/S 3.50" || maxActual != "DPS 4.25" {
+		t.Fatalf("DPS readouts = %q, %q; want HP/S 3.50 and DPS 4.25", hpRate, maxActual)
 	}
 }
 

@@ -50,7 +50,7 @@ func (g *Game) drawDPSPanel(screen *ebiten.Image) {
 
 func (g *Game) dpsPanelReadouts() (hpRate, maxActual string) {
 	return fmt.Sprintf("HP/S %.2f", g.SkeletonHPPerSecond()),
-		fmt.Sprintf("MAX %.2f", g.maxActualDPS)
+		fmt.Sprintf("DPS %.2f", g.ActualDPS())
 }
 
 type combatHUDRow struct {

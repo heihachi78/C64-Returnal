@@ -21,7 +21,6 @@ const (
 	debugLevelJumpChestRadius    = 56
 	deathWaveScrollCost          = 1000
 	deathWaveRequiredScrolls     = 5
-	actualDPSWindow              = 5.0
 	dynamicSpawnBatchInterval    = 1.0
 	minAttackSpawnInterval       = 1.0 / 60.0
 )
@@ -113,7 +112,7 @@ func DefaultTuning() Tuning {
 		PlayerAnimationFrameTime:        0.18,
 		SkeletonSpeed:                   82,
 		InitialSkeletonHPPerSecond:      1.0,
-		SkeletonHPPerSecondLevelUpBonus: 0.01,
+		SkeletonHPPerSecondLevelUpBonus: 0.375,
 		SkeletonHitDistance:             24,
 		SkeletonSpawnMargin:             72,
 		SkeletonAnimationFrameTime:      0.20,

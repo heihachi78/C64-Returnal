@@ -126,13 +126,11 @@ func (g *Game) queueDynamicSpawnPressureForLevelUp(count int) {
 	if count <= 0 {
 		return
 	}
-	if g.maxActualDPS > 0 {
-		g.pendingSpawnPressureActual = max(g.pendingSpawnPressureActual, g.maxActualDPS)
+	if actualDPS := g.ActualDPS(); actualDPS > 0 {
+		g.pendingSpawnPressureActual = max(g.pendingSpawnPressureActual, actualDPS)
 	}
 	g.pendingSpawnPressureLevels += count
-	g.maxActualDPS = 0
-	g.actualDamage = g.actualDamage[:0]
-	g.actualDamageWindowTotal = 0
+	g.resetActualDamageLevelStats()
 }
 
 func (g *Game) applyPendingDynamicSpawnPressure() {
@@ -141,6 +139,7 @@ func (g *Game) applyPendingDynamicSpawnPressure() {
 		return
 	}
 	g.skeletonHPPerSecond = nextLevelSkeletonHPPerSecond(g.SkeletonHPPerSecond(), g.pendingSpawnPressureActual, g.tuning.SkeletonHPPerSecondLevelUpBonus)
+	g.resetActualDamageLevelStats()
 	g.pendingSpawnPressureLevels--
 	if g.pendingSpawnPressureLevels == 0 {
 		g.pendingSpawnPressureActual = 0

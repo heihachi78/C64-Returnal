@@ -148,14 +148,16 @@ func TestCoverageProgressionAndSpawnPressureEdges(t *testing.T) {
 	}
 
 	g = New()
-	g.maxActualDPS = 8
+	g.totalTime = 2
+	g.actualDamageLevelStartTime = 1
+	g.actualDamageLevelTotal = 8
 	g.session.PendingLevelUpLevels = []int{2, 3}
 	g.queueDynamicSpawnPressureForLevelUp(2)
-	if g.pendingSpawnPressureActual != 8 || g.pendingSpawnPressureLevels != 2 || g.maxActualDPS != 0 {
-		t.Fatalf("queued spawn pressure state = actual %v levels %d max %v", g.pendingSpawnPressureActual, g.pendingSpawnPressureLevels, g.maxActualDPS)
+	if g.pendingSpawnPressureActual != 8 || g.pendingSpawnPressureLevels != 2 || g.actualDamageLevelTotal != 0 {
+		t.Fatalf("queued spawn pressure state = actual %v levels %d damage %d", g.pendingSpawnPressureActual, g.pendingSpawnPressureLevels, g.actualDamageLevelTotal)
 	}
 	g.applyPendingDynamicSpawnPressure()
-	if g.skeletonHPPerSecond != 9 || g.pendingSpawnPressureLevels != 1 {
+	if g.skeletonHPPerSecond != 8+g.tuning.SkeletonHPPerSecondLevelUpBonus || g.pendingSpawnPressureLevels != 1 {
 		t.Fatalf("actual-target spawn pressure = hp/s %v levels %d", g.skeletonHPPerSecond, g.pendingSpawnPressureLevels)
 	}
 	g.pendingSpawnPressureActual = 0
@@ -286,15 +288,15 @@ func TestCoverageWeaponReservationAndVisualEdges(t *testing.T) {
 func TestCoverageCombatAndTypeEdges(t *testing.T) {
 	g := New()
 	g.recordActualDamage(0)
-	if len(g.actualDamage) != 0 {
-		t.Fatalf("zero damage samples = %v, want none", g.actualDamage)
+	if g.actualDamageLevelTotal != 0 {
+		t.Fatalf("zero damage total = %d, want 0", g.actualDamageLevelTotal)
 	}
-	g.totalTime = actualDPSWindow + 1
-	g.actualDamage = []actualDamageSample{{Time: 0, Amount: 10}}
-	g.actualDamageWindowTotal = 5
-	g.pruneActualDamageSamples()
-	if g.actualDamageWindowTotal != 0 || len(g.actualDamage) != 0 {
-		t.Fatalf("pruned damage state = total %d samples %v, want empty nonnegative", g.actualDamageWindowTotal, g.actualDamage)
+	g.totalTime = 12
+	g.actualDamageLevelStartTime = 2
+	g.actualDamageLevelTotal = 10
+	g.resetActualDamageLevelStats()
+	if g.actualDamageLevelTotal != 0 || g.actualDamageLevelStartTime != 12 {
+		t.Fatalf("reset damage state = total %d start %v, want zeroed at current time", g.actualDamageLevelTotal, g.actualDamageLevelStartTime)
 	}
 
 	tuning := DefaultTuning()
