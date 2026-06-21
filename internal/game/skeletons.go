@@ -171,7 +171,11 @@ func (g *Game) destroySkeleton(index int, attack AttackKind) int {
 	if index < 0 || index >= len(g.skeleton) {
 		return 0
 	}
-	reward := g.skeleton[index].Reward
+	destroyed := g.skeleton[index]
+	reward := destroyed.Reward
+	beforeLevel := g.session.Progression.Level
+	beforeXP := g.session.Progression.Experience
+	beforeNextXP := g.session.Progression.NextExperience
 	last := len(g.skeleton) - 1
 	g.skeleton[index] = g.skeleton[last]
 	g.skeleton = g.skeleton[:last]
@@ -180,6 +184,7 @@ func (g *Game) destroySkeleton(index int, attack AttackKind) int {
 	g.spawnChestsForMilestones()
 	g.session.RegisterAttackKill(attack)
 	levelUps := g.session.Progression.GainExperience(reward)
+	g.logExperienceAward(attack, destroyed, 1, reward, beforeLevel, beforeXP, beforeNextXP, levelUps)
 	return levelUps
 }
 func (g *Game) spawnChestsForMilestones() {

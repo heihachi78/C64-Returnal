@@ -10,6 +10,8 @@ type Game struct {
 	rng    *rand.Rand
 	assets *Assets
 
+	experienceLogPath string
+
 	screenW int
 	screenH int
 	nextID  int
@@ -58,11 +60,16 @@ type Game struct {
 }
 
 func New() *Game {
+	return NewWithExperienceLog("")
+}
+
+func NewWithExperienceLog(path string) *Game {
 	tuning := DefaultTuning()
 	g := &Game{
 		tuning:                      tuning,
 		rng:                         rand.New(rand.NewSource(rand.Int63())),
 		assets:                      NewAssets(int(tuning.TileSize)),
+		experienceLogPath:           path,
 		screenW:                     ScreenWidth,
 		screenH:                     ScreenHeight,
 		spatial:                     NewSpatialIndex(tuning.SpatialIndexCellSize),

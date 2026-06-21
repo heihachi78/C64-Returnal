@@ -64,6 +64,9 @@ func (g *Game) applyLightningStrikes(strikes []lightningStrikeTarget) int {
 			MaxTTL: g.tuning.LightningEffectDuration,
 		})
 		levelUps += g.damageSkeleton(idx, 1, AttackLightning, false)
+		if levelUps > 0 {
+			return levelUps
+		}
 		start = end
 	}
 	return levelUps

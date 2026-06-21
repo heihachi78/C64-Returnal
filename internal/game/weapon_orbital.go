@@ -63,6 +63,9 @@ func (g *Game) checkOrbitalOrbCollisions() {
 		g.orbs[i].MissingOrbitProgress = 0
 		g.orbs[i].AnimFrame = 0
 		levelUps += g.damageSkeleton(idx, 1, AttackOrbitalOrb, false)
+		if levelUps > 0 {
+			break
+		}
 	}
 	g.queueLevelUpChoices(levelUps)
 }

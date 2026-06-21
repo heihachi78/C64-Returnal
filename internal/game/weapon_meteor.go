@@ -56,6 +56,9 @@ func (g *Game) impactMeteor(pos Vec2) {
 	for _, id := range targets {
 		if idx := g.skeletonIndexByID(id); idx >= 0 {
 			levelUps += g.damageSkeleton(idx, 1, AttackMeteor, false)
+			if levelUps > 0 {
+				break
+			}
 		}
 	}
 	g.queueLevelUpChoices(levelUps)

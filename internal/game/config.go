@@ -29,21 +29,22 @@ const (
 type Tuning struct {
 	TileSize float64
 
-	PlayerSpeed                float64
-	InitialPlayerLives         int
-	PlayerHitInvulnerability   float64
-	PlayerAnimationFrameTime   float64
-	SkeletonSpeed              float64
-	InitialSkeletonHPPerSecond float64
-	SkeletonHitDistance        float64
-	SkeletonSpawnMargin        float64
-	SkeletonAnimationFrameTime float64
-	RedHitPoints               int
-	PurpleHitPoints            int
-	BlackHitPoints             int
-	MaxActiveSkeletons         int
-	MaxSkeletonSpawnsPerTick   int
-	SpatialIndexCellSize       float64
+	PlayerSpeed                     float64
+	InitialPlayerLives              int
+	PlayerHitInvulnerability        float64
+	PlayerAnimationFrameTime        float64
+	SkeletonSpeed                   float64
+	InitialSkeletonHPPerSecond      float64
+	SkeletonHPPerSecondLevelUpBonus float64
+	SkeletonHitDistance             float64
+	SkeletonSpawnMargin             float64
+	SkeletonAnimationFrameTime      float64
+	RedHitPoints                    int
+	PurpleHitPoints                 int
+	BlackHitPoints                  int
+	MaxActiveSkeletons              int
+	MaxSkeletonSpawnsPerTick        int
+	SpatialIndexCellSize            float64
 
 	FireballSpeed              float64
 	InitialFireballCast        float64
@@ -106,21 +107,22 @@ func DefaultTuning() Tuning {
 	return Tuning{
 		TileSize: 64,
 
-		PlayerSpeed:                190,
-		InitialPlayerLives:         3,
-		PlayerHitInvulnerability:   1,
-		PlayerAnimationFrameTime:   0.18,
-		SkeletonSpeed:              82,
-		InitialSkeletonHPPerSecond: 1.0,
-		SkeletonHitDistance:        24,
-		SkeletonSpawnMargin:        72,
-		SkeletonAnimationFrameTime: 0.20,
-		RedHitPoints:               3,
-		PurpleHitPoints:            7,
-		BlackHitPoints:             29,
-		MaxActiveSkeletons:         810,
-		MaxSkeletonSpawnsPerTick:   1,
-		SpatialIndexCellSize:       96,
+		PlayerSpeed:                     190,
+		InitialPlayerLives:              3,
+		PlayerHitInvulnerability:        1,
+		PlayerAnimationFrameTime:        0.18,
+		SkeletonSpeed:                   82,
+		InitialSkeletonHPPerSecond:      1.0,
+		SkeletonHPPerSecondLevelUpBonus: 0.01,
+		SkeletonHitDistance:             24,
+		SkeletonSpawnMargin:             72,
+		SkeletonAnimationFrameTime:      0.20,
+		RedHitPoints:                    3,
+		PurpleHitPoints:                 7,
+		BlackHitPoints:                  29,
+		MaxActiveSkeletons:              999,
+		MaxSkeletonSpawnsPerTick:        1,
+		SpatialIndexCellSize:            96,
 
 		FireballSpeed:              280,
 		InitialFireballCast:        3,

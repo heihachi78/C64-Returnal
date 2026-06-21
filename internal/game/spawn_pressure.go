@@ -140,15 +140,16 @@ func (g *Game) applyPendingDynamicSpawnPressure() {
 		g.capDynamicSpawnPressure()
 		return
 	}
-	g.skeletonHPPerSecond = nextLevelSkeletonHPPerSecond(g.SkeletonHPPerSecond(), g.pendingSpawnPressureActual)
+	g.skeletonHPPerSecond = nextLevelSkeletonHPPerSecond(g.SkeletonHPPerSecond(), g.pendingSpawnPressureActual, g.tuning.SkeletonHPPerSecondLevelUpBonus)
 	g.pendingSpawnPressureLevels--
 	if g.pendingSpawnPressureLevels == 0 {
 		g.pendingSpawnPressureActual = 0
 	}
 }
 
-func nextLevelSkeletonHPPerSecond(currentHPPerSecond, maxDamageOutput float64) float64 {
-	return max(max(0, maxDamageOutput)+1, max(0, currentHPPerSecond)+1)
+func nextLevelSkeletonHPPerSecond(currentHPPerSecond, maxDamageOutput, levelUpBonus float64) float64 {
+	bonus := max(0, levelUpBonus)
+	return max(max(0, maxDamageOutput)+bonus, max(0, currentHPPerSecond)+bonus)
 }
 
 func (g *Game) capDynamicSpawnPressure() {

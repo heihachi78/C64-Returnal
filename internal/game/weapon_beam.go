@@ -60,6 +60,9 @@ func (g *Game) applyBeamDamage(targets []int, damageBudget int) int {
 		damage := min(remainingDamage, g.skeleton[idx].HP)
 		remainingDamage -= damage
 		levelUps += g.damageSkeleton(idx, damage, AttackBeam, false)
+		if levelUps > 0 {
+			return levelUps
+		}
 	}
 	return levelUps
 }

@@ -527,6 +527,54 @@ func TestMeteorImpactNoOpsAfterGameOverLikeOriginal(t *testing.T) {
 	}
 }
 
+func TestMeteorStopsDamagingWhenKillQueuesLevelUp(t *testing.T) {
+	g := New()
+	g.skeleton = []Skeleton{
+		{ID: 101, Pos: Vec2{X: -10}, HP: 1, Reward: 1},
+		{ID: 202, Pos: Vec2{X: 10}, HP: 1, Reward: 1},
+	}
+	g.spatial.Rebuild(g.skeleton)
+
+	g.impactMeteor(Vec2{})
+
+	if got, want := g.session.Kills.Meteor, 1; got != want {
+		t.Fatalf("meteor kills = %d, want %d", got, want)
+	}
+	if got, want := len(g.skeleton), 1; got != want {
+		t.Fatalf("remaining skeletons = %d, want %d", got, want)
+	}
+	if !g.session.LevelUpChoiceActive || len(g.session.PendingLevelUpLevels) != 1 {
+		t.Fatalf("level-up state active=%v pending=%v, want one queued level-up", g.session.LevelUpChoiceActive, g.session.PendingLevelUpLevels)
+	}
+}
+
+func TestOrbitalOrbsStopDamagingWhenKillQueuesLevelUp(t *testing.T) {
+	g := New()
+	g.session.Progression.ApplyLevelUpOption(LearnOrb)
+	g.session.Progression.ApplyLevelUpOption(ExtraOrb)
+	g.orbs = []OrbitalOrb{
+		{Pos: Vec2{X: -10}, Active: true},
+		{Pos: Vec2{X: 10}, Active: true},
+	}
+	g.skeleton = []Skeleton{
+		{ID: 101, Pos: Vec2{X: -10}, HP: 1, Reward: 1},
+		{ID: 202, Pos: Vec2{X: 10}, HP: 1, Reward: 1},
+	}
+	g.spatial.Rebuild(g.skeleton)
+
+	g.checkOrbitalOrbCollisions()
+
+	if got, want := g.session.Kills.OrbitalOrb, 1; got != want {
+		t.Fatalf("orbital kills = %d, want %d", got, want)
+	}
+	if got, want := len(g.skeleton), 1; got != want {
+		t.Fatalf("remaining skeletons = %d, want %d", got, want)
+	}
+	if !g.session.LevelUpChoiceActive || len(g.session.PendingLevelUpLevels) != 1 {
+		t.Fatalf("level-up state active=%v pending=%v, want one queued level-up", g.session.LevelUpChoiceActive, g.session.PendingLevelUpLevels)
+	}
+}
+
 func TestLightningBoltPathIsJaggedAndStable(t *testing.T) {
 	g := New()
 	g.rng = rand.New(rand.NewSource(3))
@@ -722,6 +770,28 @@ func TestFireballVolleySkipsLightningReservedSkeletons(t *testing.T) {
 	}
 }
 
+func TestLightningStopsDamagingWhenKillQueuesLevelUp(t *testing.T) {
+	g := New()
+	g.session.Progression.ApplyLevelUpOption(LearnLightning)
+	g.session.Progression.ApplyLevelUpOption(LightningBounce)
+	g.skeleton = []Skeleton{
+		{ID: 101, Pos: Vec2{X: 10}, HP: 1, Reward: 1},
+		{ID: 202, Pos: Vec2{X: 20}, HP: 1, Reward: 1},
+	}
+
+	g.castLightning()
+
+	if got, want := g.session.Kills.Lightning, 1; got != want {
+		t.Fatalf("lightning kills = %d, want %d", got, want)
+	}
+	if got, want := len(g.skeleton), 1; got != want {
+		t.Fatalf("remaining skeletons = %d, want %d", got, want)
+	}
+	if !g.session.LevelUpChoiceActive || len(g.session.PendingLevelUpLevels) != 1 {
+		t.Fatalf("level-up state active=%v pending=%v, want one queued level-up", g.session.LevelUpChoiceActive, g.session.PendingLevelUpLevels)
+	}
+}
+
 func TestSameTickLightningAndFireballDoNotShareTargets(t *testing.T) {
 	g := New()
 	g.hasUpdated = true
@@ -763,6 +833,27 @@ func TestBeamTargetSelectionPreservesOriginalTieOrder(t *testing.T) {
 	}
 	if targets[0] != 101 || targets[1] != 202 {
 		t.Fatalf("beam tie targets = %v, want stable IDs [101 202]", targets)
+	}
+}
+
+func TestBeamStopsDamagingWhenKillQueuesLevelUp(t *testing.T) {
+	g := New()
+	g.session.Progression.ApplyLevelUpOption(LearnBeam)
+	g.skeleton = []Skeleton{
+		{ID: 101, Pos: Vec2{X: 10}, HP: 1, Reward: 1},
+		{ID: 202, Pos: Vec2{X: 20}, HP: 1, Reward: 1},
+	}
+
+	g.castBeam()
+
+	if got, want := g.session.Kills.Beam, 1; got != want {
+		t.Fatalf("beam kills = %d, want %d", got, want)
+	}
+	if got, want := len(g.skeleton), 1; got != want {
+		t.Fatalf("remaining skeletons = %d, want %d", got, want)
+	}
+	if !g.session.LevelUpChoiceActive || len(g.session.PendingLevelUpLevels) != 1 {
+		t.Fatalf("level-up state active=%v pending=%v, want one queued level-up", g.session.LevelUpChoiceActive, g.session.PendingLevelUpLevels)
 	}
 }
 

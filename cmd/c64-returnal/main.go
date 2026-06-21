@@ -31,5 +31,5 @@ func run() error {
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetTPS(game.TargetTPS)
 
-	return runEbitenGame(game.New())
+	return runEbitenGame(game.NewWithExperienceLog("xp.log"))
 }

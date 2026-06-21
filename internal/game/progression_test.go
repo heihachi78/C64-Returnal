@@ -334,6 +334,21 @@ func TestDynamicSpawnPressureUsesPeakActualDPSPlusOne(t *testing.T) {
 	}
 }
 
+func TestDynamicSpawnPressureUsesConfiguredLevelUpBonus(t *testing.T) {
+	g := New()
+	g.tuning.SkeletonHPPerSecondLevelUpBonus = 2.5
+	g.skeletonHPPerSecond = 4
+	g.maxActualDPS = 8
+	g.session.Progression.GainExperience(1)
+
+	g.queueLevelUpChoices(1)
+	g.applyLevelUpOption(ExtraLife)
+
+	if got, want := g.SkeletonHPPerSecond(), 10.5; math.Abs(got-want) > 0.000001 {
+		t.Fatalf("skeleton hp/sec = %v, want configured bonus result %v", got, want)
+	}
+}
+
 func TestDynamicSpawnPressureUsesCurrentHPPlusOneWhenItIsHigher(t *testing.T) {
 	g := New()
 	g.skeletonHPPerSecond = 12
@@ -380,7 +395,7 @@ func TestDynamicSpawnPressureAppliesOneForEachQueuedLevel(t *testing.T) {
 }
 
 func TestDynamicSpawnPressureNeverReducesExistingRate(t *testing.T) {
-	if got, want := nextLevelSkeletonHPPerSecond(5, 1), 6.0; got != want {
+	if got, want := nextLevelSkeletonHPPerSecond(5, 1, 1), 6.0; got != want {
 		t.Fatalf("next-level hp/sec = %v, want %v", got, want)
 	}
 }

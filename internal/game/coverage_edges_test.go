@@ -168,7 +168,7 @@ func TestCoverageProgressionAndSpawnPressureEdges(t *testing.T) {
 	if got := initialSkeletonHPPerSecond(Tuning{InitialSkeletonHPPerSecond: -5}); got != 0 {
 		t.Fatalf("negative initial hp/sec = %v, want 0", got)
 	}
-	if got := nextLevelSkeletonHPPerSecond(-5, -1); got != 1 {
+	if got := nextLevelSkeletonHPPerSecond(-5, -1, 1); got != 1 {
 		t.Fatalf("negative next-level hp/sec = %v, want 1", got)
 	}
 }
