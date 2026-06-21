@@ -527,6 +527,7 @@ func TestCoverageWeaponBranches(t *testing.T) {
 		t.Fatal("meteor timer was not reset without skeletons")
 	}
 	g.session.GameOver = true
+	g.effects = nil
 	g.impactMeteor(Vec2{})
 	if len(g.effects) != 0 {
 		t.Fatal("game-over meteor impact added an effect")

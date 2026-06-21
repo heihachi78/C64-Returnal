@@ -604,7 +604,7 @@ func TestBeamDamageBudgetCanPartiallyDamagePurpleSkeletonLikeOriginal(t *testing
 	if len(g.skeleton) != 1 {
 		t.Fatalf("skeleton count = %d, want 1 partially damaged purple skeleton", len(g.skeleton))
 	}
-	if got, want := g.skeleton[0].HP, 2; got != want {
+	if got, want := g.skeleton[0].HP, 4; got != want {
 		t.Fatalf("purple skeleton HP = %d, want %d", got, want)
 	}
 	if g.session.Kills.Beam != 0 {
@@ -617,6 +617,7 @@ func TestBeamDamageBudgetCanPartiallyDamagePurpleSkeletonLikeOriginal(t *testing
 
 func TestBeamDamageBudgetKillsPurpleSkeletonWhenItCoversHitPointsLikeOriginal(t *testing.T) {
 	g := beamTestGame()
+	g.session.Progression.ApplyLevelUpOption(BeamKillCount)
 	g.session.Progression.ApplyLevelUpOption(BeamKillCount)
 	g.session.Progression.ApplyLevelUpOption(BeamKillCount)
 	g.skeleton = []Skeleton{{ID: 1, Kind: SkeletonPurple, Pos: Vec2{X: 60}, HP: SkeletonPurple.HitPoints(g.tuning), Reward: SkeletonPurple.ExperienceReward()}}
