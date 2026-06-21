@@ -9,6 +9,12 @@ import (
 
 func (g *Game) drawHUD(screen *ebiten.Image) {
 	left := 18.0
+	g.drawStatusPanel(screen, left)
+	g.drawCombatStatusPanel(screen, left)
+	g.drawDPSPanel(screen)
+}
+
+func (g *Game) drawStatusPanel(screen *ebiten.Image, left float64) {
 	top := 24.0
 	topX, topY, topW, topH := topStatusPanelRect(g.session.PlayerLives)
 	g.panel(screen, topX, topY, topW, topH)
@@ -20,24 +26,83 @@ func (g *Game) drawHUD(screen *ebiten.Image) {
 		x, y := lifeIconScreenPosition(i)
 		g.drawSpriteScreen(screen, g.assets.Life, x, y, 14, 14, false, color.RGBA{255, 255, 255, 255})
 	}
+}
 
+func (g *Game) drawCombatStatusPanel(screen *ebiten.Image, left float64) {
 	bottomX, bottomY, bottomW, bottomH := combatStatusPanelRect(g.screenH)
 	g.panel(screen, bottomX, bottomY, bottomW, bottomH)
 	bottomPanelTop := bottomY
-	g.drawCombatRow(screen, g.assets.Fireball[0], left+9, bottomPanelTop+295, fmt.Sprintf("x%d", g.session.Progression.SimultaneousFireball), fmt.Sprintf("%ss", formattedSeconds(g.session.Progression.FireballCastInterval())), fmt.Sprintf("KILLS %d", g.session.Kills.Fireball), true)
-	g.drawCombatRow(screen, g.assets.Lightning, left+9, bottomPanelTop+241, fmt.Sprintf("x%d", g.session.Progression.LightningStrikeCount()), fmt.Sprintf("%ss", formattedSeconds(g.session.Progression.LightningCastInterval())), fmt.Sprintf("KILLS %d", g.session.Kills.Lightning), g.session.Progression.LightningUnlocked)
-	g.drawCombatRow(screen, g.assets.Orb[0], left+9, bottomPanelTop+187, fmt.Sprintf("x%d", g.session.Progression.OrbitalOrbCount()), fmt.Sprintf("%.1fr/s", g.session.Progression.OrbitalAngularSpeed()), fmt.Sprintf("KILLS %d", g.session.Kills.OrbitalOrb), g.session.Progression.OrbitalOrbUnlocked)
-	g.drawCombatRow(screen, g.assets.Beam, left+9, bottomPanelTop+133, fmt.Sprintf("x%d", g.session.Progression.BeamKillCount()), fmt.Sprintf("%ss", formattedSeconds(g.session.Progression.BeamCastInterval())), fmt.Sprintf("KILLS %d", g.session.Kills.Beam), g.session.Progression.BeamUnlocked)
-	g.drawCombatRow(screen, g.assets.Meteor[0], left+9, bottomPanelTop+79, fmt.Sprintf("x%d", g.session.Progression.MeteorCount()), fmt.Sprintf("%ss", formattedSeconds(g.session.Progression.MeteorCastInterval())), fmt.Sprintf("KILLS %d", g.session.Kills.Meteor), g.session.Progression.MeteorUnlocked)
+	for _, row := range g.combatHUDRows() {
+		g.drawCombatRow(screen, row.icon, left+9, bottomPanelTop+row.y, row.first, row.second, row.kills, row.unlocked)
+	}
 	g.drawSpriteScreen(screen, g.assets.Skeleton[0], left+9, bottomPanelTop+25, 16, 22, false, color.RGBA{255, 255, 255, 255})
 	g.drawTextSize(screen, fmt.Sprintf("x%d", len(g.skeleton)), left+28, bottomPanelTop+15, combatFontSize, c64Text)
 	g.drawTextSize(screen, fmt.Sprintf("%ss", formattedSeconds(g.SkeletonSpawnInterval())), left+28, bottomPanelTop+31, combatFontSize, c64Text)
+}
 
+func (g *Game) drawDPSPanel(screen *ebiten.Image) {
 	dpsX, dpsY, dpsW, dpsH := dpsPanelRect(g.screenW, g.screenH)
 	g.panel(screen, dpsX, dpsY, dpsW, dpsH)
 	g.drawCenteredTextSize(screen, fmt.Sprintf("RAW %.2f", g.session.Progression.MageRawDPS()), dpsX+dpsW/2, dpsY+19, combatFontSize, c64Text)
 	g.drawCenteredTextSize(screen, fmt.Sprintf("ACT %.2f", g.ActualDPS()), dpsX+dpsW/2, dpsY+39, combatFontSize, c64Gold)
 }
+
+type combatHUDRow struct {
+	icon     *ebiten.Image
+	y        float64
+	first    string
+	second   string
+	kills    string
+	unlocked bool
+}
+
+func (g *Game) combatHUDRows() []combatHUDRow {
+	p := g.session.Progression
+	kills := g.session.Kills
+	return []combatHUDRow{
+		{
+			icon:     g.assets.Fireball[0],
+			y:        295,
+			first:    fmt.Sprintf("x%d", p.SimultaneousFireball),
+			second:   fmt.Sprintf("%ss", formattedSeconds(p.FireballCastInterval())),
+			kills:    fmt.Sprintf("KILLS %d", kills.Fireball),
+			unlocked: true,
+		},
+		{
+			icon:     g.assets.Lightning,
+			y:        241,
+			first:    fmt.Sprintf("x%d", p.LightningStrikeCount()),
+			second:   fmt.Sprintf("%ss", formattedSeconds(p.LightningCastInterval())),
+			kills:    fmt.Sprintf("KILLS %d", kills.Lightning),
+			unlocked: p.LightningUnlocked,
+		},
+		{
+			icon:     g.assets.Orb[0],
+			y:        187,
+			first:    fmt.Sprintf("x%d", p.OrbitalOrbCount()),
+			second:   fmt.Sprintf("%.1fr/s", p.OrbitalAngularSpeed()),
+			kills:    fmt.Sprintf("KILLS %d", kills.OrbitalOrb),
+			unlocked: p.OrbitalOrbUnlocked,
+		},
+		{
+			icon:     g.assets.Beam,
+			y:        133,
+			first:    fmt.Sprintf("x%d", p.BeamKillCount()),
+			second:   fmt.Sprintf("%ss", formattedSeconds(p.BeamCastInterval())),
+			kills:    fmt.Sprintf("KILLS %d", kills.Beam),
+			unlocked: p.BeamUnlocked,
+		},
+		{
+			icon:     g.assets.Meteor[0],
+			y:        79,
+			first:    fmt.Sprintf("x%d", p.MeteorCount()),
+			second:   fmt.Sprintf("%ss", formattedSeconds(p.MeteorCastInterval())),
+			kills:    fmt.Sprintf("KILLS %d", kills.Meteor),
+			unlocked: p.MeteorUnlocked,
+		},
+	}
+}
+
 func topStatusPanelRect(lives int) (x, y, w, h float64) {
 	lifeRows := max(1, (max(1, lives)+11)/12)
 	return 8, 9, 210, 104 + float64(lifeRows-1)*16
