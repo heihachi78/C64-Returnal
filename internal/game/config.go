@@ -36,6 +36,7 @@ type Tuning struct {
 	SkeletonSpeed              float64
 	InitialSkeletonHPPerSecond float64
 	DynamicSpawnPressureFactor float64
+	DynamicSpawnActualFactor   float64
 	SkeletonHitDistance        float64
 	SkeletonSpawnMargin        float64
 	SkeletonAnimationFrameTime float64
@@ -114,6 +115,7 @@ func DefaultTuning() Tuning {
 		SkeletonSpeed:              82,
 		InitialSkeletonHPPerSecond: 1.0,
 		DynamicSpawnPressureFactor: 1.1,
+		DynamicSpawnActualFactor:   0.95,
 		SkeletonHitDistance:        24,
 		SkeletonSpawnMargin:        72,
 		SkeletonAnimationFrameTime: 0.20,

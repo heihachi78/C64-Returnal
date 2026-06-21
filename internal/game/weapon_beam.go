@@ -20,13 +20,35 @@ func (g *Game) updateBeamCasting(dt float64) {
 func (g *Game) castBeam() {
 	direction := g.playerBeamDirection()
 	length := math.Max(700, math.Hypot(float64(g.screenW), float64(g.screenH))/2+g.tuning.SkeletonSpawnMargin)
-	end := g.player.Pos.Add(direction.Mul(length))
+	damageBudget := g.session.Progression.BeamKillCount()
+	targets := g.beamTargets(direction, length, g.tuning.BeamHitWidth, damageBudget)
+	end := g.beamVisualEnd(direction, length, targets, damageBudget)
 	g.effects = append(g.effects, Effect{Kind: EffectBeam, Start: g.player.Pos, End: end, TTL: g.tuning.BeamEffectDuration, MaxTTL: g.tuning.BeamEffectDuration})
 
-	targets := g.beamTargets(direction, length, g.tuning.BeamHitWidth, g.session.Progression.BeamKillCount())
-	levelUps := g.applyBeamDamage(targets, g.session.Progression.BeamKillCount())
+	levelUps := g.applyBeamDamage(targets, damageBudget)
 	g.queueLevelUpChoices(levelUps)
 }
+
+func (g *Game) beamVisualEnd(direction Vec2, length float64, targets []int, damageBudget int) Vec2 {
+	remainingDamage := damageBudget
+	visualLength := 0.0
+	for _, id := range targets {
+		idx := g.skeletonIndexByID(id)
+		if idx < 0 || remainingDamage <= 0 {
+			break
+		}
+		damage := min(remainingDamage, g.skeleton[idx].HP)
+		if damage <= 0 {
+			continue
+		}
+		target := g.skeleton[idx].Pos.Sub(g.player.Pos)
+		progress := target.X*direction.X + target.Y*direction.Y
+		visualLength = Clamp(progress, 0, length)
+		remainingDamage -= damage
+	}
+	return g.player.Pos.Add(direction.Mul(visualLength))
+}
+
 func (g *Game) applyBeamDamage(targets []int, damageBudget int) int {
 	remainingDamage := damageBudget
 	levelUps := 0

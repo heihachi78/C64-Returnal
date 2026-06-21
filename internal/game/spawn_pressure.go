@@ -141,9 +141,14 @@ func (g *Game) applyPendingDynamicSpawnPressure() {
 		return
 	}
 	rawDPS := g.session.Progression.MageRawDPS()
-	headroom := max(0, rawDPS-g.pendingSpawnPressureActual)
-	increase := max(0, g.tuning.DynamicSpawnPressureFactor) * headroom
-	g.skeletonHPPerSecond = increaseSkeletonHPPerSecond(g.SkeletonHPPerSecond(), increase, rawDPS)
+	if g.pendingSpawnPressureActual > rawDPS {
+		target := dynamicSpawnPressureActualTarget(rawDPS, g.pendingSpawnPressureActual, g.tuning.DynamicSpawnActualFactor)
+		g.skeletonHPPerSecond = increaseSkeletonHPPerSecondToTarget(g.SkeletonHPPerSecond(), target)
+	} else {
+		headroom := max(0, rawDPS-g.pendingSpawnPressureActual)
+		increase := max(0, g.tuning.DynamicSpawnPressureFactor) * headroom
+		g.skeletonHPPerSecond = increaseSkeletonHPPerSecond(g.SkeletonHPPerSecond(), increase, rawDPS)
+	}
 	g.pendingSpawnPressureLevels--
 	if g.pendingSpawnPressureLevels == 0 {
 		g.pendingSpawnPressureActual = 0
@@ -169,4 +174,12 @@ func increaseSkeletonHPPerSecond(current, increase, rawDPS float64) float64 {
 		return current
 	}
 	return min(current+increase, rawDPS)
+}
+
+func dynamicSpawnPressureActualTarget(rawDPS, actualDPS, factor float64) float64 {
+	return max(rawDPS, max(0, factor)*actualDPS)
+}
+
+func increaseSkeletonHPPerSecondToTarget(current, target float64) float64 {
+	return max(max(0, current), max(0, target))
 }

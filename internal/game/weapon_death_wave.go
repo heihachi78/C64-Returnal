@@ -48,9 +48,9 @@ func (g *Game) applyDeathWaveDamage(wave *DeathWave) {
 		if !deathWaveTouchesSkeleton(*wave, g.skeleton[i], g.tuning) {
 			continue
 		}
-		damage := g.skeleton[i].HP - 1
+		damage := g.skeleton[i].HP / 2
 		g.recordActualDamage(damage)
-		g.skeleton[i].HP = 1
+		g.skeleton[i].HP -= damage
 		g.skeleton[i].HitFlash = skeletonDamageFlashDuration
 		wave.HitIDs = append(wave.HitIDs, g.skeleton[i].ID)
 	}

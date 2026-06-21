@@ -250,7 +250,7 @@ func TestDeathWaveCastingCreatesWaveEveryThirtySeconds(t *testing.T) {
 	}
 }
 
-func TestDeathWaveReducesTouchedNonWhiteSkeletonsToOneHP(t *testing.T) {
+func TestDeathWaveRemovesHalfHPFromTouchedNonWhiteSkeletons(t *testing.T) {
 	g := New()
 	g.tuning.DeathWaveWidth = 20
 	g.skeleton = []Skeleton{
@@ -262,8 +262,8 @@ func TestDeathWaveReducesTouchedNonWhiteSkeletonsToOneHP(t *testing.T) {
 
 	g.applyDeathWaveDamage(&wave)
 
-	if g.skeleton[0].HP != 1 {
-		t.Fatalf("red skeleton HP = %d, want 1", g.skeleton[0].HP)
+	if g.skeleton[0].HP != 2 {
+		t.Fatalf("red skeleton HP = %d, want 2", g.skeleton[0].HP)
 	}
 	if g.skeleton[1].HP != 3 {
 		t.Fatalf("regular white skeleton HP = %d, want immune unchanged 3", g.skeleton[1].HP)
@@ -271,11 +271,27 @@ func TestDeathWaveReducesTouchedNonWhiteSkeletonsToOneHP(t *testing.T) {
 	if g.skeleton[2].HP != 29 {
 		t.Fatalf("outside black skeleton HP = %d, want 29", g.skeleton[2].HP)
 	}
-	if got, want := g.actualDamageWindowTotal, 2; got != want {
+	if got, want := g.actualDamageWindowTotal, 1; got != want {
 		t.Fatalf("recorded death wave damage = %d, want %d", got, want)
 	}
 	if !slices.Equal(wave.HitIDs, []int{101}) {
 		t.Fatalf("death wave hit IDs = %v, want [101]", wave.HitIDs)
+	}
+}
+
+func TestDeathWaveLeavesMinimumOneHP(t *testing.T) {
+	g := New()
+	g.tuning.DeathWaveWidth = 20
+	g.skeleton = []Skeleton{{ID: 101, Kind: SkeletonRed, Pos: Vec2{X: 48}, HP: 2}}
+	wave := DeathWave{Origin: Vec2{}, PreviousRadius: 0, Radius: 60}
+
+	g.applyDeathWaveDamage(&wave)
+
+	if g.skeleton[0].HP != 1 {
+		t.Fatalf("red skeleton HP = %d, want minimum 1", g.skeleton[0].HP)
+	}
+	if got, want := g.actualDamageWindowTotal, 1; got != want {
+		t.Fatalf("recorded death wave damage = %d, want %d", got, want)
 	}
 }
 
@@ -567,6 +583,57 @@ func TestBeamTargetsUseStableSkeletonIdentifiers(t *testing.T) {
 	}
 	if targets[0] != 101 || targets[1] != 202 {
 		t.Fatalf("targets = %v, want stable IDs [101 202]", targets)
+	}
+}
+
+func TestBeamVisualStopsAtLastTargetCoveredByDamageBudget(t *testing.T) {
+	g := New()
+	g.session.Progression.ApplyLevelUpOption(LearnBeam)
+	g.skeleton = []Skeleton{
+		{ID: 101, Pos: Vec2{X: 60}, HP: 1},
+		{ID: 202, Pos: Vec2{X: 120}, HP: 1},
+	}
+
+	g.castBeam()
+
+	if len(g.effects) != 1 || g.effects[0].Kind != EffectBeam {
+		t.Fatalf("effects = %+v, want one beam effect", g.effects)
+	}
+	if math.Abs(g.effects[0].End.X-60) > 0.0001 || math.Abs(g.effects[0].End.Y) > 0.0001 {
+		t.Fatalf("beam visual end = %+v, want first target at x=60", g.effects[0].End)
+	}
+	if g.session.Kills.Beam != 1 {
+		t.Fatalf("beam kills = %d, want gameplay kill unchanged at 1", g.session.Kills.Beam)
+	}
+}
+
+func TestBeamVisualStopsAtPartiallyDamagedTargetWhenBudgetRunsOut(t *testing.T) {
+	g := New()
+	g.session.Progression.ApplyLevelUpOption(LearnBeam)
+	g.session.Progression.ApplyLevelUpOption(BeamKillCount)
+	g.skeleton = []Skeleton{
+		{ID: 101, Pos: Vec2{X: 50}, HP: 1},
+		{ID: 202, Pos: Vec2{X: 90}, HP: 5},
+		{ID: 303, Pos: Vec2{X: 130}, HP: 1},
+	}
+
+	g.castBeam()
+
+	if len(g.effects) != 1 || g.effects[0].Kind != EffectBeam {
+		t.Fatalf("effects = %+v, want one beam effect", g.effects)
+	}
+	if math.Abs(g.effects[0].End.X-90) > 0.0001 || math.Abs(g.effects[0].End.Y) > 0.0001 {
+		t.Fatalf("beam visual end = %+v, want partially damaged target at x=90", g.effects[0].End)
+	}
+	if g.session.Kills.Beam != 1 {
+		t.Fatalf("beam kills = %d, want only first target killed", g.session.Kills.Beam)
+	}
+	idx := g.skeletonIndexByID(202)
+	if idx < 0 {
+		t.Fatal("partially damaged target was destroyed, want it alive")
+	}
+	if g.skeleton[idx].HP != 3 {
+		t.Fatalf("partially damaged target HP = %d, want 3", g.skeleton[idx].HP)
 	}
 }
 

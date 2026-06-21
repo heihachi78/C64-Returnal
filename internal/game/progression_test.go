@@ -396,9 +396,9 @@ func TestDynamicSpawnPressureIsCappedByTheoreticalDPS(t *testing.T) {
 	}
 }
 
-func TestDynamicSpawnPressureDoesNotDecreaseWhenActualExceedsTheoretical(t *testing.T) {
+func TestDynamicSpawnPressureUsesActualDPSWhenActualExceedsTheoretical(t *testing.T) {
 	g := New()
-	g.tuning.DynamicSpawnPressureFactor = 1.5
+	g.tuning.DynamicSpawnActualFactor = 0.8
 	g.skeletonHPPerSecond = 0.5
 	g.maxActualDPS = 10
 	g.session.Progression.GainExperience(1)
@@ -406,8 +406,23 @@ func TestDynamicSpawnPressureDoesNotDecreaseWhenActualExceedsTheoretical(t *test
 	g.queueLevelUpChoices(1)
 	g.applyLevelUpOption(ExtraLife)
 
-	if got, want := g.SkeletonHPPerSecond(), 0.5; math.Abs(got-want) > 0.000001 {
-		t.Fatalf("skeleton hp/sec = %v, want unchanged %v", got, want)
+	if got, want := g.SkeletonHPPerSecond(), 8.0; math.Abs(got-want) > 0.000001 {
+		t.Fatalf("skeleton hp/sec = %v, want actual-scaled %v", got, want)
+	}
+}
+
+func TestDynamicSpawnPressureActualDPSFloorIsTheoretical(t *testing.T) {
+	g := New()
+	g.tuning.DynamicSpawnActualFactor = 0.95
+	g.skeletonHPPerSecond = 0.1
+	g.maxActualDPS = g.session.Progression.MageRawDPS() + 0.01
+	g.session.Progression.GainExperience(1)
+
+	g.queueLevelUpChoices(1)
+	g.applyLevelUpOption(ExtraLife)
+
+	if got, want := g.SkeletonHPPerSecond(), g.session.Progression.MageRawDPS(); math.Abs(got-want) > 0.000001 {
+		t.Fatalf("skeleton hp/sec = %v, want theoretical floor %v", got, want)
 	}
 }
 
