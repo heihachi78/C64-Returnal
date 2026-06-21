@@ -360,6 +360,12 @@ func TestBlueMonsterSpriteSizeIsThreeTimesLarger(t *testing.T) {
 	}
 }
 
+func TestFallingMeteorSpriteDrawsAtHalfOriginalIconSize(t *testing.T) {
+	if got, want := meteorProjectileSpriteSize, 12; got != want {
+		t.Fatalf("meteor projectile sprite size = %d, want %d", got, want)
+	}
+}
+
 func TestPlayerSpritePresentationMatchesOriginalDeathTint(t *testing.T) {
 	presentation := playerSpritePresentation(Player{HitFlash: playerHitFlashDuration / 2}, false)
 	if presentation.Tint.R != 255 || presentation.Tint.G != 255 || presentation.Tint.B != 255 {

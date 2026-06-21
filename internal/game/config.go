@@ -5,22 +5,23 @@ const (
 	ScreenHeight = 600
 	TargetTPS    = 120
 
-	grassTintBlendFactor        = 0.22
-	modalFadeDuration           = 0.20
-	panelCornerRadius           = 6.0
-	redrawStatusFadeDuration    = 0.14
-	redrawFailurePulseDuration  = 0.16
-	playerHitFlashDuration      = 0.96
-	playerDeathRotationDuration = 0.16
-	skeletonDamageFlashDuration = 0.24
-	meteorImpactEffectDuration  = 0.32
-	debugLevelJumpTarget        = 100
-	debugLevelJumpCoins         = 5000
-	debugLevelJumpGoldChests    = 40
-	debugLevelJumpChestRadius   = 56
-	actualDPSWindow             = 5.0
-	dynamicSpawnBatchInterval   = 1.0
-	minAttackSpawnInterval      = 1.0 / 60.0
+	grassTintBlendFactor         = 0.22
+	modalFadeDuration            = 0.20
+	panelCornerRadius            = 6.0
+	redrawStatusFadeDuration     = 0.14
+	redrawFailurePulseDuration   = 0.16
+	playerHitFlashDuration       = 0.96
+	playerDeathRotationDuration  = 0.16
+	skeletonDamageFlashDuration  = 0.24
+	fireballImpactEffectDuration = 0.16
+	meteorImpactEffectDuration   = 0.32
+	debugLevelJumpTarget         = 100
+	debugLevelJumpCoins          = 5000
+	debugLevelJumpGoldChests     = 40
+	debugLevelJumpChestRadius    = 56
+	actualDPSWindow              = 5.0
+	dynamicSpawnBatchInterval    = 1.0
+	minAttackSpawnInterval       = 1.0 / 60.0
 )
 
 type Tuning struct {
@@ -136,7 +137,7 @@ func DefaultTuning() Tuning {
 
 		InitialBeamCast:        3,
 		BeamIntervalMultiplier: 0.9,
-		BeamHitWidth:           18,
+		BeamHitWidth:           24,
 		BeamEffectDuration:     0.16,
 
 		InitialMeteorCast:        3,

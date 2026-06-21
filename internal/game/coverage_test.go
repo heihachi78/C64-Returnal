@@ -77,6 +77,7 @@ func TestCoverageRenderPassDrawsWorldHUDAndAllOverlays(t *testing.T) {
 		{Kind: EffectLightning, Start: Vec2{}, End: Vec2{X: 60, Y: 40}, Points: []Vec2{{}, {X: 30, Y: 20}, {X: 60, Y: 40}}, TTL: g.tuning.LightningEffectDuration, MaxTTL: g.tuning.LightningEffectDuration},
 		{Kind: EffectBeam, Start: Vec2{X: -20}, End: Vec2{X: 120}, TTL: g.tuning.BeamEffectDuration, MaxTTL: g.tuning.BeamEffectDuration},
 		{Kind: EffectMeteorImpact, Pos: Vec2{X: 15, Y: 15}, Radius: g.tuning.MeteorImpactRadius, TTL: meteorImpactEffectDuration / 2, MaxTTL: meteorImpactEffectDuration},
+		{Kind: EffectFireballImpact, Pos: Vec2{X: 20, Y: 10}, TTL: fireballImpactEffectDuration / 2, MaxTTL: fireballImpactEffectDuration},
 	}
 
 	screen := ebiten.NewImage(ScreenWidth, ScreenHeight)

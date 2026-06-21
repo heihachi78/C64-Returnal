@@ -6,7 +6,10 @@ import (
 	"math"
 )
 
-const fireballProjectileSpriteSize = 9
+const (
+	fireballProjectileSpriteSize = 9
+	meteorProjectileSpriteSize   = 12
+)
 
 func (g *Game) drawGrass(screen *ebiten.Image) {
 	tile := g.tuning.TileSize
@@ -97,7 +100,7 @@ func (g *Game) drawMeteor(screen *ebiten.Image, meteor MeteorProjectile) {
 	x, y := g.worldToScreen(meteor.Pos)
 	direction := meteor.Impact.Sub(meteor.Start)
 	angle := worldRotationToScreen(math.Atan2(direction.Y, direction.X))
-	g.drawSpriteRotated(screen, g.assets.Meteor[meteor.AnimFrame%len(g.assets.Meteor)], x, y, 24, 24, angle, false, color.RGBA{255, 255, 255, 255})
+	g.drawSpriteRotated(screen, g.assets.Meteor[meteor.AnimFrame%len(g.assets.Meteor)], x, y, meteorProjectileSpriteSize, meteorProjectileSpriteSize, angle, false, color.RGBA{255, 255, 255, 255})
 }
 func (g *Game) drawCoin(screen *ebiten.Image, coin Coin) {
 	x, y := g.worldToScreen(coin.Pos)

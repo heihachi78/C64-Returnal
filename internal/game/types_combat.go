@@ -62,4 +62,5 @@ const (
 	EffectLightningHit
 	EffectBeam
 	EffectMeteorImpact
+	EffectFireballImpact
 )

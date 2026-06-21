@@ -733,6 +733,37 @@ func TestLightningCastCreatesTargetHitDuplicateEffect(t *testing.T) {
 	}
 }
 
+func TestFireballHitCreatesImpactEffect(t *testing.T) {
+	g := New()
+	g.fireball = []Fireball{{Pos: Vec2{}, TargetID: 101}}
+	g.skeleton = []Skeleton{{ID: 101, Pos: Vec2{X: 10}, HP: 2, Reward: 1}}
+
+	g.updateHomingFireball(0, 0, 0)
+
+	if len(g.effects) != 1 || g.effects[0].Kind != EffectFireballImpact {
+		t.Fatalf("fireball impact effects = %+v, want one fireball impact", g.effects)
+	}
+	if g.effects[0].Pos != (Vec2{X: 10}) || g.effects[0].TTL != fireballImpactEffectDuration || g.effects[0].MaxTTL != fireballImpactEffectDuration {
+		t.Fatalf("fireball impact effect = %+v, want target position and duration", g.effects[0])
+	}
+}
+
+func TestUntargetedFireballHitCreatesImpactEffect(t *testing.T) {
+	g := New()
+	g.fireball = []Fireball{{Pos: Vec2{}, Velocity: Vec2{X: 1}}}
+	g.skeleton = []Skeleton{{ID: 101, Pos: Vec2{X: 5}, HP: 2, Reward: 1}}
+	g.spatial.Rebuild(g.skeleton)
+
+	g.updateUntargetedFireball(0, 0.1)
+
+	if len(g.effects) != 1 || g.effects[0].Kind != EffectFireballImpact {
+		t.Fatalf("untargeted fireball impact effects = %+v, want one fireball impact", g.effects)
+	}
+	if g.effects[0].Pos != (Vec2{X: 5}) {
+		t.Fatalf("untargeted fireball impact position = %+v, want target position", g.effects[0].Pos)
+	}
+}
+
 func TestProjectileRemovalPreservesOriginalOrder(t *testing.T) {
 	g := New()
 	g.fireball = []Fireball{

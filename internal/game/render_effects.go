@@ -41,11 +41,37 @@ func (g *Game) drawEffect(screen *ebiten.Image, effect Effect) {
 	case EffectBeam:
 		startX, startY := g.worldToScreen(effect.Start)
 		endX, endY := g.worldToScreen(effect.End)
-		vector.StrokeLine(screen, float32(startX), float32(startY), float32(endX), float32(endY), 16, color.RGBA{255, 184, 20, alpha / 4}, false)
-		vector.StrokeLine(screen, float32(startX), float32(startY), float32(endX), float32(endY), 9, color.RGBA{255, 184, 20, alpha}, false)
-		vector.StrokeLine(screen, float32(startX), float32(startY), float32(endX), float32(endY), 7, color.RGBA{255, 240, 56, alpha / 3}, false)
-		vector.StrokeLine(screen, float32(startX), float32(startY), float32(endX), float32(endY), 4, color.RGBA{255, 240, 56, alpha}, false)
-		vector.StrokeLine(screen, float32(startX), float32(startY), float32(endX), float32(endY), 1, color.RGBA{255, 255, 255, alpha}, false)
+		vector.StrokeLine(screen, float32(startX), float32(startY), float32(endX), float32(endY), 4, color.RGBA{255, 184, 20, alpha / 4}, false)
+		vector.StrokeLine(screen, float32(startX), float32(startY), float32(endX), float32(endY), 2.25, color.RGBA{255, 184, 20, alpha}, false)
+		vector.StrokeLine(screen, float32(startX), float32(startY), float32(endX), float32(endY), 1.75, color.RGBA{255, 240, 56, alpha / 3}, false)
+		vector.StrokeLine(screen, float32(startX), float32(startY), float32(endX), float32(endY), 1, color.RGBA{255, 240, 56, alpha}, false)
+		vector.StrokeLine(screen, float32(startX), float32(startY), float32(endX), float32(endY), 0.25, color.RGBA{255, 255, 255, alpha}, false)
+	case EffectFireballImpact:
+		g.drawFireballImpact(screen, effect)
+	}
+}
+
+func (g *Game) drawFireballImpact(screen *ebiten.Image, effect Effect) {
+	if effect.MaxTTL <= 0 {
+		return
+	}
+	progress := Clamp((effect.MaxTTL-effect.TTL)/effect.MaxTTL, 0, 1)
+	alpha := effectFadeAlpha(effect.TTL, effect.MaxTTL)
+	const particles = 7
+	for i := 0; i < particles; i++ {
+		angle := float64(i)*math.Pi*2/particles + 0.28
+		distance := 4 + 18*progress
+		pos := Vec2{
+			X: effect.Pos.X + math.Cos(angle)*distance,
+			Y: effect.Pos.Y + math.Sin(angle)*distance,
+		}
+		x, y := g.worldToScreen(pos)
+		radius := float32(math.Max(1, 3.2*(1-progress)))
+		clr := color.RGBA{255, 145, 25, scaleAlpha(alpha, 0.85)}
+		if i%3 == 0 {
+			clr = color.RGBA{255, 238, 74, alpha}
+		}
+		vector.DrawFilledCircle(screen, float32(x), float32(y), radius, clr, false)
 	}
 }
 

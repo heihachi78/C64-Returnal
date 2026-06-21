@@ -106,6 +106,7 @@ func (g *Game) updateHomingFireball(i, targetIndex int, dt float64) {
 	travel := g.tuning.FireballSpeed * dt
 	hitDistance := g.skeletonCollisionRadius(g.tuning.FireballHitDistance, g.skeleton[targetIndex].Kind) + travel
 	if distanceSq == 0 || distanceSq <= hitDistance*hitDistance {
+		g.spawnFireballImpact(g.skeleton[targetIndex].Pos)
 		g.damageSkeleton(targetIndex, 1, AttackFireball, true)
 		g.removeFireball(i)
 		return
@@ -119,6 +120,7 @@ func (g *Game) updateUntargetedFireball(i int, dt float64) {
 	fire.TimeWithoutTarget += dt
 	fire.Pos = fire.Pos.Add(fire.Velocity.Mul(g.tuning.FireballSpeed * dt))
 	if idx := g.firstSkeletonHitBySegment(start, fire.Pos, g.tuning.FireballHitDistance); idx >= 0 {
+		g.spawnFireballImpact(g.skeleton[idx].Pos)
 		g.damageSkeleton(idx, 1, AttackFireball, true)
 		g.removeFireball(i)
 		return
@@ -126,6 +128,14 @@ func (g *Game) updateUntargetedFireball(i int, dt float64) {
 	if fire.TimeWithoutTarget >= g.tuning.FireballUntargetedLifetime {
 		g.removeFireball(i)
 	}
+}
+func (g *Game) spawnFireballImpact(pos Vec2) {
+	g.effects = append(g.effects, Effect{
+		Kind:   EffectFireballImpact,
+		Pos:    pos,
+		TTL:    fireballImpactEffectDuration,
+		MaxTTL: fireballImpactEffectDuration,
+	})
 }
 func (g *Game) firstSkeletonHitBySegment(start, end Vec2, radius float64) int {
 	g.ensureSkeletonSpatialIndex()
