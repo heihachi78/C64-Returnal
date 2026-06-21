@@ -193,63 +193,6 @@ func TestUnlockAndUpgradeBeamMatchesOriginalKillCountAndInterval(t *testing.T) {
 	}
 }
 
-func TestMageRawDPSStartsWithLevelOneFireballOnly(t *testing.T) {
-	p := NewProgression(DefaultTuning())
-
-	if got, want := p.MageRawDPS(), 2.0/actualDPSWindow; math.Abs(got-want) > 0.000001 {
-		t.Fatalf("MageRawDPS = %v, want %v", got, want)
-	}
-}
-
-func TestMageRawDPSScalesWithFireballCountAndRate(t *testing.T) {
-	p := NewProgression(DefaultTuning())
-	p.ApplyLevelUpOption(ExtraFireball)
-
-	if got, want := p.MageRawDPS(), 4.0/actualDPSWindow; math.Abs(got-want) > 0.000001 {
-		t.Fatalf("extra-fireball MageRawDPS = %v, want %v", got, want)
-	}
-
-	p = NewProgression(DefaultTuning())
-	p.ApplyLevelUpOption(FireRate)
-	if got, want := p.MageRawDPS(), 2.0/actualDPSWindow; math.Abs(got-want) > 0.000001 {
-		t.Fatalf("fire-rate MageRawDPS = %v, want %v", got, want)
-	}
-}
-
-func TestMageRawDPSIncludesUnlockedWeaponRates(t *testing.T) {
-	tuning := DefaultTuning()
-	p := NewProgression(tuning)
-	p.ApplyLevelUpOption(LearnLightning)
-	p.ApplyLevelUpOption(LightningBounce)
-	p.ApplyLevelUpOption(LearnOrb)
-	p.ApplyLevelUpOption(ExtraOrb)
-	p.ApplyLevelUpOption(OrbitalSpeed)
-	p.ApplyLevelUpOption(LearnBeam)
-	p.ApplyLevelUpOption(BeamKillCount)
-	p.ApplyLevelUpOption(LearnMeteor)
-	p.ApplyLevelUpOption(ExtraMeteor)
-
-	want := windowedDamageRate(1, p.FireballCastInterval()) +
-		windowedDamageRate(2, p.LightningCastInterval()) +
-		windowedCooldownDamageRate(2, orbitalOrbHitInterval(p.OrbitalAngularSpeed())) +
-		windowedDamageRate(3, p.BeamCastInterval()) +
-		windowedDamageRate(2, p.MeteorCastInterval())
-	if got := p.MageRawDPS(); math.Abs(got-want) > 0.000001 {
-		t.Fatalf("unlocked MageRawDPS = %v, want %v", got, want)
-	}
-}
-
-func TestMageRawDPSCountsOrbRespawnOrbitAfterHit(t *testing.T) {
-	p := NewProgression(DefaultTuning())
-	p.ApplyLevelUpOption(LearnOrb)
-
-	want := windowedDamageRate(1, p.FireballCastInterval()) +
-		windowedCooldownDamageRate(1, orbitalOrbHitInterval(p.OrbitalAngularSpeed()))
-	if got := p.MageRawDPS(); math.Abs(got-want) > 0.000001 {
-		t.Fatalf("orb MageRawDPS = %v, want %v", got, want)
-	}
-}
-
 func TestAttackSpeedOptionsStopBeforeOneSixtiethSecond(t *testing.T) {
 	tuning := DefaultTuning()
 	tuning.InitialFireballCast = 0.018
@@ -357,20 +300,18 @@ func TestDynamicSkeletonSpawnOrderUsesHighestHitPointsFirst(t *testing.T) {
 	}
 }
 
-func TestInitialDynamicSkeletonSpawnRateIsCappedByRawDPS(t *testing.T) {
+func TestInitialDynamicSkeletonSpawnRateUsesConfiguredHPPerSecond(t *testing.T) {
 	g := New()
 
-	want := min(g.tuning.InitialSkeletonHPPerSecond, g.session.Progression.MageRawDPS())
-	if got := g.SkeletonHPPerSecond(); math.Abs(got-want) > 0.000001 {
+	if got, want := g.SkeletonHPPerSecond(), g.tuning.InitialSkeletonHPPerSecond; math.Abs(got-want) > 0.000001 {
 		t.Fatalf("initial skeleton hp/sec = %v, want %v", got, want)
 	}
 }
 
-func TestDynamicSpawnPressureUsesPeakActualDPSOnLevelUp(t *testing.T) {
+func TestDynamicSpawnPressureUsesPeakActualDPSPlusOne(t *testing.T) {
 	g := New()
-	g.tuning.DynamicSpawnPressureFactor = 1.1
 	g.skeletonHPPerSecond = 0.1
-	g.maxActualDPS = 0.4
+	g.maxActualDPS = 8
 	g.session.Progression.GainExperience(1)
 
 	g.queueLevelUpChoices(1)
@@ -381,7 +322,7 @@ func TestDynamicSpawnPressureUsesPeakActualDPSOnLevelUp(t *testing.T) {
 
 	g.applyLevelUpOption(ExtraFireball)
 
-	want := 0.1 + 1.1*(g.session.Progression.MageRawDPS()-0.4)
+	want := 8.0 + 1.0
 	if got := g.SkeletonHPPerSecond(); math.Abs(got-want) > 0.000001 {
 		t.Fatalf("dynamic skeleton hp/sec = %v, want %v", got, want)
 	}
@@ -393,53 +334,54 @@ func TestDynamicSpawnPressureUsesPeakActualDPSOnLevelUp(t *testing.T) {
 	}
 }
 
-func TestDynamicSpawnPressureIsCappedByTheoreticalDPS(t *testing.T) {
+func TestDynamicSpawnPressureUsesCurrentHPPlusOneWhenItIsHigher(t *testing.T) {
 	g := New()
-	g.tuning.DynamicSpawnPressureFactor = 2
-	g.skeletonHPPerSecond = 0.1
+	g.skeletonHPPerSecond = 12
+	g.maxActualDPS = 3
 	g.session.Progression.GainExperience(1)
 
 	g.queueLevelUpChoices(1)
 	g.applyLevelUpOption(ExtraLife)
 
-	if got, want := g.SkeletonHPPerSecond(), g.session.Progression.MageRawDPS(); math.Abs(got-want) > 0.000001 {
-		t.Fatalf("capped skeleton hp/sec = %v, want raw dps %v", got, want)
+	if got, want := g.SkeletonHPPerSecond(), 13.0; math.Abs(got-want) > 0.000001 {
+		t.Fatalf("skeleton hp/sec = %v, want current-plus-one %v", got, want)
 	}
 }
 
-func TestDynamicSpawnPressureUsesActualDPSWhenActualExceedsTheoretical(t *testing.T) {
+func TestDynamicSpawnPressureAddsOneWhenNoDamageWasRecorded(t *testing.T) {
 	g := New()
-	g.tuning.DynamicSpawnActualFactor = 0.8
 	g.skeletonHPPerSecond = 0.5
-	g.maxActualDPS = 10
 	g.session.Progression.GainExperience(1)
 
 	g.queueLevelUpChoices(1)
 	g.applyLevelUpOption(ExtraLife)
 
-	if got, want := g.SkeletonHPPerSecond(), 8.0; math.Abs(got-want) > 0.000001 {
-		t.Fatalf("skeleton hp/sec = %v, want actual-scaled %v", got, want)
+	if got, want := g.SkeletonHPPerSecond(), 1.5; math.Abs(got-want) > 0.000001 {
+		t.Fatalf("skeleton hp/sec = %v, want current-plus-one %v", got, want)
 	}
 }
 
-func TestDynamicSpawnPressureActualDPSFloorIsTheoretical(t *testing.T) {
+func TestDynamicSpawnPressureAppliesOneForEachQueuedLevel(t *testing.T) {
 	g := New()
-	g.tuning.DynamicSpawnActualFactor = 0.95
-	g.skeletonHPPerSecond = 0.1
-	g.maxActualDPS = g.session.Progression.MageRawDPS() + 0.01
-	g.session.Progression.GainExperience(1)
+	g.skeletonHPPerSecond = 1
+	g.maxActualDPS = 5
+	g.session.Progression.GainExperience(3)
 
-	g.queueLevelUpChoices(1)
+	g.queueLevelUpChoices(2)
 	g.applyLevelUpOption(ExtraLife)
+	if got, want := g.SkeletonHPPerSecond(), 6.0; math.Abs(got-want) > 0.000001 {
+		t.Fatalf("first queued skeleton hp/sec = %v, want %v", got, want)
+	}
 
-	if got, want := g.SkeletonHPPerSecond(), g.session.Progression.MageRawDPS(); math.Abs(got-want) > 0.000001 {
-		t.Fatalf("skeleton hp/sec = %v, want theoretical floor %v", got, want)
+	g.applyLevelUpOption(ExtraLife)
+	if got, want := g.SkeletonHPPerSecond(), 7.0; math.Abs(got-want) > 0.000001 {
+		t.Fatalf("second queued skeleton hp/sec = %v, want %v", got, want)
 	}
 }
 
 func TestDynamicSpawnPressureNeverReducesExistingRate(t *testing.T) {
-	if got, want := increaseSkeletonHPPerSecond(2, 10, 1), 2.0; got != want {
-		t.Fatalf("increased hp/sec = %v, want unchanged %v", got, want)
+	if got, want := nextLevelSkeletonHPPerSecond(5, 1), 6.0; got != want {
+		t.Fatalf("next-level hp/sec = %v, want %v", got, want)
 	}
 }
 
@@ -722,7 +664,7 @@ func TestChestTierPolicy(t *testing.T) {
 		{name: "bronze after cap suppressed", milestone: 250, level: 34, wantTier: ChestBronze, wantOK: false},
 		{name: "silver before cap", milestone: 1000, level: 55, wantTier: ChestSilver, wantOK: true},
 		{name: "silver after cap suppressed", milestone: 1000, level: 56, wantTier: ChestSilver, wantOK: false},
-		{name: "gold always wins", milestone: 5000, level: 99, wantTier: ChestGold, wantOK: true},
+		{name: "gold always wins", milestone: 2500, level: 99, wantTier: ChestGold, wantOK: true},
 	}
 
 	for _, tt := range tests {

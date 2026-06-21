@@ -43,8 +43,14 @@ func (g *Game) drawCombatStatusPanel(screen *ebiten.Image, left float64) {
 func (g *Game) drawDPSPanel(screen *ebiten.Image) {
 	dpsX, dpsY, dpsW, dpsH := dpsPanelRect(g.screenW, g.screenH)
 	g.panel(screen, dpsX, dpsY, dpsW, dpsH)
-	g.drawCenteredTextSize(screen, fmt.Sprintf("RAW %.2f", g.session.Progression.MageRawDPS()), dpsX+dpsW/2, dpsY+19, combatFontSize, c64Text)
-	g.drawCenteredTextSize(screen, fmt.Sprintf("ACT %.2f", g.ActualDPS()), dpsX+dpsW/2, dpsY+39, combatFontSize, c64Gold)
+	hpRate, maxActual := g.dpsPanelReadouts()
+	g.drawCenteredTextSize(screen, hpRate, dpsX+dpsW/2, dpsY+19, combatFontSize, c64Text)
+	g.drawCenteredTextSize(screen, maxActual, dpsX+dpsW/2, dpsY+39, combatFontSize, c64Gold)
+}
+
+func (g *Game) dpsPanelReadouts() (hpRate, maxActual string) {
+	return fmt.Sprintf("HP/S %.2f", g.SkeletonHPPerSecond()),
+		fmt.Sprintf("MAX %.2f", g.maxActualDPS)
 }
 
 type combatHUDRow struct {

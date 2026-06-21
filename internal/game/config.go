@@ -1,8 +1,8 @@
 package game
 
 const (
-	ScreenWidth  = 800
-	ScreenHeight = 600
+	ScreenWidth  = 1200
+	ScreenHeight = 900
 	TargetTPS    = 120
 
 	grassTintBlendFactor         = 0.22
@@ -35,8 +35,6 @@ type Tuning struct {
 	PlayerAnimationFrameTime   float64
 	SkeletonSpeed              float64
 	InitialSkeletonHPPerSecond float64
-	DynamicSpawnPressureFactor float64
-	DynamicSpawnActualFactor   float64
 	SkeletonHitDistance        float64
 	SkeletonSpawnMargin        float64
 	SkeletonAnimationFrameTime float64
@@ -114,15 +112,13 @@ func DefaultTuning() Tuning {
 		PlayerAnimationFrameTime:   0.18,
 		SkeletonSpeed:              82,
 		InitialSkeletonHPPerSecond: 1.0,
-		DynamicSpawnPressureFactor: 1.1,
-		DynamicSpawnActualFactor:   0.95,
 		SkeletonHitDistance:        24,
 		SkeletonSpawnMargin:        72,
 		SkeletonAnimationFrameTime: 0.20,
 		RedHitPoints:               3,
 		PurpleHitPoints:            7,
 		BlackHitPoints:             29,
-		MaxActiveSkeletons:         360,
+		MaxActiveSkeletons:         810,
 		MaxSkeletonSpawnsPerTick:   1,
 		SpatialIndexCellSize:       96,
 
@@ -167,7 +163,7 @@ func DefaultTuning() Tuning {
 		ChestPickupDistance:    28,
 		BronzeKillInterval:     250,
 		SilverKillInterval:     1000,
-		GoldKillInterval:       5000,
+		GoldKillInterval:       2500,
 		BronzeMaximumLevel:     33,
 		SilverMaximumLevel:     55,
 		CoinSpawnMargin:        240,

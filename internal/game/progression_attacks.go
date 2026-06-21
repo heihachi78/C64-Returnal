@@ -6,30 +6,6 @@ func (p Progression) FireballCastInterval() float64 {
 	return p.tuning.InitialFireballCast * math.Pow(p.tuning.FireballIntervalMultiplier, float64(p.fireRateUpgrades))
 }
 
-func (p Progression) MageRawDPS() float64 {
-	return windowedDamageRate(p.SimultaneousFireball, p.FireballCastInterval()) +
-		windowedDamageRate(p.LightningStrikeCount(), p.LightningCastInterval()) +
-		windowedCooldownDamageRate(p.OrbitalOrbCount(), orbitalOrbHitInterval(p.OrbitalAngularSpeed())) +
-		windowedDamageRate(p.BeamKillCount(), p.BeamCastInterval()) +
-		windowedDamageRate(p.MeteorCount(), p.MeteorCastInterval())
-}
-
-func windowedDamageRate(count int, interval float64) float64 {
-	if count <= 0 || interval <= 0 || actualDPSWindow <= 0 {
-		return 0
-	}
-	hits := math.Floor(actualDPSWindow/interval) + 1
-	return float64(count) * hits / actualDPSWindow
-}
-
-func windowedCooldownDamageRate(count int, interval float64) float64 {
-	if count <= 0 || interval <= 0 || actualDPSWindow <= 0 {
-		return 0
-	}
-	hits := math.Floor(actualDPSWindow / interval)
-	return float64(count) * hits / actualDPSWindow
-}
-
 func orbitalOrbHitInterval(angularSpeed float64) float64 {
 	if angularSpeed <= 0 {
 		return 0

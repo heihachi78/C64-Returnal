@@ -93,7 +93,7 @@ func (g *Game) reset() {
 	g.maxActualDPS = 0
 	g.pendingSpawnPressureActual = 0
 	g.pendingSpawnPressureLevels = 0
-	g.skeletonHPPerSecond = initialSkeletonHPPerSecond(g.tuning, g.session.Progression)
+	g.skeletonHPPerSecond = initialSkeletonHPPerSecond(g.tuning)
 	g.dynamicSpawnQueue = g.dynamicSpawnQueue[:0]
 	g.spatial.Rebuild(g.skeleton)
 	g.skeletonSpatialDirty = false

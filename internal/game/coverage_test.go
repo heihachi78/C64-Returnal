@@ -88,13 +88,15 @@ func TestCoverageHUDDrawsDPSReadout(t *testing.T) {
 	g := New()
 	g.screenW = ScreenWidth
 	g.screenH = ScreenHeight
-	g.session.Progression.ApplyLevelUpOption(ExtraFireball)
+	g.skeletonHPPerSecond = 3.5
+	g.maxActualDPS = 4.25
 
 	screen := ebiten.NewImage(ScreenWidth, ScreenHeight)
 	g.drawHUD(screen)
 
-	if got := g.session.Progression.MageRawDPS(); got <= 0 {
-		t.Fatalf("MageRawDPS = %v, want positive HUD value", got)
+	hpRate, maxActual := g.dpsPanelReadouts()
+	if hpRate != "HP/S 3.50" || maxActual != "MAX 4.25" {
+		t.Fatalf("DPS readouts = %q, %q; want HP/S 3.50 and MAX 4.25", hpRate, maxActual)
 	}
 }
 
@@ -686,7 +688,9 @@ func TestCoverageInputOverridesDriveOverlayInputBranches(t *testing.T) {
 	g := New()
 	g.session.GameOver = true
 	mousePressed = true
-	cursorX, cursorY = 400, 370
+	x, y, w, _ := gameOverPanelRect(g.screenW, g.screenH)
+	cursorX = int(x + w/2)
+	cursorY = int(y + gameOverExitOffsetY)
 	consumed, err := g.updateOverlayInput()
 	if !consumed || !errors.Is(err, ebiten.Termination) {
 		t.Fatalf("game-over mouse exit = consumed %v err %v", consumed, err)
@@ -751,7 +755,11 @@ func TestCoverageInputOverridesDriveOverlayInputBranches(t *testing.T) {
 	g.session.CollectedCoins = 10
 	mousePressed = true
 	justPressed = nil
-	cursorX, cursorY = 400-150, int(float64(g.screenH)/2-90+94+float64(max(2, len(g.session.ActiveLevelUpOptions)))*52+14)
+	levelUpW := math.Min(math.Max(360, float64(g.screenW)-48), 620)
+	levelUpX := float64(g.screenW)/2 - levelUpW/2
+	levelUpCenterX := levelUpX + levelUpW/2
+	cursorX = int(levelUpCenterX - 150)
+	cursorY = int(float64(g.screenH)/2 - 90 + 94 + float64(max(2, len(g.session.ActiveLevelUpOptions)))*52 + 14)
 	consumed, err = g.updateOverlayInput()
 	if !consumed || err != nil {
 		t.Fatalf("redraw mouse = consumed %v err %v", consumed, err)
@@ -760,7 +768,11 @@ func TestCoverageInputOverridesDriveOverlayInputBranches(t *testing.T) {
 	g = New()
 	g.session.LevelUpChoiceActive = true
 	g.session.ActiveLevelUpOptions = []LevelUpOption{ExtraLife}
-	cursorX, cursorY = 400-78, int(float64(g.screenH)/2-90+94)
+	levelUpW = math.Min(math.Max(360, float64(g.screenW)-48), 620)
+	levelUpX = float64(g.screenW)/2 - levelUpW/2
+	levelUpCenterX = levelUpX + levelUpW/2
+	cursorX = int(levelUpCenterX - 78)
+	cursorY = int(float64(g.screenH)/2 - 90 + 94)
 	consumed, err = g.updateOverlayInput()
 	if !consumed || err != nil || g.session.PlayerLives != g.tuning.InitialPlayerLives+1 {
 		t.Fatalf("level option mouse = consumed %v err %v lives %d", consumed, err, g.session.PlayerLives)
@@ -778,14 +790,18 @@ func TestCoverageUpdateEarlyExitBranches(t *testing.T) {
 	g := New()
 	g.session.GameOver = true
 	inpututilIsMouseButtonJustPressed = func(ebiten.MouseButton) bool { return true }
-	ebitenCursorPosition = func() (int, int) { return 400, 370 }
+	x, y, w, _ := gameOverPanelRect(g.screenW, g.screenH)
+	exitX, exitY := int(x+w/2), int(y+gameOverExitOffsetY)
+	ebitenCursorPosition = func() (int, int) { return exitX, exitY }
 	if err := g.Update(); !errors.Is(err, ebiten.Termination) {
 		t.Fatalf("Update game-over exit err = %v, want termination", err)
 	}
 
 	g = New()
 	g.session.GameOver = true
-	ebitenCursorPosition = func() (int, int) { return 400, 322 }
+	x, y, w, _ = gameOverPanelRect(g.screenW, g.screenH)
+	restartX, restartY := int(x+w/2), int(y+gameOverRestartOffsetY)
+	ebitenCursorPosition = func() (int, int) { return restartX, restartY }
 	if err := g.Update(); err != nil {
 		t.Fatalf("Update game-over restart err = %v", err)
 	}

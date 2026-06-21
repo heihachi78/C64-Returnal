@@ -2,7 +2,7 @@
 
 C64-Returnal is a Go/Ebitengine desktop survival game. The player controls a mage on an infinite C64-style grass field while auto-cast weapons fight escalating skeleton hordes.
 
-The game opens a resizable 800x600 window and runs the simulation at 120 ticks per second.
+The game opens a resizable 1200x900 window and runs the simulation at 120 ticks per second.
 
 ## Features
 
@@ -12,7 +12,7 @@ The game opens a resizable 800x600 window and runs the simulation at 120 ticks p
 - Auto-cast fireballs, chain lightning, orbital orbs, beams, meteors, and an unlockable death wave.
 - Level-up choices, queued level-up overlays, coin-funded redraws, and chest rewards.
 - Skeleton variants with current hit points of 1 regular, 3 red, 7 purple, 29 black, and 1000 blue.
-- Dynamic spawn pressure based on player damage output; default tuning caps spawns at 360 active skeletons and one queued spawn per tick.
+- Dynamic spawn pressure based on each level's peak actual damage and current enemy HP budget, with a flat +1 HP/sec bump per level-up; default tuning caps spawns at 810 active skeletons and one queued spawn per tick.
 - A parallel skeleton movement path exists for tuning that allows at least 1024 active skeletons; damage, kills, rewards, and overlays stay on the main update path.
 - Tests for the entrypoint, progression, combat, pickups, overlays, rendering fidelity, generated assets, spatial indexing, and branch coverage.
 
@@ -75,7 +75,7 @@ Level-up options can increase fireball count or rate, add a life, learn lightnin
 
 One coin is spawned for each level, including level 1. Coins spawn outside the visible viewport, can be collected once, and grant 1 to 100 coins. Redrawing level-up choices costs coins equal to the current player level, with a minimum cost of 1.
 
-Chests spawn outside the visible viewport at kill milestones. A chest milestone is checked every 250 kills. Bronze chests appear on non-silver, non-gold milestones through level 33. Silver chests appear every 1000 kills through level 55. Gold chests appear every 5000 kills at any level. Bronze chests apply one random available upgrade for one learned skill, silver chests apply all currently available upgrades for one learned skill, and gold chests do that for up to two learned skills.
+Chests spawn outside the visible viewport at kill milestones. A chest milestone is checked every 250 kills. Bronze chests appear on non-silver, non-gold milestones through level 33. Silver chests appear every 1000 kills through level 55. Gold chests appear every 2500 kills at any level. Bronze chests apply one random available upgrade for one learned skill, silver chests apply all currently available upgrades for one learned skill, and gold chests do that for up to two learned skills.
 
 Skeleton spawning uses an HP-per-second budget. The spawn planner spends that budget on the strongest affordable skeleton variants first, then regular skeletons for the remainder. Red, purple, black, and blue variants are slower than regular skeletons and have higher HP; purple, black, and blue variants also grant more experience.
 

@@ -149,28 +149,27 @@ func TestCoverageProgressionAndSpawnPressureEdges(t *testing.T) {
 
 	g = New()
 	g.maxActualDPS = 8
+	g.session.PendingLevelUpLevels = []int{2, 3}
 	g.queueDynamicSpawnPressureForLevelUp(2)
 	if g.pendingSpawnPressureActual != 8 || g.pendingSpawnPressureLevels != 2 || g.maxActualDPS != 0 {
 		t.Fatalf("queued spawn pressure state = actual %v levels %d max %v", g.pendingSpawnPressureActual, g.pendingSpawnPressureLevels, g.maxActualDPS)
 	}
 	g.applyPendingDynamicSpawnPressure()
-	if g.skeletonHPPerSecond <= 0 || g.pendingSpawnPressureLevels != 1 {
+	if g.skeletonHPPerSecond != 9 || g.pendingSpawnPressureLevels != 1 {
 		t.Fatalf("actual-target spawn pressure = hp/s %v levels %d", g.skeletonHPPerSecond, g.pendingSpawnPressureLevels)
 	}
 	g.pendingSpawnPressureActual = 0
+	g.session.PendingLevelUpLevels = []int{3}
 	g.applyPendingDynamicSpawnPressure()
 	if g.pendingSpawnPressureActual != 0 || g.pendingSpawnPressureLevels != 0 {
 		t.Fatalf("finished spawn pressure state = actual %v levels %d", g.pendingSpawnPressureActual, g.pendingSpawnPressureLevels)
 	}
 
-	if got := capSkeletonHPPerSecond(5, 0); got != 0 {
-		t.Fatalf("capSkeletonHPPerSecond no DPS = %v, want 0", got)
+	if got := initialSkeletonHPPerSecond(Tuning{InitialSkeletonHPPerSecond: -5}); got != 0 {
+		t.Fatalf("negative initial hp/sec = %v, want 0", got)
 	}
-	if got := increaseSkeletonHPPerSecond(5, 1, 4); got != 5 {
-		t.Fatalf("increase capped by current = %v, want 5", got)
-	}
-	if got := dynamicSpawnPressureActualTarget(10, 100, -1); got != 10 {
-		t.Fatalf("negative-factor actual target = %v, want raw DPS 10", got)
+	if got := nextLevelSkeletonHPPerSecond(-5, -1); got != 1 {
+		t.Fatalf("negative next-level hp/sec = %v, want 1", got)
 	}
 }
 

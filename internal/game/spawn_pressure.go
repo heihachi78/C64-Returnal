@@ -5,8 +5,8 @@ import (
 	"slices"
 )
 
-func initialSkeletonHPPerSecond(t Tuning, p Progression) float64 {
-	return capSkeletonHPPerSecond(t.InitialSkeletonHPPerSecond, p.MageRawDPS())
+func initialSkeletonHPPerSecond(t Tuning) float64 {
+	return max(0, t.InitialSkeletonHPPerSecond)
 }
 
 func (g *Game) updateSkeletonSpawning(dt float64) {
@@ -140,46 +140,17 @@ func (g *Game) applyPendingDynamicSpawnPressure() {
 		g.capDynamicSpawnPressure()
 		return
 	}
-	rawDPS := g.session.Progression.MageRawDPS()
-	if g.pendingSpawnPressureActual > rawDPS {
-		target := dynamicSpawnPressureActualTarget(rawDPS, g.pendingSpawnPressureActual, g.tuning.DynamicSpawnActualFactor)
-		g.skeletonHPPerSecond = increaseSkeletonHPPerSecondToTarget(g.SkeletonHPPerSecond(), target)
-	} else {
-		headroom := max(0, rawDPS-g.pendingSpawnPressureActual)
-		increase := max(0, g.tuning.DynamicSpawnPressureFactor) * headroom
-		g.skeletonHPPerSecond = increaseSkeletonHPPerSecond(g.SkeletonHPPerSecond(), increase, rawDPS)
-	}
+	g.skeletonHPPerSecond = nextLevelSkeletonHPPerSecond(g.SkeletonHPPerSecond(), g.pendingSpawnPressureActual)
 	g.pendingSpawnPressureLevels--
 	if g.pendingSpawnPressureLevels == 0 {
 		g.pendingSpawnPressureActual = 0
 	}
 }
 
+func nextLevelSkeletonHPPerSecond(currentHPPerSecond, maxDamageOutput float64) float64 {
+	return max(max(0, maxDamageOutput)+1, max(0, currentHPPerSecond)+1)
+}
+
 func (g *Game) capDynamicSpawnPressure() {
 	g.skeletonHPPerSecond = g.SkeletonHPPerSecond()
-}
-
-func capSkeletonHPPerSecond(desired, rawDPS float64) float64 {
-	desired = max(0, desired)
-	if rawDPS <= 0 {
-		return 0
-	}
-	return min(desired, rawDPS)
-}
-
-func increaseSkeletonHPPerSecond(current, increase, rawDPS float64) float64 {
-	current = max(0, current)
-	increase = max(0, increase)
-	if rawDPS <= current {
-		return current
-	}
-	return min(current+increase, rawDPS)
-}
-
-func dynamicSpawnPressureActualTarget(rawDPS, actualDPS, factor float64) float64 {
-	return max(rawDPS, max(0, factor)*actualDPS)
-}
-
-func increaseSkeletonHPPerSecondToTarget(current, target float64) float64 {
-	return max(max(0, current), max(0, target))
 }

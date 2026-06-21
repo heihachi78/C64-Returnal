@@ -10,8 +10,8 @@ import (
 )
 
 func TestInitialWindowSizeMatchesOriginalApp(t *testing.T) {
-	if ScreenWidth != 800 || ScreenHeight != 600 {
-		t.Fatalf("initial screen size = %dx%d, want 800x600", ScreenWidth, ScreenHeight)
+	if ScreenWidth != 1200 || ScreenHeight != 900 {
+		t.Fatalf("initial screen size = %dx%d, want 1200x900", ScreenWidth, ScreenHeight)
 	}
 }
 
@@ -85,19 +85,19 @@ func TestGrassTintBlendFactorMatchesOriginalField(t *testing.T) {
 
 func TestGrassGridMatchesOriginalInfiniteFieldLayout(t *testing.T) {
 	startColumn, startRow, columns, rows := grassGrid(ScreenWidth, ScreenHeight, 64, Vec2{})
-	if columns != 17 || rows != 14 {
-		t.Fatalf("grass grid size = %dx%d, want 17x14", columns, rows)
+	if columns != 23 || rows != 19 {
+		t.Fatalf("grass grid size = %dx%d, want 23x19", columns, rows)
 	}
-	if startColumn != -8 || startRow != -7 {
-		t.Fatalf("grass grid start = (%d,%d), want (-8,-7)", startColumn, startRow)
+	if startColumn != -11 || startRow != -9 {
+		t.Fatalf("grass grid start = (%d,%d), want (-11,-9)", startColumn, startRow)
 	}
 
 	startColumn, startRow, columns, rows = grassGrid(ScreenWidth, ScreenHeight, 64, Vec2{X: 130, Y: -130})
-	if columns != 17 || rows != 14 {
-		t.Fatalf("shifted grass grid size = %dx%d, want 17x14", columns, rows)
+	if columns != 23 || rows != 19 {
+		t.Fatalf("shifted grass grid size = %dx%d, want 23x19", columns, rows)
 	}
-	if startColumn != -6 || startRow != -10 {
-		t.Fatalf("shifted grass grid start = (%d,%d), want (-6,-10)", startColumn, startRow)
+	if startColumn != -9 || startRow != -12 {
+		t.Fatalf("shifted grass grid start = (%d,%d), want (-9,-12)", startColumn, startRow)
 	}
 }
 
@@ -247,16 +247,20 @@ func TestGameOverLayoutMatchesOriginalHUDRect(t *testing.T) {
 	}
 
 	g := New()
-	if got := g.gameOverOptionAt(400, 322); got != "restart" {
+	x, y, w, _ = gameOverPanelRect(g.screenW, g.screenH)
+	centerX := x + w/2
+	restartY := y + gameOverRestartOffsetY
+	exitY := y + gameOverExitOffsetY
+	if got := g.gameOverOptionAt(centerX, restartY); got != "restart" {
 		t.Fatalf("game over option at restart center = %q, want restart", got)
 	}
-	if got := g.gameOverOptionAt(400, 370); got != "exit" {
+	if got := g.gameOverOptionAt(centerX, exitY); got != "exit" {
 		t.Fatalf("game over option at exit center = %q, want exit", got)
 	}
 
 	face := fontFaceForSize(gameOverOptionFontSize)
-	restartOutsideX := 400 + float64(font.MeasureString(face, "RESTART").Ceil())/2 + 27
-	if got := g.gameOverOptionAt(restartOutsideX, 322); got != "" {
+	restartOutsideX := centerX + float64(font.MeasureString(face, "RESTART").Ceil())/2 + 27
+	if got := g.gameOverOptionAt(restartOutsideX, restartY); got != "" {
 		t.Fatalf("game over option outside restart label hit area = %q, want none like original behavior", got)
 	}
 }
