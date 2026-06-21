@@ -49,6 +49,9 @@ func (g *Game) drawWorld(screen *ebiten.Image) {
 			g.drawEffect(screen, effect)
 		}
 	}
+	for _, wave := range g.deathWaves {
+		g.drawDeathWave(screen, wave)
+	}
 	for _, meteor := range g.meteors {
 		g.drawMeteor(screen, meteor)
 	}

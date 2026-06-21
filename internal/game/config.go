@@ -19,6 +19,8 @@ const (
 	debugLevelJumpCoins          = 5000
 	debugLevelJumpGoldChests     = 40
 	debugLevelJumpChestRadius    = 56
+	deathWaveScrollCost          = 1000
+	deathWaveRequiredScrolls     = 5
 	actualDPSWindow              = 5.0
 	dynamicSpawnBatchInterval    = 1.0
 	minAttackSpawnInterval       = 1.0 / 60.0
@@ -75,6 +77,11 @@ type Tuning struct {
 	MeteorFallHeight         float64
 	MeteorFallDrift          float64
 	MeteorAnimationFrameTime float64
+
+	DeathWaveInterval  float64
+	DeathWaveSpeed     float64
+	DeathWaveWidth     float64
+	DeathWaveMaxRadius float64
 
 	ChestSpawnMargin       float64
 	ChestPickupDistance    float64
@@ -148,6 +155,11 @@ func DefaultTuning() Tuning {
 		MeteorFallHeight:         240,
 		MeteorFallDrift:          90,
 		MeteorAnimationFrameTime: 0.14,
+
+		DeathWaveInterval:  30,
+		DeathWaveSpeed:     320,
+		DeathWaveWidth:     28,
+		DeathWaveMaxRadius: 760,
 
 		ChestSpawnMargin:       88,
 		ChestPickupDistance:    28,

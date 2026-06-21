@@ -15,6 +15,7 @@ type CastTimers struct {
 	Lightning     float64
 	Beam          float64
 	Meteor        float64
+	DeathWave     float64
 }
 
 type Session struct {

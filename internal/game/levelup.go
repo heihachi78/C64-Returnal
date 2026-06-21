@@ -52,6 +52,9 @@ func (g *Game) randomLevelUpOptionsCandidate() []LevelUpOption {
 	if hasSkeletons && len(selected) > 0 && chance(g.rng, g.tuning.HalveHordeChanceNumerator, g.tuning.HalveHordeChanceDenominator) {
 		selected[g.rng.Intn(len(selected))] = HalveSkeletons
 	}
+	if g.canBuyDeathWaveScroll() && !slices.Contains(selected, BuyDeathWaveScroll) {
+		selected = append(selected, BuyDeathWaveScroll)
+	}
 	return selected
 }
 func (g *Game) applyLevelUpOption(option LevelUpOption) {
@@ -68,6 +71,11 @@ func (g *Game) applyLevelUpOption(option LevelUpOption) {
 }
 func (g *Game) applyUpgradeEffect(option LevelUpOption) {
 	switch option {
+	case BuyDeathWaveScroll:
+		if g.canBuyDeathWaveScroll() {
+			g.session.CollectedCoins -= deathWaveScrollCost
+			g.session.Progression.ApplyLevelUpOption(option)
+		}
 	case ExtraLife:
 		g.session.PlayerLives++
 	case HalveSkeletons:
@@ -128,6 +136,10 @@ func (g *Game) showLevelUpRedrawPresentation(resetTextFade bool) {
 }
 func (g *Game) levelUpRedrawCost() int {
 	return max(1, g.session.Progression.Level)
+}
+func (g *Game) canBuyDeathWaveScroll() bool {
+	return g.session.CollectedCoins >= deathWaveScrollCost &&
+		g.session.Progression.LevelUpOptionAvailable(BuyDeathWaveScroll)
 }
 func (g *Game) hideLevelUpPresentation() {
 	g.session.LevelUpRedrawStatusTimer = 0

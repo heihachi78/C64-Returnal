@@ -99,6 +99,8 @@ func (g *Game) drawOptionIconTinted(screen *ebiten.Image, option LevelUpOption, 
 		img = g.assets.Beam
 	case LearnMeteor, ExtraMeteor, MeteorRate:
 		img = g.assets.Meteor[0]
+	case BuyDeathWaveScroll:
+		img = g.assets.Beam
 	default:
 		img = g.assets.Fireball[0]
 	}

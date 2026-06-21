@@ -45,6 +45,7 @@ func TestLevelUpOptionTitlesMatchOriginalHUDModels(t *testing.T) {
 		{option: LearnMeteor, want: "LEARN METEOR"},
 		{option: ExtraMeteor, want: "+1 METEOR"},
 		{option: MeteorRate, want: "FASTER METEOR"},
+		{option: BuyDeathWaveScroll, want: "DEATH SCROLL"},
 	}
 
 	for _, tt := range tests {
@@ -53,6 +54,28 @@ func TestLevelUpOptionTitlesMatchOriginalHUDModels(t *testing.T) {
 				t.Fatalf("title = %q, want %q", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestDeathWaveScrollRequiresFivePurchasesToUnlock(t *testing.T) {
+	p := NewProgression(DefaultTuning())
+
+	for i := 0; i < deathWaveRequiredScrolls-1; i++ {
+		if !p.LevelUpOptionAvailable(BuyDeathWaveScroll) {
+			t.Fatalf("death wave scroll unavailable after %d purchases", i)
+		}
+		p.ApplyLevelUpOption(BuyDeathWaveScroll)
+		if p.DeathWaveUnlocked {
+			t.Fatalf("death wave unlocked after %d purchases, want locked", i+1)
+		}
+	}
+
+	p.ApplyLevelUpOption(BuyDeathWaveScroll)
+	if !p.DeathWaveUnlocked {
+		t.Fatal("death wave unlocked = false, want true after fifth scroll")
+	}
+	if p.LevelUpOptionAvailable(BuyDeathWaveScroll) {
+		t.Fatal("death wave scroll still available after all required scrolls")
 	}
 }
 

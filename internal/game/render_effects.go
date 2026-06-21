@@ -75,6 +75,55 @@ func (g *Game) drawFireballImpact(screen *ebiten.Image, effect Effect) {
 	}
 }
 
+func (g *Game) drawDeathWave(screen *ebiten.Image, wave DeathWave) {
+	if wave.MaxRadius <= 0 || wave.Radius <= 0 {
+		return
+	}
+	progress := Clamp(wave.Radius/wave.MaxRadius, 0, 1)
+	alpha := uint8(math.Round(255 * (1 - progress) * 0.86))
+	if alpha == 0 {
+		return
+	}
+	x, y := g.worldToScreen(wave.Origin)
+	width := float32(max(1, g.tuning.DeathWaveWidth*0.18))
+	pulse := 0.5 + 0.5*math.Sin(wave.Radius*0.08+g.totalTime*12)
+	outerAlpha := scaleAlpha(alpha, 0.28+0.18*pulse)
+	echoAlpha := scaleAlpha(alpha, 0.32*(1-progress))
+	rimAlpha := scaleAlpha(alpha, 0.96)
+
+	vector.StrokeCircle(screen, float32(x), float32(y), float32(wave.Radius), width+9, color.RGBA{42, 5, 58, outerAlpha}, false)
+	vector.StrokeCircle(screen, float32(x), float32(y), float32(wave.Radius), width+5, color.RGBA{116, 18, 156, scaleAlpha(alpha, 0.72)}, false)
+	vector.StrokeCircle(screen, float32(x), float32(y), float32(wave.Radius), width+2, color.RGBA{226, 43, 217, rimAlpha}, false)
+	vector.StrokeCircle(screen, float32(x), float32(y), float32(wave.Radius), max(1, width-1), color.RGBA{246, 243, 231, rimAlpha}, false)
+	if wave.Radius > g.tuning.DeathWaveWidth {
+		vector.StrokeCircle(screen, float32(x), float32(y), float32(wave.Radius-g.tuning.DeathWaveWidth*0.65), max(1, width-2), color.RGBA{71, 187, 255, echoAlpha}, false)
+	}
+	g.drawDeathWaveSparks(screen, wave, alpha)
+}
+
+func (g *Game) drawDeathWaveSparks(screen *ebiten.Image, wave DeathWave, alpha uint8) {
+	if wave.Radius < 18 {
+		return
+	}
+	const sparks = 18
+	for i := 0; i < sparks; i++ {
+		angle := float64(i)*math.Pi*2/sparks + math.Sin(wave.Radius*0.045+float64(i))*0.16
+		length := 9 + 7*linearPingPong(wave.Radius*0.018+float64(i)*0.19, 0.5)
+		radius := wave.Radius + math.Sin(wave.Radius*0.06+float64(i)*1.7)*g.tuning.DeathWaveWidth*0.28
+		start := wave.Origin.Add(Vec2{X: math.Cos(angle) * (radius - length*0.35), Y: math.Sin(angle) * (radius - length*0.35)})
+		end := wave.Origin.Add(Vec2{X: math.Cos(angle) * (radius + length), Y: math.Sin(angle) * (radius + length)})
+		startX, startY := g.worldToScreen(start)
+		endX, endY := g.worldToScreen(end)
+		clr := color.RGBA{255, 72, 214, scaleAlpha(alpha, 0.62)}
+		if i%3 == 0 {
+			clr = color.RGBA{246, 243, 231, scaleAlpha(alpha, 0.78)}
+		} else if i%3 == 1 {
+			clr = color.RGBA{71, 187, 255, scaleAlpha(alpha, 0.48)}
+		}
+		vector.StrokeLine(screen, float32(startX), float32(startY), float32(endX), float32(endY), 1.4, clr, false)
+	}
+}
+
 type meteorImpactShake struct {
 	Radius  float64
 	OffsetX float64

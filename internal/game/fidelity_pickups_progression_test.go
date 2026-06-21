@@ -3,6 +3,7 @@ package game
 import (
 	"math"
 	"math/rand"
+	"slices"
 	"testing"
 )
 
@@ -86,6 +87,38 @@ func TestCoinAnimationsAdvanceWhenSameFrameGameOverLeavesWorldUnpausedLikeOrigin
 	want := 1.0 / float64(TargetTPS)
 	if math.Abs(g.coins[0].Phase-want) > 0.0001 {
 		t.Fatalf("coin phase after same-frame game over = %v, want %v", g.coins[0].Phase, want)
+	}
+}
+
+func TestDeathWaveScrollAppearsOnLevelUpOnlyWhenAffordable(t *testing.T) {
+	g := New()
+	g.session.CollectedCoins = deathWaveScrollCost - 1
+	if options := g.randomLevelUpOptionsCandidate(); slices.Contains(options, BuyDeathWaveScroll) {
+		t.Fatalf("options = %v, want no death wave scroll below cost", options)
+	}
+
+	g.session.CollectedCoins = deathWaveScrollCost
+	if options := g.randomLevelUpOptionsCandidate(); !slices.Contains(options, BuyDeathWaveScroll) {
+		t.Fatalf("options = %v, want death wave scroll when affordable", options)
+	}
+}
+
+func TestBuyingDeathWaveScrollCostsCoinsAndUnlocksOnFifthPurchase(t *testing.T) {
+	g := New()
+
+	for i := 0; i < deathWaveRequiredScrolls; i++ {
+		g.session.CollectedCoins = deathWaveScrollCost
+		g.applyUpgradeEffect(BuyDeathWaveScroll)
+	}
+
+	if got := g.session.Progression.DeathWaveScrolls; got != deathWaveRequiredScrolls {
+		t.Fatalf("death wave scrolls = %d, want %d", got, deathWaveRequiredScrolls)
+	}
+	if !g.session.Progression.DeathWaveUnlocked {
+		t.Fatal("death wave unlocked = false, want true")
+	}
+	if got := g.session.CollectedCoins; got != 0 {
+		t.Fatalf("coins after final scroll = %d, want 0", got)
 	}
 }
 

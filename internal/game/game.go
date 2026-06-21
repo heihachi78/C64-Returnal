@@ -23,6 +23,7 @@ type Game struct {
 	fireballTargetReservations  map[int]bool
 	orbs                        []OrbitalOrb
 	meteors                     []MeteorProjectile
+	deathWaves                  []DeathWave
 	chests                      []Chest
 	coins                       []Coin
 	effects                     []Effect
@@ -83,6 +84,7 @@ func (g *Game) reset() {
 	clear(g.fireballTargetReservations)
 	g.orbs = g.orbs[:0]
 	g.meteors = g.meteors[:0]
+	g.deathWaves = g.deathWaves[:0]
 	g.chests = g.chests[:0]
 	g.coins = g.coins[:0]
 	g.effects = g.effects[:0]
@@ -167,6 +169,8 @@ func (g *Game) Update() error {
 
 	g.updateMeteorCasting(dt)
 	g.updateMeteors(dt)
+	g.updateDeathWaveCasting(dt)
+	g.updateDeathWaves(dt)
 	g.updateInvulnerability(dt)
 	if g.session.LevelUpChoiceActive {
 		g.updateNewlyPresentedOverlayActions(dt)

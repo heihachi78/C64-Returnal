@@ -19,6 +19,7 @@ const (
 	LearnMeteor
 	ExtraMeteor
 	MeteorRate
+	BuyDeathWaveScroll
 )
 
 func (o LevelUpOption) Title(beamKillBonus int) string {
@@ -55,6 +56,8 @@ func (o LevelUpOption) Title(beamKillBonus int) string {
 		return "+1 METEOR"
 	case MeteorRate:
 		return "FASTER METEOR"
+	case BuyDeathWaveScroll:
+		return "DEATH SCROLL"
 	default:
 		return "UNKNOWN"
 	}

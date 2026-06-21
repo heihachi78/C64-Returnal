@@ -14,6 +14,8 @@ type Progression struct {
 	OrbitalOrbUnlocked      bool
 	BeamUnlocked            bool
 	MeteorUnlocked          bool
+	DeathWaveScrolls        int
+	DeathWaveUnlocked       bool
 	fireRateUpgrades        int
 	lightningRateUpgrades   int
 	orbitalSpeedUpgrades    int
@@ -41,6 +43,8 @@ func (p *Progression) Reset() {
 	p.OrbitalOrbUnlocked = false
 	p.BeamUnlocked = false
 	p.MeteorUnlocked = false
+	p.DeathWaveScrolls = 0
+	p.DeathWaveUnlocked = false
 	p.fireRateUpgrades = 0
 	p.lightningRateUpgrades = 0
 	p.orbitalSpeedUpgrades = 0
@@ -207,6 +211,9 @@ func (p Progression) AvailableUpgradeOptionsForSkill(skill LearnedSkill) []Level
 }
 
 func (p Progression) LevelUpOptionAvailable(option LevelUpOption) bool {
+	if option == BuyDeathWaveScroll {
+		return p.DeathWaveScrolls < deathWaveRequiredScrolls
+	}
 	interval, ok := p.attackSpawnIntervalAfterOption(option)
 	return !ok || interval >= minAttackSpawnInterval
 }
@@ -251,6 +258,11 @@ func (p *Progression) GainExperienceToLevel(targetLevel int) int {
 
 func (p *Progression) ApplyLevelUpOption(option LevelUpOption) {
 	switch option {
+	case BuyDeathWaveScroll:
+		if p.DeathWaveScrolls < deathWaveRequiredScrolls {
+			p.DeathWaveScrolls++
+			p.DeathWaveUnlocked = p.DeathWaveScrolls >= deathWaveRequiredScrolls
+		}
 	case FireRate:
 		if p.LevelUpOptionAvailable(option) {
 			p.fireRateUpgrades++

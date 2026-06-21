@@ -236,6 +236,65 @@ func TestMeteorCastingResetsTimerWhenNoSkeletonsLikeOriginal(t *testing.T) {
 	}
 }
 
+func TestDeathWaveCastingCreatesWaveEveryThirtySeconds(t *testing.T) {
+	g := New()
+	g.session.Progression.DeathWaveUnlocked = true
+
+	g.updateDeathWaveCasting(g.tuning.DeathWaveInterval*2 + 0.25)
+
+	if len(g.deathWaves) != 2 {
+		t.Fatalf("death wave count = %d, want 2", len(g.deathWaves))
+	}
+	if math.Abs(g.session.Casts.DeathWave-0.25) > 0.0001 {
+		t.Fatalf("death wave cast remainder = %v, want 0.25", g.session.Casts.DeathWave)
+	}
+}
+
+func TestDeathWaveReducesTouchedNonWhiteSkeletonsToOneHP(t *testing.T) {
+	g := New()
+	g.tuning.DeathWaveWidth = 20
+	g.skeleton = []Skeleton{
+		{ID: 101, Kind: SkeletonRed, Pos: Vec2{X: 48}, HP: 3},
+		{ID: 202, Kind: SkeletonRegular, Pos: Vec2{X: 52}, HP: 3},
+		{ID: 303, Kind: SkeletonBlack, Pos: Vec2{X: 180}, HP: 29},
+	}
+	wave := DeathWave{Origin: Vec2{}, PreviousRadius: 0, Radius: 60}
+
+	g.applyDeathWaveDamage(&wave)
+
+	if g.skeleton[0].HP != 1 {
+		t.Fatalf("red skeleton HP = %d, want 1", g.skeleton[0].HP)
+	}
+	if g.skeleton[1].HP != 3 {
+		t.Fatalf("regular white skeleton HP = %d, want immune unchanged 3", g.skeleton[1].HP)
+	}
+	if g.skeleton[2].HP != 29 {
+		t.Fatalf("outside black skeleton HP = %d, want 29", g.skeleton[2].HP)
+	}
+	if got, want := g.actualDamageWindowTotal, 2; got != want {
+		t.Fatalf("recorded death wave damage = %d, want %d", got, want)
+	}
+	if !slices.Equal(wave.HitIDs, []int{101}) {
+		t.Fatalf("death wave hit IDs = %v, want [101]", wave.HitIDs)
+	}
+}
+
+func TestDeathWaveDoesNotHitSameSkeletonTwice(t *testing.T) {
+	g := New()
+	g.skeleton = []Skeleton{{ID: 101, Kind: SkeletonRed, Pos: Vec2{X: 24}, HP: 5}}
+	wave := DeathWave{Origin: Vec2{}, PreviousRadius: 0, Radius: 40}
+
+	g.applyDeathWaveDamage(&wave)
+	g.skeleton[0].HP = 5
+	wave.PreviousRadius = wave.Radius
+	wave.Radius = 80
+	g.applyDeathWaveDamage(&wave)
+
+	if g.skeleton[0].HP != 5 {
+		t.Fatalf("same skeleton was hit twice; HP = %d, want reset value 5", g.skeleton[0].HP)
+	}
+}
+
 func TestMeteorSpawnHeightStaysReasonableForLowImpacts(t *testing.T) {
 	g := New()
 	g.player.Pos = Vec2{X: 10, Y: 100}

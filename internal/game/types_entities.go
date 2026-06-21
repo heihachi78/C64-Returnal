@@ -41,6 +41,13 @@ type MeteorProjectile struct {
 	Age       float64
 	AnimFrame int
 }
+type DeathWave struct {
+	Origin         Vec2
+	Radius         float64
+	PreviousRadius float64
+	MaxRadius      float64
+	HitIDs         []int
+}
 type Coin struct {
 	Pos    Vec2
 	Amount int
