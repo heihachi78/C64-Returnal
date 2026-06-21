@@ -391,21 +391,17 @@ func TestDynamicSpawnPressureNeverReducesExistingRate(t *testing.T) {
 func TestDynamicSpawnPlanGreedilyFillsHPBudgetWithLargestSkeletons(t *testing.T) {
 	g := New()
 
-	if got := countDynamicSkeletonSpawnPlan(g.tuning, 198, SkeletonBlack); got != 1 {
-		t.Fatalf("black skeleton count = %d, want 1", got)
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 198, SkeletonBlack); got != 6 {
+		t.Fatalf("black skeleton count = %d, want 6", got)
 	}
-	if got := countDynamicSkeletonSpawnPlan(g.tuning, 198, SkeletonPurple); got != 1 {
-		t.Fatalf("purple skeleton count = %d, want 1", got)
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 198, SkeletonPurple); got != 3 {
+		t.Fatalf("purple skeleton count = %d, want 3", got)
 	}
 	if got := countDynamicSkeletonSpawnPlan(g.tuning, 198, SkeletonRed); got != 1 {
 		t.Fatalf("red skeleton count = %d, want 1", got)
 	}
-	wantRegular := 198 -
-		SkeletonBlack.HitPoints(g.tuning) -
-		SkeletonPurple.HitPoints(g.tuning) -
-		SkeletonRed.HitPoints(g.tuning)
-	if got := countDynamicSkeletonSpawnPlan(g.tuning, 198, SkeletonRegular); got != wantRegular {
-		t.Fatalf("regular skeleton count = %d, want %d", got, wantRegular)
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 198, SkeletonRegular); got != 0 {
+		t.Fatalf("regular skeleton count = %d, want 0", got)
 	}
 }
 
@@ -478,14 +474,17 @@ func TestDynamicSpawnPlanSpendsPartialRedBudgetAsRegularSkeletons(t *testing.T) 
 	}
 }
 
-func TestDynamicSpawnPlanSpendsTwelvePointFiveHPAsRedAndRegulars(t *testing.T) {
+func TestDynamicSpawnPlanSpendsTwelvePointFiveHPAsPurpleRedAndRegulars(t *testing.T) {
 	g := New()
 	budget := 12.5
 
+	if got, want := countDynamicSkeletonSpawnPlan(g.tuning, budget, SkeletonPurple), 1; got != want {
+		t.Fatalf("purple skeleton count at 12.5 HP budget = %d, want %d", got, want)
+	}
 	if got, want := countDynamicSkeletonSpawnPlan(g.tuning, budget, SkeletonRed), 1; got != want {
 		t.Fatalf("red skeleton count at 12.5 HP budget = %d, want %d", got, want)
 	}
-	if got, want := countDynamicSkeletonSpawnPlan(g.tuning, budget, SkeletonRegular), 5; got != want {
+	if got, want := countDynamicSkeletonSpawnPlan(g.tuning, budget, SkeletonRegular), 2; got != want {
 		t.Fatalf("regular skeleton count at 12.5 HP budget = %d, want %d", got, want)
 	}
 }
@@ -529,28 +528,40 @@ func TestDynamicSpawningStopsAtActiveSkeletonLimit(t *testing.T) {
 	}
 }
 
-func TestDynamicSpawnPlanUsesEachLargeSkeletonTypeOnceBeforeRegulars(t *testing.T) {
+func TestDynamicSpawnPlanRepeatsLargestAffordableSkeletonsBeforeRegulars(t *testing.T) {
 	g := New()
 
-	if got := countDynamicSkeletonSpawnPlan(g.tuning, 2000, SkeletonBlue); got != 1 {
-		t.Fatalf("blue skeleton count = %d, want 1", got)
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 2000, SkeletonBlue); got != 2 {
+		t.Fatalf("blue skeleton count = %d, want 2", got)
 	}
-	if got := countDynamicSkeletonSpawnPlan(g.tuning, 2000, SkeletonBlack); got != 1 {
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 2000, SkeletonBlack); got != 0 {
+		t.Fatalf("black skeleton count = %d, want 0", got)
+	}
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 2000, SkeletonPurple); got != 0 {
+		t.Fatalf("purple skeleton count = %d, want 0", got)
+	}
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 2000, SkeletonRed); got != 0 {
+		t.Fatalf("red skeleton count = %d, want 0", got)
+	}
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 2000, SkeletonRegular); got != 0 {
+		t.Fatalf("regular skeleton count = %d, want 0", got)
+	}
+}
+
+func TestDynamicSpawnPlanSpendsRegularOverflowOnStrongerSkeletons(t *testing.T) {
+	g := New()
+
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 41, SkeletonBlack); got != 1 {
 		t.Fatalf("black skeleton count = %d, want 1", got)
 	}
-	if got := countDynamicSkeletonSpawnPlan(g.tuning, 2000, SkeletonPurple); got != 1 {
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 41, SkeletonPurple); got != 1 {
 		t.Fatalf("purple skeleton count = %d, want 1", got)
 	}
-	if got := countDynamicSkeletonSpawnPlan(g.tuning, 2000, SkeletonRed); got != 1 {
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 41, SkeletonRed); got != 1 {
 		t.Fatalf("red skeleton count = %d, want 1", got)
 	}
-	wantRegular := 2000 -
-		SkeletonBlue.HitPoints(g.tuning) -
-		SkeletonBlack.HitPoints(g.tuning) -
-		SkeletonPurple.HitPoints(g.tuning) -
-		SkeletonRed.HitPoints(g.tuning)
-	if got := countDynamicSkeletonSpawnPlan(g.tuning, 2000, SkeletonRegular); got != wantRegular {
-		t.Fatalf("regular skeleton count = %d, want %d", got, wantRegular)
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 41, SkeletonRegular); got != 2 {
+		t.Fatalf("regular skeleton count = %d, want 2", got)
 	}
 }
 

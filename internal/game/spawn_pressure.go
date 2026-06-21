@@ -40,17 +40,12 @@ func dynamicSkeletonSpawnPlanEntries(t Tuning, budget float64) []dynamicSpawnPla
 func appendDynamicSkeletonSpawnPlanEntries(plan []dynamicSpawnPlanEntry, t Tuning, budget float64) []dynamicSpawnPlanEntry {
 	for _, kind := range dynamicSkeletonSpawnOrder(t) {
 		hp := kind.HitPoints(t)
-		if kind == SkeletonRegular {
-			count := int(budget / float64(hp))
-			if count > 0 {
-				plan = append(plan, dynamicSpawnPlanEntry{Kind: kind, Count: count})
-			}
-			break
+		count := int(budget / float64(hp))
+		if count <= 0 {
+			continue
 		}
-		if budget >= float64(hp) {
-			budget -= float64(hp)
-			plan = append(plan, dynamicSpawnPlanEntry{Kind: kind, Count: 1})
-		}
+		budget -= float64(count * hp)
+		plan = append(plan, dynamicSpawnPlanEntry{Kind: kind, Count: count})
 	}
 	return plan
 }
