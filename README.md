@@ -62,7 +62,6 @@ go test ./...
 | Advance chest reward overlay | `Q` |
 | Restart after game over | Left-click `RESTART` |
 | Exit after game over | Left-click `EXIT` |
-| Development: kill all active skeletons and grant their experience | `1` or keypad `1` |
 | Development: jump to level 100, add 5000 coins, and spawn 40 gold chests | `0` or keypad `0` |
 
 ## Gameplay

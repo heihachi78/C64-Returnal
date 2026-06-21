@@ -657,9 +657,6 @@ func TestCoverageSelectAndAdvanceBranches(t *testing.T) {
 	if !g.selectLevelUpOptionAt(0) {
 		t.Fatal("selectLevelUpOptionAt rejected valid option")
 	}
-	if !isKillAllAndGrantExperienceKey(ebiten.KeyDigit1) || !isKillAllAndGrantExperienceKey(ebiten.KeyNumpad1) || isKillAllAndGrantExperienceKey(ebiten.KeyQ) {
-		t.Fatal("kill-all key predicate mismatch")
-	}
 }
 
 func TestCoverageInputOverridesDriveOverlayInputBranches(t *testing.T) {
@@ -717,15 +714,6 @@ func TestCoverageInputOverridesDriveOverlayInputBranches(t *testing.T) {
 	consumed, err = g.updateOverlayInput()
 	if !consumed || err != nil || g.session.ChestRewardActive {
 		t.Fatalf("chest advance = consumed %v err %v active %v", consumed, err, g.session.ChestRewardActive)
-	}
-
-	g = New()
-	g.skeleton = []Skeleton{{ID: 1, Reward: 1}}
-	g.spatial.Rebuild(g.skeleton)
-	justPressed = map[ebiten.Key]bool{ebiten.KeyDigit1: true}
-	consumed, err = g.updateOverlayInput()
-	if consumed || err != nil || len(g.skeleton) != 0 {
-		t.Fatalf("kill-all key = consumed %v err %v skeletons %d", consumed, err, len(g.skeleton))
 	}
 
 	g = New()

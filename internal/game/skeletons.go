@@ -199,24 +199,6 @@ func chestTier(t Tuning, milestone, playerLevel int) (ChestTier, bool) {
 	}
 	return ChestBronze, playerLevel <= t.BronzeMaximumLevel
 }
-func (g *Game) killAllEnemiesAndGrantExperience() bool {
-	if len(g.skeleton) == 0 {
-		return false
-	}
-	reward := 0
-	for _, skeleton := range g.skeleton {
-		reward += skeleton.Reward
-	}
-	g.skeleton = g.skeleton[:0]
-	g.rebuildSkeletonSpatialIndex()
-	levelUps := g.session.Progression.GainExperience(reward)
-	g.queueLevelUpChoices(levelUps)
-	return true
-}
-func (g *Game) handleKillAllAndGrantExperienceKeyDown() bool {
-	g.killAllEnemiesAndGrantExperience()
-	return false
-}
 
 func (g *Game) ensureSkeletonSpatialIndex() {
 	if g.skeletonSpatialDirty {

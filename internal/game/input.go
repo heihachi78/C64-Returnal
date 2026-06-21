@@ -34,9 +34,6 @@ func (g *Game) updateOverlayInput() (bool, error) {
 	}
 
 	if !g.session.LevelUpChoiceActive {
-		if isKillAllAndGrantExperienceJustPressed() {
-			return g.handleKillAllAndGrantExperienceKeyDown(), nil
-		}
 		return false, nil
 	}
 
@@ -104,12 +101,6 @@ func levelUpRedrawKey() ebiten.Key {
 }
 func chestRewardAdvanceKey() ebiten.Key {
 	return ebiten.KeyQ
-}
-func isKillAllAndGrantExperienceKey(key ebiten.Key) bool {
-	return key == ebiten.KeyDigit1 || key == ebiten.KeyNumpad1
-}
-func isKillAllAndGrantExperienceJustPressed() bool {
-	return inpututilIsKeyJustPressed(ebiten.KeyDigit1) || inpututilIsKeyJustPressed(ebiten.KeyNumpad1)
 }
 func isJumpToLevel100DebugKey(key ebiten.Key) bool {
 	return key == ebiten.KeyDigit0 || key == ebiten.KeyNumpad0

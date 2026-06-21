@@ -26,17 +26,11 @@ func TestModalAndDebugKeysMatchOriginalInputBindings(t *testing.T) {
 	if got := chestRewardAdvanceKey(); got != ebiten.KeyQ {
 		t.Fatalf("chest reward advance key = %v, want %v", got, ebiten.KeyQ)
 	}
-	if !isKillAllAndGrantExperienceKey(ebiten.KeyDigit1) || !isKillAllAndGrantExperienceKey(ebiten.KeyNumpad1) {
-		t.Fatalf("kill-all keys did not include main and numpad 1")
-	}
-	if isKillAllAndGrantExperienceKey(ebiten.KeyDigit2) {
-		t.Fatalf("kill-all accepted digit 2, want only original 1 bindings")
-	}
 	if !isJumpToLevel100DebugKey(ebiten.KeyDigit0) || !isJumpToLevel100DebugKey(ebiten.KeyNumpad0) {
 		t.Fatalf("level-100 debug keys did not include main and numpad 0")
 	}
-	if isJumpToLevel100DebugKey(ebiten.KeyDigit1) {
-		t.Fatalf("level-100 debug accepted digit 1, want only 0 bindings")
+	if isJumpToLevel100DebugKey(ebiten.KeyDigit2) {
+		t.Fatalf("level-100 debug accepted digit 2, want only 0 bindings")
 	}
 }
 
@@ -91,34 +85,6 @@ func TestOverlayEventActionsConsumeTheCurrentUpdateFrameLikeOriginal(t *testing.
 	}
 	if g.session.LevelUpChoiceActive || len(g.session.PendingLevelUpLevels) != 0 || g.session.Progression.SimultaneousFireball != 2 {
 		t.Fatalf("level-up state active=%v pending=%v fireballs=%d; want applied and closed", g.session.LevelUpChoiceActive, g.session.PendingLevelUpLevels, g.session.Progression.SimultaneousFireball)
-	}
-}
-
-func TestDebugKillAllKeyDownDoesNotConsumeUpdateFrameLikeOriginal(t *testing.T) {
-	g := New()
-	g.skeleton = nil
-	g.spatial.Rebuild(g.skeleton)
-	level := g.session.Progression.Level
-	experience := g.session.Progression.Experience
-
-	if g.handleKillAllAndGrantExperienceKeyDown() {
-		t.Fatal("kill-all keyDown consumed frame with no skeletons, want no-op")
-	}
-	if g.session.Progression.Level != level || g.session.Progression.Experience != experience || g.session.LevelUpChoiceActive {
-		t.Fatalf("no-op kill-all changed state: level=%d xp=%d active=%v", g.session.Progression.Level, g.session.Progression.Experience, g.session.LevelUpChoiceActive)
-	}
-
-	g.skeleton = []Skeleton{{ID: 101, HP: 1, Reward: 1}}
-	g.spatial.Rebuild(g.skeleton)
-	if g.handleKillAllAndGrantExperienceKeyDown() {
-		t.Fatal("kill-all keyDown consumed frame after clearing skeletons, want scene update to observe resulting state")
-	}
-	if len(g.skeleton) != 0 || !g.session.LevelUpChoiceActive {
-		t.Fatalf("kill-all state skeletons=%d levelUp=%v, want cleared skeletons and modal", len(g.skeleton), g.session.LevelUpChoiceActive)
-	}
-	g.updatePausedAnimations(1.0 / float64(TargetTPS))
-	if math.Abs(g.session.LevelUpOverlayTimer-1.0/float64(TargetTPS)) > 0.0001 {
-		t.Fatalf("level-up overlay timer after non-consumed keyDown = %v, want one frame", g.session.LevelUpOverlayTimer)
 	}
 }
 
