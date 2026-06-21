@@ -1,13 +1,12 @@
 package game
 
 type KillCounts struct {
-	TotalSkeletons  int
-	PurpleSkeletons int
-	Fireball        int
-	Lightning       int
-	OrbitalOrb      int
-	Beam            int
-	Meteor          int
+	TotalSkeletons int
+	Fireball       int
+	Lightning      int
+	OrbitalOrb     int
+	Beam           int
+	Meteor         int
 }
 
 type CastTimers struct {
@@ -26,7 +25,6 @@ type Session struct {
 	OrbitalOrbAngle            float64
 	PendingLevelUpLevels       []int
 	Kills                      KillCounts
-	BlueMonstersSpawned        int
 	NextChestMilestone         int
 	CollectedCoins             int
 	SpawnedCoinLevels          map[int]bool

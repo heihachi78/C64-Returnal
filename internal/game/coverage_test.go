@@ -346,16 +346,6 @@ func TestCoverageAnimationAndSpawnBranches(t *testing.T) {
 		t.Fatalf("empty skeleton animation timer = %v, want 0", g.skeletonAnimTimer)
 	}
 
-	g.tuning.RedKillInterval = 1
-	g.tuning.PurpleKillInterval = 1
-	g.session.Kills.TotalSkeletons = 1
-	g.spawnMilestoneSkeletonsIfNeeded()
-	if len(g.skeleton) != 2 {
-		t.Fatalf("milestone skeletons = %v, want red and purple", g.skeleton)
-	}
-	g.session.Progression.Level = g.tuning.RedOnlyLevel
-	g.spawnMilestoneSkeletonsIfNeeded()
-
 	g.tuning.BronzeKillInterval = 1
 	g.tuning.SilverKillInterval = 2
 	g.tuning.GoldKillInterval = 3
@@ -816,8 +806,6 @@ func TestCoverageUpdateWeaponLevelUpExitBranches(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			g := New()
 			g.hasUpdated = true
-			g.tuning.RedKillInterval = 0
-			g.tuning.PurpleKillInterval = 0
 			g.session.NextChestMilestone = 1_000_000
 			configure(g)
 			if err := g.Update(); err != nil {
@@ -889,20 +877,18 @@ func TestCoverageMoreGameLogicBranches(t *testing.T) {
 		t.Fatalf("suppressed right/down movement = %+v, want down only", move)
 	}
 
-	p := NewProgression(DefaultTuning())
-	p.Level = p.tuning.RedOnlyLevel
-	redInterval := p.SkeletonSpawnInterval()
-	p.Level = p.tuning.PurpleOnlyLevel
-	purpleInterval := p.SkeletonSpawnInterval()
-	if redInterval <= 0 || purpleInterval <= 0 {
-		t.Fatalf("spawn intervals red=%v purple=%v, want positive values", redInterval, purpleInterval)
+	g = New()
+	if g.SkeletonSpawnInterval() <= 0 {
+		t.Fatalf("dynamic spawn interval = %v, want positive value", g.SkeletonSpawnInterval())
 	}
 
 	g = New()
 	g.tuning.ChestPickupDistance = 10_000
 	pos := g.randomChestPosition()
-	if pos != (Vec2{X: g.player.Pos.X + math.Max(48, float64(g.screenW)/2-g.tuning.ChestSpawnMargin), Y: g.player.Pos.Y}) {
-		t.Fatalf("fallback chest position = %+v", pos)
+	outsideHorizontalEdge := math.Abs(pos.X-g.player.Pos.X) >= float64(g.screenW)/2+g.tuning.ChestSpawnMargin
+	outsideVerticalEdge := math.Abs(pos.Y-g.player.Pos.Y) >= float64(g.screenH)/2+g.tuning.ChestSpawnMargin
+	if !outsideHorizontalEdge && !outsideVerticalEdge {
+		t.Fatalf("chest position = %+v, want offscreen", pos)
 	}
 
 	g.applyUpgradeEffect(ExtraLife)

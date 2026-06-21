@@ -46,6 +46,25 @@ func TestActualDPSUsesRollingWindow(t *testing.T) {
 	}
 }
 
+func TestActualDPSMaintainsRollingWindowTotal(t *testing.T) {
+	g := newCombatStatsTestGame()
+	g.totalTime = 0
+	g.recordActualDamage(2)
+	g.totalTime = 1
+	g.recordActualDamage(3)
+
+	if got, want := g.actualDamageWindowTotal, 5; got != want {
+		t.Fatalf("actual damage window total = %d, want %d", got, want)
+	}
+
+	g.totalTime = actualDPSWindow + 0.5
+	g.pruneActualDamageSamples()
+
+	if got, want := g.actualDamageWindowTotal, 3; got != want {
+		t.Fatalf("actual damage window total after prune = %d, want %d", got, want)
+	}
+}
+
 func newCombatStatsTestGame() *Game {
 	tuning := DefaultTuning()
 	return &Game{

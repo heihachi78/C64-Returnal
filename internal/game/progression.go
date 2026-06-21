@@ -23,7 +23,6 @@ type Progression struct {
 	beamKillLevel           int
 	upgradedBeamKillCount   int
 	upgradedMeteorCount     int
-	skeletonSpawnRate       float64
 }
 
 func NewProgression(t Tuning) Progression {
@@ -51,32 +50,10 @@ func (p *Progression) Reset() {
 	p.beamKillLevel = 1
 	p.upgradedBeamKillCount = 1
 	p.upgradedMeteorCount = 1
-	p.skeletonSpawnRate = 1
 }
 
 func ExperienceRequirement(level int) int {
 	return max(1, level*level/2)
-}
-
-func (p Progression) SkeletonSpawnInterval() float64 {
-	interval := p.tuning.InitialSkeletonSpawn * math.Pow(p.tuning.SkeletonIntervalMultiplier, float64(p.Level-1))
-	if p.Level >= p.tuning.RedOnlyLevel {
-		interval *= p.tuning.RedOnlySpawnMultiplier
-	}
-	if p.Level >= p.tuning.PurpleOnlyLevel {
-		interval *= p.tuning.PurpleOnlySpawnMultiplier
-	}
-	if p.Level >= p.tuning.BlackOnlyLevel {
-		interval *= p.tuning.BlackOnlySpawnMultiplier
-	}
-	if p.skeletonSpawnRate <= 0 {
-		return math.Inf(1)
-	}
-	return interval / p.skeletonSpawnRate
-}
-
-func (p *Progression) ScaleSkeletonSpawnRate(factor float64) {
-	p.skeletonSpawnRate = math.Max(0, p.skeletonSpawnRate) * math.Max(0, factor)
 }
 
 func (p Progression) FireballCastInterval() float64 {
@@ -84,18 +61,26 @@ func (p Progression) FireballCastInterval() float64 {
 }
 
 func (p Progression) MageRawDPS() float64 {
-	return damageRate(p.SimultaneousFireball, p.FireballCastInterval()) +
-		damageRate(p.LightningStrikeCount(), p.LightningCastInterval()) +
-		float64(p.OrbitalOrbCount())*p.OrbitalAngularSpeed()/(math.Pi*2) +
-		damageRate(p.BeamKillCount(), p.BeamCastInterval()) +
-		damageRate(p.MeteorCount(), p.MeteorCastInterval())
+	return windowedDamageRate(p.SimultaneousFireball, p.FireballCastInterval()) +
+		windowedDamageRate(p.LightningStrikeCount(), p.LightningCastInterval()) +
+		windowedDamageRate(p.OrbitalOrbCount(), orbitalOrbHitInterval(p.OrbitalAngularSpeed())) +
+		windowedDamageRate(p.BeamKillCount(), p.BeamCastInterval()) +
+		windowedDamageRate(p.MeteorCount(), p.MeteorCastInterval())
 }
 
-func damageRate(count int, interval float64) float64 {
-	if count <= 0 || interval <= 0 {
+func windowedDamageRate(count int, interval float64) float64 {
+	if count <= 0 || interval <= 0 || actualDPSWindow <= 0 {
 		return 0
 	}
-	return float64(count) / interval
+	hits := math.Floor(actualDPSWindow/interval) + 1
+	return float64(count) * hits / actualDPSWindow
+}
+
+func orbitalOrbHitInterval(angularSpeed float64) float64 {
+	if angularSpeed <= 0 {
+		return 0
+	}
+	return math.Pi * 2 / angularSpeed
 }
 
 func (p Progression) LightningCastInterval() float64 {

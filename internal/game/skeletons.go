@@ -12,7 +12,7 @@ func (g *Game) updateSkeletons(dt float64) {
 	if len(g.skeleton) < g.tuning.ParallelSkeletonUpdateThreshold {
 		g.updateSkeletonRange(0, len(g.skeleton), dt, g.player.Pos)
 		g.updateSkeletonAnimation(dt)
-		g.spatial.Rebuild(g.skeleton)
+		g.rebuildSkeletonSpatialIndex()
 		return
 	}
 
@@ -37,7 +37,7 @@ func (g *Game) updateSkeletons(dt float64) {
 	wg.Wait()
 	g.lastParallelJobs = launchedJobs
 	g.updateSkeletonAnimation(dt)
-	g.spatial.Rebuild(g.skeleton)
+	g.rebuildSkeletonSpatialIndex()
 }
 func (g *Game) updateSkeletonRange(start, end int, dt float64, playerPos Vec2) {
 	for i := start; i < end; i++ {
@@ -69,57 +69,8 @@ func (g *Game) updateSkeletonAnimation(dt float64) {
 		g.skeleton[i].AnimFrame = g.skeletonAnimFrame
 	}
 }
-func (g *Game) updateSkeletonSpawning(dt float64) {
-	g.session.Casts.SkeletonSpawn += dt
-	for {
-		interval := g.session.Progression.SkeletonSpawnInterval()
-		if g.session.Casts.SkeletonSpawn < interval {
-			break
-		}
-		g.session.Casts.SkeletonSpawn -= interval
-		g.spawnTimedSkeleton()
-	}
-}
-func (g *Game) spawnTimedSkeleton() {
-	if g.shouldSpawnBlueMonster() {
-		g.spawnBlueMonster()
-		return
-	}
-	g.spawnSkeleton(g.timedSkeletonSpawnKind())
-}
-func (g *Game) timedSkeletonSpawnKind() SkeletonKind {
-	if g.session.Progression.Level >= g.tuning.BlackOnlyLevel {
-		return SkeletonBlack
-	}
-	if g.session.Progression.Level >= g.tuning.PurpleOnlyLevel {
-		return SkeletonPurple
-	}
-	if g.session.Progression.Level >= g.tuning.RedOnlyLevel {
-		return SkeletonRed
-	}
-	return SkeletonRegular
-}
 func (g *Game) spawnSkeleton(kind SkeletonKind) {
 	g.addSkeleton(kind)
-}
-func (g *Game) shouldSpawnBlueMonster() bool {
-	return g.session.Progression.Level >= g.tuning.BlueMonsterMinimumLevel &&
-		g.tuning.BlueMonsterMinimumEnemies > 0 &&
-		len(g.skeleton) > g.tuning.BlueMonsterMinimumEnemies
-}
-func (g *Game) spawnBlueMonster() {
-	blue := g.addSkeleton(SkeletonBlue)
-	g.session.BlueMonstersSpawned++
-	g.skeleton[len(g.skeleton)-1].HP = blueMonsterHitPoints(g.tuning.BlueMonsterHitPoints, g.session.BlueMonstersSpawned)
-	g.session.Progression.ScaleSkeletonSpawnRate(g.tuning.BlueMonsterSpawnRateFactor)
-	g.cullEnemiesForBlueMonster(blue.ID)
-}
-func blueMonsterHitPoints(baseHitPoints, spawnCount int) int {
-	hitPoints := max(1, baseHitPoints)
-	for i := 1; i < spawnCount; i++ {
-		hitPoints = int(math.Ceil(float64(hitPoints) * 1.25))
-	}
-	return hitPoints
 }
 func (g *Game) addSkeleton(kind SkeletonKind) Skeleton {
 	s := Skeleton{
@@ -133,37 +84,6 @@ func (g *Game) addSkeleton(kind SkeletonKind) Skeleton {
 	g.nextID++
 	g.skeleton = append(g.skeleton, s)
 	return s
-}
-func (g *Game) cullEnemiesForBlueMonster(blueID int) {
-	targetIDs := make([]int, 0, len(g.skeleton))
-	for _, skeleton := range g.skeleton {
-		if skeleton.ID != blueID {
-			targetIDs = append(targetIDs, skeleton.ID)
-		}
-	}
-	cullCount := blueMonsterCullCount(len(targetIDs), g.tuning.BlueMonsterCullDivisor)
-	if cullCount <= 0 {
-		return
-	}
-	g.rng.Shuffle(len(targetIDs), func(i, j int) { targetIDs[i], targetIDs[j] = targetIDs[j], targetIDs[i] })
-	cull := make(map[int]bool, cullCount)
-	for _, id := range targetIDs[:cullCount] {
-		cull[id] = true
-	}
-	remaining := g.skeleton[:0]
-	for _, skeleton := range g.skeleton {
-		if !cull[skeleton.ID] {
-			remaining = append(remaining, skeleton)
-		}
-	}
-	g.skeleton = remaining
-	g.spatial.Rebuild(g.skeleton)
-}
-func blueMonsterCullCount(enemyCount, divisor int) int {
-	if divisor <= 0 {
-		return 0
-	}
-	return enemyCount / divisor
 }
 func (g *Game) skeletonSpawnPosition() Vec2 {
 	halfW := float64(g.screenW) / 2
@@ -194,6 +114,7 @@ func (g *Game) checkSkeletonCollisions() {
 	}
 }
 func (g *Game) firstSkeletonHitByPoint(pos Vec2, hitDistance float64) int {
+	g.ensureSkeletonSpatialIndex()
 	searchRadius := g.maxSkeletonCollisionRadius(hitDistance)
 	found := -1
 	g.spatial.ForEachNear(pos, searchRadius, g.skeleton, func(i int) bool {
@@ -249,39 +170,16 @@ func (g *Game) destroySkeleton(index int, attack AttackKind) int {
 	if index < 0 || index >= len(g.skeleton) {
 		return 0
 	}
-	kind := g.skeleton[index].Kind
 	reward := g.skeleton[index].Reward
 	last := len(g.skeleton) - 1
 	g.skeleton[index] = g.skeleton[last]
 	g.skeleton = g.skeleton[:last]
-	g.spatial.Rebuild(g.skeleton)
+	g.skeletonSpatialDirty = true
 	g.session.Kills.TotalSkeletons++
-	g.spawnBlackSkeletonIfNeeded(kind)
-	g.spawnMilestoneSkeletonsIfNeeded()
 	g.spawnChestsForMilestones()
 	g.session.RegisterAttackKill(attack)
 	levelUps := g.session.Progression.GainExperience(reward)
 	return levelUps
-}
-func (g *Game) spawnBlackSkeletonIfNeeded(kind SkeletonKind) {
-	if kind != SkeletonPurple || g.tuning.BlackPurpleKillInterval <= 0 {
-		return
-	}
-	g.session.Kills.PurpleSkeletons++
-	if g.session.Kills.PurpleSkeletons%g.tuning.BlackPurpleKillInterval == 0 {
-		g.addSkeleton(SkeletonBlack)
-	}
-}
-func (g *Game) spawnMilestoneSkeletonsIfNeeded() {
-	if g.session.Progression.Level >= g.tuning.RedOnlyLevel {
-		return
-	}
-	if g.tuning.RedKillInterval > 0 && g.session.Kills.TotalSkeletons%g.tuning.RedKillInterval == 0 {
-		g.addSkeleton(SkeletonRed)
-	}
-	if g.tuning.PurpleKillInterval > 0 && g.session.Kills.TotalSkeletons%g.tuning.PurpleKillInterval == 0 {
-		g.addSkeleton(SkeletonPurple)
-	}
 }
 func (g *Game) spawnChestsForMilestones() {
 	for g.session.Kills.TotalSkeletons >= g.session.NextChestMilestone {
@@ -309,7 +207,7 @@ func (g *Game) killAllEnemiesAndGrantExperience() bool {
 		reward += skeleton.Reward
 	}
 	g.skeleton = g.skeleton[:0]
-	g.spatial.Rebuild(g.skeleton)
+	g.rebuildSkeletonSpatialIndex()
 	levelUps := g.session.Progression.GainExperience(reward)
 	g.queueLevelUpChoices(levelUps)
 	return true
@@ -317,4 +215,15 @@ func (g *Game) killAllEnemiesAndGrantExperience() bool {
 func (g *Game) handleKillAllAndGrantExperienceKeyDown() bool {
 	g.killAllEnemiesAndGrantExperience()
 	return false
+}
+
+func (g *Game) ensureSkeletonSpatialIndex() {
+	if g.skeletonSpatialDirty {
+		g.rebuildSkeletonSpatialIndex()
+	}
+}
+
+func (g *Game) rebuildSkeletonSpatialIndex() {
+	g.spatial.Rebuild(g.skeleton)
+	g.skeletonSpatialDirty = false
 }

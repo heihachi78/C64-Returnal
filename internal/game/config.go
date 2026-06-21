@@ -19,6 +19,7 @@ const (
 	debugLevelJumpGoldChests    = 40
 	debugLevelJumpChestRadius   = 56
 	actualDPSWindow             = 5.0
+	dynamicSpawnBatchInterval   = 1.0
 	minAttackSpawnInterval      = 1.0 / 60.0
 )
 
@@ -30,28 +31,16 @@ type Tuning struct {
 	PlayerHitInvulnerability   float64
 	PlayerAnimationFrameTime   float64
 	SkeletonSpeed              float64
-	InitialSkeletonSpawn       float64
-	SkeletonIntervalMultiplier float64
+	InitialSkeletonHPPerSecond float64
+	DynamicSpawnPressureFactor float64
 	SkeletonHitDistance        float64
 	SkeletonSpawnMargin        float64
 	SkeletonAnimationFrameTime float64
-	RedOnlyLevel               int
-	RedOnlySpawnMultiplier     float64
-	PurpleOnlyLevel            int
-	PurpleOnlySpawnMultiplier  float64
-	BlackOnlyLevel             int
-	BlackOnlySpawnMultiplier   float64
 	RedHitPoints               int
-	RedKillInterval            int
 	PurpleHitPoints            int
-	PurpleKillInterval         int
 	BlackHitPoints             int
-	BlackPurpleKillInterval    int
-	BlueMonsterMinimumLevel    int
-	BlueMonsterHitPoints       int
-	BlueMonsterMinimumEnemies  int
-	BlueMonsterSpawnRateFactor float64
-	BlueMonsterCullDivisor     int
+	MaxActiveSkeletons         int
+	MaxSkeletonSpawnsPerTick   int
 	SpatialIndexCellSize       float64
 
 	FireballSpeed              float64
@@ -115,28 +104,16 @@ func DefaultTuning() Tuning {
 		PlayerHitInvulnerability:   1,
 		PlayerAnimationFrameTime:   0.18,
 		SkeletonSpeed:              82,
-		InitialSkeletonSpawn:       0.91,
-		SkeletonIntervalMultiplier: 0.915,
+		InitialSkeletonHPPerSecond: 1.0,
+		DynamicSpawnPressureFactor: 1.1,
 		SkeletonHitDistance:        24,
 		SkeletonSpawnMargin:        72,
 		SkeletonAnimationFrameTime: 0.20,
-		RedOnlyLevel:               66,
-		RedOnlySpawnMultiplier:     3,
-		PurpleOnlyLevel:            75,
-		PurpleOnlySpawnMultiplier:  6,
-		BlackOnlyLevel:             100,
-		BlackOnlySpawnMultiplier:   6,
-		RedHitPoints:               5,
-		RedKillInterval:            100,
-		PurpleHitPoints:            15,
-		PurpleKillInterval:         500,
-		BlackHitPoints:             30,
-		BlackPurpleKillInterval:    100,
-		BlueMonsterMinimumLevel:    101,
-		BlueMonsterHitPoints:       1000,
-		BlueMonsterMinimumEnemies:  666,
-		BlueMonsterSpawnRateFactor: 0.95,
-		BlueMonsterCullDivisor:     100,
+		RedHitPoints:               3,
+		PurpleHitPoints:            7,
+		BlackHitPoints:             29,
+		MaxActiveSkeletons:         360,
+		MaxSkeletonSpawnsPerTick:   1,
 		SpatialIndexCellSize:       96,
 
 		FireballSpeed:              280,
@@ -188,6 +165,6 @@ func DefaultTuning() Tuning {
 		HalveHordeChanceDenominator:     100,
 		ExtraOptionChanceNumerator:      25,
 		ExtraOptionChanceDenominator:    100,
-		ParallelSkeletonUpdateThreshold: 256,
+		ParallelSkeletonUpdateThreshold: 1024,
 	}
 }

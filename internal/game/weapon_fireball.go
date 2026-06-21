@@ -18,7 +18,12 @@ func (g *Game) updateFireballCasting(dt float64) {
 	}
 }
 func (g *Game) spawnFireballs() {
-	reserved := map[int]bool{}
+	reserved := g.fireballTargetReservations
+	if reserved == nil {
+		reserved = map[int]bool{}
+		g.fireballTargetReservations = reserved
+	}
+	clear(reserved)
 	for _, fire := range g.fireball {
 		if fire.TargetID != 0 {
 			reserved[fire.TargetID] = true
@@ -36,36 +41,46 @@ func (g *Game) spawnFireballs() {
 		})
 	}
 }
+
+type closestSkeletonPick struct {
+	index int
+	dist  float64
+}
+
 func (g *Game) closestSkeletons(pos Vec2, excluded map[int]bool, limit int) []int {
 	if limit <= 0 {
 		return nil
 	}
-	type selected struct {
-		index int
-		dist  float64
+	picks := g.closestSkeletonScratch[:0]
+	if cap(picks) < limit {
+		picks = make([]closestSkeletonPick, 0, limit)
 	}
-	picks := make([]selected, 0, limit)
 	for i := range g.skeleton {
-		if excluded[g.skeleton[i].ID] {
+		if excluded != nil && excluded[g.skeleton[i].ID] {
 			continue
 		}
 		dist := DistanceSq(pos, g.skeleton[i].Pos)
 		if len(picks) < limit {
-			picks = append(picks, selected{i, dist})
+			picks = append(picks, closestSkeletonPick{i, dist})
 			for j := len(picks) - 1; j > 0 && picks[j].dist < picks[j-1].dist; j-- {
 				picks[j], picks[j-1] = picks[j-1], picks[j]
 			}
 		} else if dist < picks[len(picks)-1].dist {
-			picks[len(picks)-1] = selected{i, dist}
+			picks[len(picks)-1] = closestSkeletonPick{i, dist}
 			for j := len(picks) - 1; j > 0 && picks[j].dist < picks[j-1].dist; j-- {
 				picks[j], picks[j-1] = picks[j-1], picks[j]
 			}
 		}
 	}
-	result := make([]int, len(picks))
-	for i, pick := range picks {
-		result[i] = pick.index
+	g.closestSkeletonScratch = picks
+	result := g.closestSkeletonResult[:0]
+	if cap(result) < len(picks) {
+		result = make([]int, 0, len(picks))
 	}
+	for _, pick := range picks {
+		result = append(result, pick.index)
+	}
+	g.closestSkeletonResult = result
 	return result
 }
 func (g *Game) updateFireballs(dt float64) {
@@ -113,6 +128,7 @@ func (g *Game) updateUntargetedFireball(i int, dt float64) {
 	}
 }
 func (g *Game) firstSkeletonHitBySegment(start, end Vec2, radius float64) int {
+	g.ensureSkeletonSpatialIndex()
 	delta := end.Sub(start)
 	lengthSq := delta.LenSq()
 	searchRadius := g.maxSkeletonCollisionRadius(radius)

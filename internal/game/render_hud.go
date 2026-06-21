@@ -31,7 +31,7 @@ func (g *Game) drawHUD(screen *ebiten.Image) {
 	g.drawCombatRow(screen, g.assets.Meteor[0], left+9, bottomPanelTop+79, fmt.Sprintf("x%d", g.session.Progression.MeteorCount()), fmt.Sprintf("%ss", formattedSeconds(g.session.Progression.MeteorCastInterval())), fmt.Sprintf("KILLS %d", g.session.Kills.Meteor), g.session.Progression.MeteorUnlocked)
 	g.drawSpriteScreen(screen, g.assets.Skeleton[0], left+9, bottomPanelTop+25, 16, 22, false, color.RGBA{255, 255, 255, 255})
 	g.drawTextSize(screen, fmt.Sprintf("x%d", len(g.skeleton)), left+28, bottomPanelTop+15, combatFontSize, c64Text)
-	g.drawTextSize(screen, fmt.Sprintf("%ss", formattedSeconds(g.session.Progression.SkeletonSpawnInterval())), left+28, bottomPanelTop+31, combatFontSize, c64Text)
+	g.drawTextSize(screen, fmt.Sprintf("%ss", formattedSeconds(g.SkeletonSpawnInterval())), left+28, bottomPanelTop+31, combatFontSize, c64Text)
 
 	dpsX, dpsY, dpsW, dpsH := dpsPanelRect(g.screenW, g.screenH)
 	g.panel(screen, dpsX, dpsY, dpsW, dpsH)

@@ -167,7 +167,7 @@ func TestUnlockAndUpgradeBeamMatchesOriginalKillCountAndInterval(t *testing.T) {
 func TestMageRawDPSStartsWithLevelOneFireballOnly(t *testing.T) {
 	p := NewProgression(DefaultTuning())
 
-	if got, want := p.MageRawDPS(), 1.0/3.0; math.Abs(got-want) > 0.000001 {
+	if got, want := p.MageRawDPS(), 2.0/actualDPSWindow; math.Abs(got-want) > 0.000001 {
 		t.Fatalf("MageRawDPS = %v, want %v", got, want)
 	}
 }
@@ -176,13 +176,13 @@ func TestMageRawDPSScalesWithFireballCountAndRate(t *testing.T) {
 	p := NewProgression(DefaultTuning())
 	p.ApplyLevelUpOption(ExtraFireball)
 
-	if got, want := p.MageRawDPS(), 2.0/3.0; math.Abs(got-want) > 0.000001 {
+	if got, want := p.MageRawDPS(), 4.0/actualDPSWindow; math.Abs(got-want) > 0.000001 {
 		t.Fatalf("extra-fireball MageRawDPS = %v, want %v", got, want)
 	}
 
 	p = NewProgression(DefaultTuning())
 	p.ApplyLevelUpOption(FireRate)
-	if got, want := p.MageRawDPS(), 1.0/(3.0*0.9); math.Abs(got-want) > 0.000001 {
+	if got, want := p.MageRawDPS(), 2.0/actualDPSWindow; math.Abs(got-want) > 0.000001 {
 		t.Fatalf("fire-rate MageRawDPS = %v, want %v", got, want)
 	}
 }
@@ -200,11 +200,11 @@ func TestMageRawDPSIncludesUnlockedWeaponRates(t *testing.T) {
 	p.ApplyLevelUpOption(LearnMeteor)
 	p.ApplyLevelUpOption(ExtraMeteor)
 
-	want := 1.0/tuning.InitialFireballCast +
-		2.0/tuning.InitialLightningCast +
-		2.0*tuning.InitialOrbitalAngularSpeed*tuning.OrbitalSpeedUpgradeMultipler/(math.Pi*2) +
-		3.0/tuning.InitialBeamCast +
-		2.0/tuning.InitialMeteorCast
+	want := windowedDamageRate(1, p.FireballCastInterval()) +
+		windowedDamageRate(2, p.LightningCastInterval()) +
+		windowedDamageRate(2, orbitalOrbHitInterval(p.OrbitalAngularSpeed())) +
+		windowedDamageRate(3, p.BeamCastInterval()) +
+		windowedDamageRate(2, p.MeteorCastInterval())
 	if got := p.MageRawDPS(); math.Abs(got-want) > 0.000001 {
 		t.Fatalf("unlocked MageRawDPS = %v, want %v", got, want)
 	}
@@ -302,202 +302,256 @@ func TestCappedAttackSpeedOptionsDoNotApplyDirectly(t *testing.T) {
 	}
 }
 
-func TestTimedSkeletonSpawnKindTurnsRedThenPurpleThenBlackAtThresholds(t *testing.T) {
-	g := New()
-	g.session.Progression.Level = g.tuning.RedOnlyLevel
-	if got := g.timedSkeletonSpawnKind(); got != SkeletonRed {
-		t.Fatalf("spawn kind at red threshold = %v, want red", got)
-	}
+func TestDynamicSkeletonSpawnOrderUsesHighestHitPointsFirst(t *testing.T) {
+	order := dynamicSkeletonSpawnOrder(DefaultTuning())
 
-	g.session.Progression.Level = g.tuning.PurpleOnlyLevel
-	if got := g.timedSkeletonSpawnKind(); got != SkeletonPurple {
-		t.Fatalf("spawn kind at purple threshold = %v, want purple", got)
-	}
-
-	g.session.Progression.Level = g.tuning.BlackOnlyLevel - 1
-	if got := g.timedSkeletonSpawnKind(); got != SkeletonPurple {
-		t.Fatalf("spawn kind before black threshold = %v, want purple", got)
-	}
-
-	g.session.Progression.Level = g.tuning.BlackOnlyLevel
-	if got := g.timedSkeletonSpawnKind(); got != SkeletonBlack {
-		t.Fatalf("spawn kind at black threshold = %v, want black", got)
-	}
-}
-
-func TestBlackOnlyLevelIncreasesTimedSkeletonSpawnInterval(t *testing.T) {
-	p := NewProgression(DefaultTuning())
-
-	p.Level = p.tuning.BlackOnlyLevel - 1
-	beforeBlack := p.SkeletonSpawnInterval()
-	p.Level = p.tuning.BlackOnlyLevel
-	black := p.SkeletonSpawnInterval()
-
-	if black <= beforeBlack {
-		t.Fatalf("black spawn interval = %v, want greater than level-before-black interval %v", black, beforeBlack)
-	}
-}
-
-func TestBlueMonsterOnlySpawnsAfterLevel100WithLargeHorde(t *testing.T) {
-	g := New()
-	g.session.Progression.Level = g.tuning.BlueMonsterMinimumLevel
-	g.skeleton = makeSkeletonHorde(g.tuning.BlueMonsterMinimumEnemies)
-	g.nextID = 10_000
-
-	g.spawnTimedSkeleton()
-
-	if got, want := len(g.skeleton), g.tuning.BlueMonsterMinimumEnemies+1; got != want {
-		t.Fatalf("skeleton count below blue threshold = %d, want %d", got, want)
-	}
-	if got := countSkeletonKind(g.skeleton, SkeletonBlue); got != 0 {
-		t.Fatalf("blue monsters below threshold = %d, want 0", got)
-	}
-	if got := countSkeletonKind(g.skeleton, SkeletonBlack); got != 1 {
-		t.Fatalf("black monsters below threshold = %d, want 1", got)
-	}
-
-	g = New()
-	g.session.Progression.Level = g.tuning.BlueMonsterMinimumLevel - 1
-	g.skeleton = makeSkeletonHorde(g.tuning.BlueMonsterMinimumEnemies + 1)
-	g.nextID = 10_000
-
-	g.spawnTimedSkeleton()
-
-	if got := countSkeletonKind(g.skeleton, SkeletonBlue); got != 0 {
-		t.Fatalf("blue monsters at level 100 = %d, want 0", got)
-	}
-}
-
-func TestBlueMonsterSpawnSlowsSpawnRateAndCullsConfiguredShareOfHorde(t *testing.T) {
-	g := New()
-	g.session.Progression.Level = g.tuning.BlueMonsterMinimumLevel
-	g.skeleton = makeSkeletonHorde(g.tuning.BlueMonsterMinimumEnemies + 1)
-	g.nextID = 10_000
-	beforeInterval := g.session.Progression.SkeletonSpawnInterval()
-
-	g.spawnTimedSkeleton()
-
-	if got, want := countSkeletonKind(g.skeleton, SkeletonBlue), 1; got != want {
-		t.Fatalf("blue monsters = %d, want %d", got, want)
-	}
-	wantCount := g.tuning.BlueMonsterMinimumEnemies + 2 - (g.tuning.BlueMonsterMinimumEnemies+1)/g.tuning.BlueMonsterCullDivisor
-	if got, want := len(g.skeleton), wantCount; got != want {
-		t.Fatalf("skeleton count after blue cull = %d, want %d", got, want)
-	}
-	afterInterval := g.session.Progression.SkeletonSpawnInterval()
-	wantInterval := beforeInterval / g.tuning.BlueMonsterSpawnRateFactor
-	if math.Abs(afterInterval-wantInterval) > 0.0001 {
-		t.Fatalf("spawn interval after blue = %v, want %v", afterInterval, wantInterval)
-	}
-	for _, skeleton := range g.skeleton {
-		if skeleton.Kind == SkeletonBlue {
-			if got, want := skeleton.HP, g.tuning.BlueMonsterHitPoints; got != want {
-				t.Fatalf("blue monster HP = %d, want %d", got, want)
-			}
-			if got, want := skeleton.Reward, 75; got != want {
-				t.Fatalf("blue monster reward = %d, want %d", got, want)
-			}
-			return
+	for i := 1; i < len(order); i++ {
+		previousHP := order[i-1].HitPoints(DefaultTuning())
+		currentHP := order[i].HitPoints(DefaultTuning())
+		if previousHP < currentHP {
+			t.Fatalf("spawn order = %v, want descending HP", order)
 		}
 	}
-	t.Fatal("blue monster was not preserved after cull")
+	if order[0] != SkeletonBlue {
+		t.Fatalf("first spawn kind = %v, want blue", order[0])
+	}
 }
 
-func TestBlueMonsterCullDivisorIsConfigurable(t *testing.T) {
+func TestInitialDynamicSkeletonSpawnRateIsCappedByRawDPS(t *testing.T) {
 	g := New()
-	g.tuning.BlueMonsterCullDivisor = 4
-	g.skeleton = makeSkeletonHorde(12)
-	g.nextID = 100
 
-	g.spawnBlueMonster()
-
-	if got, want := len(g.skeleton), 10; got != want {
-		t.Fatalf("skeleton count after blue cull divisor 4 = %d, want %d", got, want)
-	}
-	if got, want := countSkeletonKind(g.skeleton, SkeletonBlue), 1; got != want {
-		t.Fatalf("blue monsters after configured cull = %d, want %d", got, want)
+	want := min(g.tuning.InitialSkeletonHPPerSecond, g.session.Progression.MageRawDPS())
+	if got := g.SkeletonHPPerSecond(); math.Abs(got-want) > 0.000001 {
+		t.Fatalf("initial skeleton hp/sec = %v, want %v", got, want)
 	}
 }
 
-func TestBlueMonsterCullDivisorCanDisableCull(t *testing.T) {
+func TestDynamicSpawnPressureUsesPeakActualDPSOnLevelUp(t *testing.T) {
 	g := New()
-	g.tuning.BlueMonsterCullDivisor = 0
-	g.skeleton = makeSkeletonHorde(12)
+	g.tuning.DynamicSpawnPressureFactor = 1.1
+	g.skeletonHPPerSecond = 0.1
+	g.maxActualDPS = 0.4
+	g.session.Progression.GainExperience(1)
 
-	g.spawnBlueMonster()
+	g.queueLevelUpChoices(1)
 
-	if got, want := len(g.skeleton), 13; got != want {
-		t.Fatalf("skeleton count after disabled blue cull = %d, want %d", got, want)
+	if got, want := g.SkeletonHPPerSecond(), 0.1; math.Abs(got-want) > 0.000001 {
+		t.Fatalf("queued skeleton hp/sec = %v, want unchanged %v", got, want)
+	}
+
+	g.applyLevelUpOption(ExtraFireball)
+
+	want := 0.1 + 1.1*(g.session.Progression.MageRawDPS()-0.4)
+	if got := g.SkeletonHPPerSecond(); math.Abs(got-want) > 0.000001 {
+		t.Fatalf("dynamic skeleton hp/sec = %v, want %v", got, want)
+	}
+	if g.maxActualDPS != 0 {
+		t.Fatalf("max actual dps after level transition = %v, want reset", g.maxActualDPS)
+	}
+	if g.pendingSpawnPressureLevels != 0 || g.pendingSpawnPressureActual != 0 {
+		t.Fatalf("pending pressure = levels %d actual %v, want cleared", g.pendingSpawnPressureLevels, g.pendingSpawnPressureActual)
 	}
 }
 
-func TestBlueMonsterHitPointsGrowByTwentyFivePercentPerSpawn(t *testing.T) {
-	tests := []struct {
-		spawns int
-		want   int
-	}{
-		{spawns: 1, want: 1000},
-		{spawns: 2, want: 1250},
-		{spawns: 3, want: 1563},
-		{spawns: 4, want: 1954},
-	}
-	for _, tt := range tests {
-		if got := blueMonsterHitPoints(1000, tt.spawns); got != tt.want {
-			t.Fatalf("blue monster HP after %d spawns = %d, want %d", tt.spawns, got, tt.want)
-		}
-	}
-}
-
-func TestRepeatedBlueMonsterSpawnsUseIncreasingHitPoints(t *testing.T) {
+func TestDynamicSpawnPressureIsCappedByTheoreticalDPS(t *testing.T) {
 	g := New()
-	g.skeleton = nil
-	g.nextID = 1
-	wantHP := []int{1000, 1250, 1563}
+	g.tuning.DynamicSpawnPressureFactor = 2
+	g.skeletonHPPerSecond = 0.1
+	g.session.Progression.GainExperience(1)
 
-	for _, want := range wantHP {
-		g.spawnBlueMonster()
-		newID := g.nextID - 1
-		idx := findSkeletonByID(g.skeleton, newID)
-		if idx < 0 {
-			t.Fatalf("new blue monster %d was not preserved", newID)
-		}
-		if got := g.skeleton[idx].HP; got != want {
-			t.Fatalf("blue monster %d HP = %d, want %d", newID, got, want)
-		}
+	g.queueLevelUpChoices(1)
+	g.applyLevelUpOption(ExtraLife)
+
+	if got, want := g.SkeletonHPPerSecond(), g.session.Progression.MageRawDPS(); math.Abs(got-want) > 0.000001 {
+		t.Fatalf("capped skeleton hp/sec = %v, want raw dps %v", got, want)
 	}
 }
 
-func TestBlueMonsterSpawnRateFactorIsConfigurable(t *testing.T) {
+func TestDynamicSpawnPressureDoesNotDecreaseWhenActualExceedsTheoretical(t *testing.T) {
 	g := New()
-	g.tuning.BlueMonsterSpawnRateFactor = 0.25
-	g.session.Progression = NewProgression(g.tuning)
-	g.session.Progression.Level = g.tuning.BlueMonsterMinimumLevel
-	g.skeleton = makeSkeletonHorde(g.tuning.BlueMonsterMinimumEnemies + 1)
-	beforeInterval := g.session.Progression.SkeletonSpawnInterval()
+	g.tuning.DynamicSpawnPressureFactor = 1.5
+	g.skeletonHPPerSecond = 0.5
+	g.maxActualDPS = 10
+	g.session.Progression.GainExperience(1)
 
-	g.spawnTimedSkeleton()
+	g.queueLevelUpChoices(1)
+	g.applyLevelUpOption(ExtraLife)
 
-	afterInterval := g.session.Progression.SkeletonSpawnInterval()
-	if math.Abs(afterInterval-beforeInterval*4) > 0.0001 {
-		t.Fatalf("spawn interval after blue = %v, want quadruple %v", afterInterval, beforeInterval)
+	if got, want := g.SkeletonHPPerSecond(), 0.5; math.Abs(got-want) > 0.000001 {
+		t.Fatalf("skeleton hp/sec = %v, want unchanged %v", got, want)
 	}
 }
 
-func makeSkeletonHorde(count int) []Skeleton {
-	skeletons := make([]Skeleton, count)
-	for i := range skeletons {
-		skeletons[i] = Skeleton{ID: i + 1, Kind: SkeletonRegular, HP: 1, Reward: 1}
+func TestDynamicSpawnPressureNeverReducesExistingRate(t *testing.T) {
+	if got, want := increaseSkeletonHPPerSecond(2, 10, 1), 2.0; got != want {
+		t.Fatalf("increased hp/sec = %v, want unchanged %v", got, want)
 	}
-	return skeletons
 }
 
-func findSkeletonByID(skeletons []Skeleton, id int) int {
-	for i, skeleton := range skeletons {
-		if skeleton.ID == id {
-			return i
-		}
+func TestDynamicSpawnPlanGreedilyFillsHPBudgetWithLargestSkeletons(t *testing.T) {
+	g := New()
+
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 198, SkeletonBlack); got != 1 {
+		t.Fatalf("black skeleton count = %d, want 1", got)
 	}
-	return -1
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 198, SkeletonPurple); got != 1 {
+		t.Fatalf("purple skeleton count = %d, want 1", got)
+	}
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 198, SkeletonRed); got != 1 {
+		t.Fatalf("red skeleton count = %d, want 1", got)
+	}
+	wantRegular := 198 -
+		SkeletonBlack.HitPoints(g.tuning) -
+		SkeletonPurple.HitPoints(g.tuning) -
+		SkeletonRed.HitPoints(g.tuning)
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 198, SkeletonRegular); got != wantRegular {
+		t.Fatalf("regular skeleton count = %d, want %d", got, wantRegular)
+	}
+}
+
+func TestDynamicSpawningFlushesLowLevelBudgetAsRegularSkeletons(t *testing.T) {
+	g := New()
+	g.skeleton = g.skeleton[:0]
+	g.skeletonHPPerSecond = 1
+
+	g.updateSkeletonSpawning(1)
+
+	if got := countSkeletonKind(g.skeleton, SkeletonRed); got != 0 {
+		t.Fatalf("red skeleton count = %d, want 0", got)
+	}
+	if got, want := countSkeletonKind(g.skeleton, SkeletonRegular), 1; got != want {
+		t.Fatalf("regular skeleton count = %d, want %d", got, want)
+	}
+	if got := g.session.Casts.SkeletonSpawn; got != 0 {
+		t.Fatalf("remaining spawn budget = %v, want 0", got)
+	}
+}
+
+func TestDynamicSpawningPacesQueuedSkeletonsByHitPoints(t *testing.T) {
+	g := New()
+	g.skeleton = g.skeleton[:0]
+	g.tuning.MaxSkeletonSpawnsPerTick = 1
+	redHP := SkeletonRed.HitPoints(g.tuning)
+	g.skeletonHPPerSecond = float64(redHP * 2)
+
+	g.updateSkeletonSpawning(float64(redHP-1) / g.skeletonHPPerSecond)
+
+	if got := len(g.skeleton); got != 0 {
+		t.Fatalf("skeleton count before red HP budget = %d, want 0", got)
+	}
+	if len(g.dynamicSpawnQueue) == 0 || g.dynamicSpawnQueue[0].Kind != SkeletonRed {
+		t.Fatalf("dynamic spawn queue = %v, want red first", g.dynamicSpawnQueue)
+	}
+
+	g.updateSkeletonSpawning(1 / g.skeletonHPPerSecond)
+
+	if got, want := len(g.skeleton), 1; got != want {
+		t.Fatalf("skeleton count after red HP budget = %d, want %d", got, want)
+	}
+	if got := g.skeleton[0].Kind; got != SkeletonRed {
+		t.Fatalf("spawned skeleton kind = %v, want red", got)
+	}
+}
+
+func TestDynamicSpawnPlanSpendsRedBudgetAsOneRed(t *testing.T) {
+	g := New()
+	redHP := SkeletonRed.HitPoints(g.tuning)
+	budget := float64(redHP)
+
+	if got, want := countDynamicSkeletonSpawnPlan(g.tuning, budget, SkeletonRed), 1; got != want {
+		t.Fatalf("red skeleton count at red budget = %d, want %d", got, want)
+	}
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, budget, SkeletonRegular); got != 0 {
+		t.Fatalf("regular skeleton count at red budget = %d, want 0", got)
+	}
+}
+
+func TestDynamicSpawnPlanSpendsPartialRedBudgetAsRegularSkeletons(t *testing.T) {
+	g := New()
+	budget := float64(SkeletonRed.HitPoints(g.tuning) - 1)
+
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, budget, SkeletonRed); got != 0 {
+		t.Fatalf("red skeleton count = %d, want 0", got)
+	}
+	if got, want := countDynamicSkeletonSpawnPlan(g.tuning, budget, SkeletonRegular), SkeletonRed.HitPoints(g.tuning)-1; got != want {
+		t.Fatalf("regular skeleton count = %d, want %d", got, want)
+	}
+}
+
+func TestDynamicSpawnPlanSpendsTwelvePointFiveHPAsRedAndRegulars(t *testing.T) {
+	g := New()
+	budget := 12.5
+
+	if got, want := countDynamicSkeletonSpawnPlan(g.tuning, budget, SkeletonRed), 1; got != want {
+		t.Fatalf("red skeleton count at 12.5 HP budget = %d, want %d", got, want)
+	}
+	if got, want := countDynamicSkeletonSpawnPlan(g.tuning, budget, SkeletonRegular), 5; got != want {
+		t.Fatalf("regular skeleton count at 12.5 HP budget = %d, want %d", got, want)
+	}
+}
+
+func TestDynamicSpawningLimitsSpawnCountPerTick(t *testing.T) {
+	g := New()
+	g.skeleton = g.skeleton[:0]
+	g.tuning.MaxSkeletonSpawnsPerTick = 3
+	g.tuning.MaxActiveSkeletons = 0
+	g.session.Casts.SkeletonSpawn = 20
+	g.dynamicSpawnQueue = dynamicSkeletonSpawnPlanEntries(g.tuning, 20)
+
+	g.spawnQueuedDynamicSkeletons()
+
+	if got, want := len(g.skeleton), 3; got != want {
+		t.Fatalf("spawned skeleton count = %d, want %d", got, want)
+	}
+	if got := g.session.Casts.SkeletonSpawn; got <= 0 {
+		t.Fatalf("remaining spawn budget = %v, want queued budget", got)
+	}
+}
+
+func TestDynamicSpawningStopsAtActiveSkeletonLimit(t *testing.T) {
+	g := New()
+	g.skeleton = []Skeleton{
+		{ID: 101, HP: 1},
+		{ID: 202, HP: 1},
+	}
+	g.tuning.MaxActiveSkeletons = 4
+	g.tuning.MaxSkeletonSpawnsPerTick = 0
+	g.session.Casts.SkeletonSpawn = 20
+	g.dynamicSpawnQueue = dynamicSkeletonSpawnPlanEntries(g.tuning, 20)
+
+	g.spawnQueuedDynamicSkeletons()
+
+	if got, want := len(g.skeleton), 4; got != want {
+		t.Fatalf("active skeleton count = %d, want capped count %d", got, want)
+	}
+	if got := g.session.Casts.SkeletonSpawn; got <= 0 {
+		t.Fatalf("remaining spawn budget = %v, want queued budget", got)
+	}
+}
+
+func TestDynamicSpawnPlanUsesEachLargeSkeletonTypeOnceBeforeRegulars(t *testing.T) {
+	g := New()
+
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 2000, SkeletonBlue); got != 1 {
+		t.Fatalf("blue skeleton count = %d, want 1", got)
+	}
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 2000, SkeletonBlack); got != 1 {
+		t.Fatalf("black skeleton count = %d, want 1", got)
+	}
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 2000, SkeletonPurple); got != 1 {
+		t.Fatalf("purple skeleton count = %d, want 1", got)
+	}
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 2000, SkeletonRed); got != 1 {
+		t.Fatalf("red skeleton count = %d, want 1", got)
+	}
+	wantRegular := 2000 -
+		SkeletonBlue.HitPoints(g.tuning) -
+		SkeletonBlack.HitPoints(g.tuning) -
+		SkeletonPurple.HitPoints(g.tuning) -
+		SkeletonRed.HitPoints(g.tuning)
+	if got := countDynamicSkeletonSpawnPlan(g.tuning, 2000, SkeletonRegular); got != wantRegular {
+		t.Fatalf("regular skeleton count = %d, want %d", got, wantRegular)
+	}
 }
 
 func countSkeletonKind(skeletons []Skeleton, kind SkeletonKind) int {
@@ -623,6 +677,26 @@ func TestCoinSpawnsWellOutsideVisibleViewportOncePerLevelLikeOriginal(t *testing
 	}
 }
 
+func TestChestSpawnsOutsideVisibleViewport(t *testing.T) {
+	g := New()
+	g.screenW = 640
+	g.screenH = 480
+	g.rng = rand.New(rand.NewSource(11))
+	g.chests = nil
+
+	for i := 0; i < 20; i++ {
+		g.spawnChest(ChestBronze)
+	}
+
+	for _, chest := range g.chests {
+		outsideHorizontalEdge := math.Abs(chest.Pos.X-g.player.Pos.X) >= float64(g.screenW)/2+g.tuning.ChestSpawnMargin
+		outsideVerticalEdge := math.Abs(chest.Pos.Y-g.player.Pos.Y) >= float64(g.screenH)/2+g.tuning.ChestSpawnMargin
+		if !outsideHorizontalEdge && !outsideVerticalEdge {
+			t.Fatalf("chest position = %+v, want outside horizontal or vertical viewport edge", chest.Pos)
+		}
+	}
+}
+
 func TestCoinPickupGrantsRewardAndRemovesCoinLikeOriginal(t *testing.T) {
 	g := New()
 	g.rng = rand.New(rand.NewSource(2))
@@ -693,24 +767,14 @@ func TestPurpleSkeletonKillGrantsOriginalExperienceReward(t *testing.T) {
 	}
 }
 
-func TestBlackSkeletonSpawnsAfterOriginalPurpleKillMilestone(t *testing.T) {
+func TestPurpleSkeletonKillsDoNotSpawnBlackSkeletons(t *testing.T) {
 	g := New()
-	g.session.Kills.PurpleSkeletons = g.tuning.BlackPurpleKillInterval - 1
 	g.skeleton = []Skeleton{{ID: 1, Kind: SkeletonPurple, HP: 1, Reward: SkeletonPurple.ExperienceReward()}}
 
 	g.destroySkeleton(0, AttackNone)
 
-	if len(g.skeleton) != 1 {
-		t.Fatalf("skeleton count = %d, want 1 spawned black skeleton", len(g.skeleton))
-	}
-	if got, want := g.skeleton[0].Kind, SkeletonBlack; got != want {
-		t.Fatalf("spawned skeleton kind = %v, want %v", got, want)
-	}
-	if got, want := g.skeleton[0].HP, g.tuning.BlackHitPoints; got != want {
-		t.Fatalf("black skeleton HP = %d, want %d", got, want)
-	}
-	if got, want := g.session.Kills.PurpleSkeletons, g.tuning.BlackPurpleKillInterval; got != want {
-		t.Fatalf("purple kills = %d, want %d", got, want)
+	if len(g.skeleton) != 0 {
+		t.Fatalf("skeleton count = %d, want no milestone spawn", len(g.skeleton))
 	}
 }
 

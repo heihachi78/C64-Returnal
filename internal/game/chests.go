@@ -25,16 +25,19 @@ func (g *Game) spawnGoldChestsAroundPlayer(count int, radius float64) {
 	}
 }
 func (g *Game) randomChestPosition() Vec2 {
-	halfW := math.Max(48, float64(g.screenW)/2-g.tuning.ChestSpawnMargin)
-	halfH := math.Max(48, float64(g.screenH)/2-g.tuning.ChestSpawnMargin)
-	minDistSq := g.tuning.ChestPickupDistance * g.tuning.ChestPickupDistance * 4
-	for range 12 {
-		pos := Vec2{X: g.player.Pos.X + g.randRange(-halfW, halfW), Y: g.player.Pos.Y + g.randRange(-halfH, halfH)}
-		if DistanceSq(pos, g.player.Pos) >= minDistSq {
-			return pos
-		}
+	halfW := math.Max(1, float64(g.screenW)/2)
+	halfH := math.Max(1, float64(g.screenH)/2)
+	margin := math.Max(1, g.tuning.ChestSpawnMargin)
+	switch g.rng.Intn(4) {
+	case 0:
+		return Vec2{X: g.player.Pos.X - halfW - margin - g.randRange(0, halfW), Y: g.player.Pos.Y + g.randRange(-halfH, halfH)}
+	case 1:
+		return Vec2{X: g.player.Pos.X + halfW + margin + g.randRange(0, halfW), Y: g.player.Pos.Y + g.randRange(-halfH, halfH)}
+	case 2:
+		return Vec2{X: g.player.Pos.X + g.randRange(-halfW, halfW), Y: g.player.Pos.Y - halfH - margin - g.randRange(0, halfH)}
+	default:
+		return Vec2{X: g.player.Pos.X + g.randRange(-halfW, halfW), Y: g.player.Pos.Y + halfH + margin + g.randRange(0, halfH)}
 	}
-	return Vec2{X: g.player.Pos.X + halfW, Y: g.player.Pos.Y}
 }
 func (g *Game) checkChestPickups() {
 	distSq := g.tuning.ChestPickupDistance * g.tuning.ChestPickupDistance

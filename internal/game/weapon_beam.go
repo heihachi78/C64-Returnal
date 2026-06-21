@@ -48,11 +48,13 @@ func (g *Game) playerBeamDirection() Vec2 {
 	return Vec2{X: g.player.Facing, Y: 0}
 }
 func (g *Game) beamTargets(direction Vec2, length, hitWidth float64, limit int) []int {
-	type hit struct {
-		id       int
-		progress float64
+	if limit <= 0 {
+		return nil
 	}
-	hits := make([]hit, 0, limit)
+	hits := g.beamTargetScratch[:0]
+	if cap(hits) < limit {
+		hits = make([]beamTargetHit, 0, limit)
+	}
 	for i := range g.skeleton {
 		target := g.skeleton[i].Pos.Sub(g.player.Pos)
 		progress := target.X*direction.X + target.Y*direction.Y
@@ -65,20 +67,30 @@ func (g *Game) beamTargets(direction Vec2, length, hitWidth float64, limit int) 
 			continue
 		}
 		if len(hits) < limit {
-			hits = append(hits, hit{g.skeleton[i].ID, progress})
+			hits = append(hits, beamTargetHit{g.skeleton[i].ID, progress})
 			for j := len(hits) - 1; j > 0 && hits[j].progress < hits[j-1].progress; j-- {
 				hits[j], hits[j-1] = hits[j-1], hits[j]
 			}
 		} else if progress < hits[len(hits)-1].progress {
-			hits[len(hits)-1] = hit{g.skeleton[i].ID, progress}
+			hits[len(hits)-1] = beamTargetHit{g.skeleton[i].ID, progress}
 			for j := len(hits) - 1; j > 0 && hits[j].progress < hits[j-1].progress; j-- {
 				hits[j], hits[j-1] = hits[j-1], hits[j]
 			}
 		}
 	}
-	result := make([]int, len(hits))
-	for i, h := range hits {
-		result[i] = h.id
+	g.beamTargetScratch = hits
+	result := g.beamTargetResult[:0]
+	if cap(result) < len(hits) {
+		result = make([]int, 0, len(hits))
 	}
+	for _, h := range hits {
+		result = append(result, h.id)
+	}
+	g.beamTargetResult = result
 	return result
+}
+
+type beamTargetHit struct {
+	id       int
+	progress float64
 }

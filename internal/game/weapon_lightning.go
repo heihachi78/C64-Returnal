@@ -94,20 +94,31 @@ func (g *Game) chainLightningTargets() []lightningStrikeTarget {
 	if count <= 0 {
 		return nil
 	}
-	fireballFinishingTargets := map[int]bool{}
+	fireballFinishingTargets := g.fireballTargetReservations
+	if fireballFinishingTargets == nil {
+		fireballFinishingTargets = map[int]bool{}
+		g.fireballTargetReservations = fireballFinishingTargets
+	}
+	clear(fireballFinishingTargets)
 	for _, fire := range g.fireball {
 		if fire.TargetID != 0 {
 			fireballFinishingTargets[fire.TargetID] = true
 		}
 	}
-	remaining := make([]int, 0, len(g.skeleton))
+	remaining := g.lightningRemainingTargets[:0]
+	if cap(remaining) < len(g.skeleton) {
+		remaining = make([]int, 0, len(g.skeleton))
+	}
 	for i := range g.skeleton {
 		if fireballFinishingTargets[g.skeleton[i].ID] && g.skeleton[i].HP <= 1 {
 			continue
 		}
 		remaining = append(remaining, i)
 	}
-	targets := make([]lightningStrikeTarget, 0, count)
+	targets := g.lightningTargetScratch[:0]
+	if cap(targets) < count {
+		targets = make([]lightningStrikeTarget, 0, count)
+	}
 	origin := g.player.Pos
 	for len(targets) < count && len(remaining) > 0 {
 		best := 0
@@ -124,5 +135,7 @@ func (g *Game) chainLightningTargets() []lightningStrikeTarget {
 		origin = g.skeleton[idx].Pos
 		remaining = slices.Delete(remaining, best, best+1)
 	}
+	g.lightningRemainingTargets = remaining
+	g.lightningTargetScratch = targets
 	return targets
 }

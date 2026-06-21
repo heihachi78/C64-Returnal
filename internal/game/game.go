@@ -20,12 +20,26 @@ type Game struct {
 	skeleton                    []Skeleton
 	fireball                    []Fireball
 	lightningTargetReservations map[int]bool
+	fireballTargetReservations  map[int]bool
 	orbs                        []OrbitalOrb
 	meteors                     []MeteorProjectile
 	chests                      []Chest
 	coins                       []Coin
 	effects                     []Effect
 	actualDamage                []actualDamageSample
+	actualDamageWindowTotal     int
+	maxActualDPS                float64
+	pendingSpawnPressureActual  float64
+	pendingSpawnPressureLevels  int
+	skeletonHPPerSecond         float64
+	skeletonSpatialDirty        bool
+	dynamicSpawnQueue           []dynamicSpawnPlanEntry
+	closestSkeletonScratch      []closestSkeletonPick
+	closestSkeletonResult       []int
+	beamTargetScratch           []beamTargetHit
+	beamTargetResult            []int
+	lightningRemainingTargets   []int
+	lightningTargetScratch      []lightningStrikeTarget
 
 	skeletonAnimTimer  float64
 	skeletonAnimFrame  int
@@ -52,6 +66,7 @@ func New() *Game {
 		screenH:                     ScreenHeight,
 		spatial:                     NewSpatialIndex(tuning.SpatialIndexCellSize),
 		lightningTargetReservations: map[int]bool{},
+		fireballTargetReservations:  map[int]bool{},
 		suppressedMovement:          map[ebiten.Key]bool{},
 		scaledTextCache:             map[scaledTextCacheKey]scaledTextCacheEntry{},
 	}
@@ -65,13 +80,21 @@ func (g *Game) reset() {
 	g.skeleton = g.skeleton[:0]
 	g.fireball = g.fireball[:0]
 	clear(g.lightningTargetReservations)
+	clear(g.fireballTargetReservations)
 	g.orbs = g.orbs[:0]
 	g.meteors = g.meteors[:0]
 	g.chests = g.chests[:0]
 	g.coins = g.coins[:0]
 	g.effects = g.effects[:0]
 	g.actualDamage = g.actualDamage[:0]
+	g.actualDamageWindowTotal = 0
+	g.maxActualDPS = 0
+	g.pendingSpawnPressureActual = 0
+	g.pendingSpawnPressureLevels = 0
+	g.skeletonHPPerSecond = initialSkeletonHPPerSecond(g.tuning, g.session.Progression)
+	g.dynamicSpawnQueue = g.dynamicSpawnQueue[:0]
 	g.spatial.Rebuild(g.skeleton)
+	g.skeletonSpatialDirty = false
 	g.skeletonAnimTimer = 0
 	g.skeletonAnimFrame = 0
 	g.fireAnimTimer = 0

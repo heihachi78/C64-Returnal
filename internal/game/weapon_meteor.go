@@ -61,6 +61,7 @@ func (g *Game) impactMeteor(pos Vec2) {
 	g.queueLevelUpChoices(levelUps)
 }
 func (g *Game) meteorImpactTargetIDs(pos Vec2) []int {
+	g.ensureSkeletonSpatialIndex()
 	targets := []int{}
 	damageRadius := g.meteorImpactDamageRadius()
 	g.spatial.ForEachNear(pos, damageRadius, g.skeleton, func(i int) bool {

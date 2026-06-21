@@ -26,6 +26,8 @@ const (
 	SkeletonBlue
 )
 
+const blueMonsterHitPoints = 1000
+
 func (k SkeletonKind) HitPoints(t Tuning) int {
 	switch k {
 	case SkeletonRed:
@@ -35,7 +37,7 @@ func (k SkeletonKind) HitPoints(t Tuning) int {
 	case SkeletonBlack:
 		return max(1, t.BlackHitPoints)
 	case SkeletonBlue:
-		return max(1, t.BlueMonsterHitPoints)
+		return blueMonsterHitPoints
 	default:
 		return 1
 	}

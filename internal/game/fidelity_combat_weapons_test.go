@@ -142,39 +142,21 @@ func TestHalveSkeletonsDoesNotCreditWeaponKillsLikeOriginal(t *testing.T) {
 	}
 }
 
-func TestMilestoneSkeletonSpawnDefersSpatialRefreshLikeOriginal(t *testing.T) {
-	g := New()
-	g.skeleton = g.skeleton[:0]
-	g.spatial.Rebuild(g.skeleton)
-	g.session.Kills.TotalSkeletons = 1
-	g.tuning.RedKillInterval = 1
-	g.tuning.PurpleKillInterval = 0
-
-	g.spawnMilestoneSkeletonsIfNeeded()
-
-	if len(g.skeleton) != 1 || g.skeleton[0].Kind != SkeletonRed {
-		t.Fatalf("milestone skeletons = %+v, want one red skeleton", g.skeleton)
-	}
-	pos := g.skeleton[0].Pos
-	if idx := g.spatial.FirstNear(pos, g.tuning.SkeletonHitDistance, g.skeleton, func(int) bool { return true }); idx != -1 {
-		t.Fatalf("milestone skeleton was visible in spatial index before rebuild at index %d", idx)
-	}
-	g.spatial.Rebuild(g.skeleton)
-	if idx := g.spatial.FirstNear(pos, g.tuning.SkeletonHitDistance, g.skeleton, func(int) bool { return true }); idx != 0 {
-		t.Fatalf("milestone skeleton index after rebuild = %d, want 0", idx)
-	}
-}
-
 func TestTimedSkeletonSpawnDefersSpatialRefreshLikeOriginal(t *testing.T) {
 	g := New()
 	g.skeleton = g.skeleton[:0]
 	g.spatial.Rebuild(g.skeleton)
-	g.session.Casts.SkeletonSpawn = g.session.Progression.SkeletonSpawnInterval()
+	redHP := SkeletonRed.HitPoints(g.tuning)
+	g.dynamicSpawnQueue = []dynamicSpawnPlanEntry{{Kind: SkeletonRed, Count: 1}}
+	g.session.Casts.SkeletonSpawn = float64(redHP)
 
 	g.updateSkeletonSpawning(0)
 
-	if len(g.skeleton) != 1 {
-		t.Fatalf("timed skeleton count = %d, want 1", len(g.skeleton))
+	if got, want := len(g.skeleton), 1; got != want {
+		t.Fatalf("timed skeleton count = %d, want %d", got, want)
+	}
+	if g.skeleton[0].Kind != SkeletonRed {
+		t.Fatalf("timed skeleton kind = %v, want red", g.skeleton[0].Kind)
 	}
 	pos := g.skeleton[0].Pos
 	if idx := g.spatial.FirstNear(pos, g.tuning.SkeletonHitDistance, g.skeleton, func(int) bool { return true }); idx != -1 {
@@ -186,27 +168,38 @@ func TestTimedSkeletonSpawnDefersSpatialRefreshLikeOriginal(t *testing.T) {
 	}
 }
 
-func TestDestroyTriggeredMilestoneSpawnDefersSpatialRefreshLikeOriginal(t *testing.T) {
+func TestDestroyDoesNotTriggerMilestoneEnemySpawn(t *testing.T) {
 	g := New()
 	g.skeleton = []Skeleton{{ID: 101, Pos: Vec2{}, HP: 1, Reward: 0}}
 	g.spatial.Rebuild(g.skeleton)
 	g.session.Kills.TotalSkeletons = 0
 	g.session.NextChestMilestone = 1_000_000
-	g.tuning.RedKillInterval = 1
-	g.tuning.PurpleKillInterval = 0
 
 	g.destroySkeleton(0, AttackFireball)
 
-	if len(g.skeleton) != 1 || g.skeleton[0].Kind != SkeletonRed {
-		t.Fatalf("post-kill skeletons = %+v, want one deferred red milestone skeleton", g.skeleton)
+	if len(g.skeleton) != 0 {
+		t.Fatalf("post-kill skeletons = %+v, want none", g.skeleton)
 	}
-	pos := g.skeleton[0].Pos
-	if idx := g.spatial.FirstNear(pos, g.tuning.SkeletonHitDistance, g.skeleton, func(int) bool { return true }); idx != -1 {
-		t.Fatalf("post-kill milestone skeleton was visible in spatial index before rebuild at index %d", idx)
+}
+
+func TestDestroySkeletonDefersSpatialRebuildUntilNextQuery(t *testing.T) {
+	g := New()
+	g.skeleton = []Skeleton{
+		{ID: 101, Pos: Vec2{}, HP: 1, Reward: 0},
+		{ID: 202, Pos: Vec2{X: 200}, HP: 1, Reward: 0},
 	}
-	g.updateSkeletons(0)
-	if idx := g.spatial.FirstNear(pos, g.tuning.SkeletonHitDistance, g.skeleton, func(int) bool { return true }); idx != 0 {
-		t.Fatalf("post-kill milestone skeleton index after skeleton update = %d, want 0", idx)
+	g.rebuildSkeletonSpatialIndex()
+
+	g.destroySkeleton(0, AttackNone)
+
+	if !g.skeletonSpatialDirty {
+		t.Fatal("skeleton spatial dirty = false, want true after removal")
+	}
+	if got := g.firstSkeletonHitByPoint(Vec2{X: 200}, g.tuning.SkeletonHitDistance); got != 0 {
+		t.Fatalf("hit query after dirty removal = %d, want remaining skeleton index 0", got)
+	}
+	if g.skeletonSpatialDirty {
+		t.Fatal("skeleton spatial dirty = true, want false after query rebuild")
 	}
 }
 

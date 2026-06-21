@@ -8,6 +8,7 @@ func (g *Game) queueLevelUpChoices(count int) {
 	if count <= 0 || g.session.GameOver {
 		return
 	}
+	g.queueDynamicSpawnPressureForLevelUp(count)
 	first := g.session.Progression.Level - count + 1
 	for level := first; level <= g.session.Progression.Level; level++ {
 		g.session.PendingLevelUpLevels = append(g.session.PendingLevelUpLevels, level)
@@ -56,6 +57,7 @@ func (g *Game) randomLevelUpOptionsCandidate() []LevelUpOption {
 func (g *Game) applyLevelUpOption(option LevelUpOption) {
 	g.applyUpgradeEffect(option)
 	g.syncOrbitalOrbCount()
+	g.applyPendingDynamicSpawnPressure()
 	if len(g.session.PendingLevelUpLevels) > 0 {
 		g.session.PendingLevelUpLevels = g.session.PendingLevelUpLevels[1:]
 	}

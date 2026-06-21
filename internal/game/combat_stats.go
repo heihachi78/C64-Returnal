@@ -5,28 +5,28 @@ func (g *Game) recordActualDamage(amount int) {
 		return
 	}
 	g.actualDamage = append(g.actualDamage, actualDamageSample{Time: g.totalTime, Amount: amount})
+	g.actualDamageWindowTotal += amount
 	g.pruneActualDamageSamples()
+	g.maxActualDPS = max(g.maxActualDPS, g.ActualDPS())
 }
 
 func (g *Game) ActualDPS() float64 {
 	if actualDPSWindow <= 0 {
 		return 0
 	}
-	cutoff := g.totalTime - actualDPSWindow
-	damage := 0
-	for _, sample := range g.actualDamage {
-		if sample.Time >= cutoff {
-			damage += sample.Amount
-		}
-	}
-	return float64(damage) / actualDPSWindow
+	g.pruneActualDamageSamples()
+	return float64(g.actualDamageWindowTotal) / actualDPSWindow
 }
 
 func (g *Game) pruneActualDamageSamples() {
 	cutoff := g.totalTime - actualDPSWindow
 	first := 0
 	for first < len(g.actualDamage) && g.actualDamage[first].Time < cutoff {
+		g.actualDamageWindowTotal -= g.actualDamage[first].Amount
 		first++
 	}
 	g.actualDamage = g.actualDamage[first:]
+	if g.actualDamageWindowTotal < 0 {
+		g.actualDamageWindowTotal = 0
+	}
 }
