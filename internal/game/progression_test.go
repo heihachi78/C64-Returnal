@@ -164,6 +164,52 @@ func TestUnlockAndUpgradeBeamMatchesOriginalKillCountAndInterval(t *testing.T) {
 	}
 }
 
+func TestMageRawDPSStartsWithLevelOneFireballOnly(t *testing.T) {
+	p := NewProgression(DefaultTuning())
+
+	if got, want := p.MageRawDPS(), 1.0/3.0; math.Abs(got-want) > 0.000001 {
+		t.Fatalf("MageRawDPS = %v, want %v", got, want)
+	}
+}
+
+func TestMageRawDPSScalesWithFireballCountAndRate(t *testing.T) {
+	p := NewProgression(DefaultTuning())
+	p.ApplyLevelUpOption(ExtraFireball)
+
+	if got, want := p.MageRawDPS(), 2.0/3.0; math.Abs(got-want) > 0.000001 {
+		t.Fatalf("extra-fireball MageRawDPS = %v, want %v", got, want)
+	}
+
+	p = NewProgression(DefaultTuning())
+	p.ApplyLevelUpOption(FireRate)
+	if got, want := p.MageRawDPS(), 1.0/(3.0*0.9); math.Abs(got-want) > 0.000001 {
+		t.Fatalf("fire-rate MageRawDPS = %v, want %v", got, want)
+	}
+}
+
+func TestMageRawDPSIncludesUnlockedWeaponRates(t *testing.T) {
+	tuning := DefaultTuning()
+	p := NewProgression(tuning)
+	p.ApplyLevelUpOption(LearnLightning)
+	p.ApplyLevelUpOption(LightningBounce)
+	p.ApplyLevelUpOption(LearnOrb)
+	p.ApplyLevelUpOption(ExtraOrb)
+	p.ApplyLevelUpOption(OrbitalSpeed)
+	p.ApplyLevelUpOption(LearnBeam)
+	p.ApplyLevelUpOption(BeamKillCount)
+	p.ApplyLevelUpOption(LearnMeteor)
+	p.ApplyLevelUpOption(ExtraMeteor)
+
+	want := 1.0/tuning.InitialFireballCast +
+		2.0/tuning.InitialLightningCast +
+		2.0*tuning.InitialOrbitalAngularSpeed*tuning.OrbitalSpeedUpgradeMultipler/(math.Pi*2) +
+		3.0/tuning.InitialBeamCast +
+		2.0/tuning.InitialMeteorCast
+	if got := p.MageRawDPS(); math.Abs(got-want) > 0.000001 {
+		t.Fatalf("unlocked MageRawDPS = %v, want %v", got, want)
+	}
+}
+
 func TestAttackSpeedOptionsStopBeforeOneSixtiethSecond(t *testing.T) {
 	tuning := DefaultTuning()
 	tuning.InitialFireballCast = 0.018

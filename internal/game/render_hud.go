@@ -32,6 +32,11 @@ func (g *Game) drawHUD(screen *ebiten.Image) {
 	g.drawSpriteScreen(screen, g.assets.Skeleton[0], left+9, bottomPanelTop+25, 16, 22, false, color.RGBA{255, 255, 255, 255})
 	g.drawTextSize(screen, fmt.Sprintf("x%d", len(g.skeleton)), left+28, bottomPanelTop+15, combatFontSize, c64Text)
 	g.drawTextSize(screen, fmt.Sprintf("%ss", formattedSeconds(g.session.Progression.SkeletonSpawnInterval())), left+28, bottomPanelTop+31, combatFontSize, c64Text)
+
+	dpsX, dpsY, dpsW, dpsH := dpsPanelRect(g.screenW, g.screenH)
+	g.panel(screen, dpsX, dpsY, dpsW, dpsH)
+	g.drawCenteredTextSize(screen, fmt.Sprintf("RAW %.2f", g.session.Progression.MageRawDPS()), dpsX+dpsW/2, dpsY+19, combatFontSize, c64Text)
+	g.drawCenteredTextSize(screen, fmt.Sprintf("ACT %.2f", g.ActualDPS()), dpsX+dpsW/2, dpsY+39, combatFontSize, c64Gold)
 }
 func topStatusPanelRect(lives int) (x, y, w, h float64) {
 	lifeRows := max(1, (max(1, lives)+11)/12)
@@ -44,6 +49,11 @@ func lifeIconScreenPosition(index int) (x, y float64) {
 }
 func combatStatusPanelRect(screenH int) (x, y, w, h float64) {
 	return 8, float64(screenH) - 333, 176, 330
+}
+func dpsPanelRect(screenW, screenH int) (x, y, w, h float64) {
+	w = 136
+	h = 58
+	return float64(screenW) - w - 8, float64(screenH) - h - 8, w, h
 }
 func (g *Game) drawCombatRow(screen, icon *ebiten.Image, x, y float64, first, second, kills string, unlocked bool) {
 	row := combatRowPresentation(first, second, kills, unlocked)

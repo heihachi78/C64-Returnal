@@ -83,6 +83,20 @@ func TestCoverageRenderPassDrawsWorldHUDAndAllOverlays(t *testing.T) {
 	g.Draw(screen)
 }
 
+func TestCoverageHUDDrawsDPSReadout(t *testing.T) {
+	g := New()
+	g.screenW = ScreenWidth
+	g.screenH = ScreenHeight
+	g.session.Progression.ApplyLevelUpOption(ExtraFireball)
+
+	screen := ebiten.NewImage(ScreenWidth, ScreenHeight)
+	g.drawHUD(screen)
+
+	if got := g.session.Progression.MageRawDPS(); got <= 0 {
+		t.Fatalf("MageRawDPS = %v, want positive HUD value", got)
+	}
+}
+
 func TestCoverageDrawHelpersAndOptionIcons(t *testing.T) {
 	g := New()
 	screen := ebiten.NewImage(96, 96)

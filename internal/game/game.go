@@ -25,6 +25,7 @@ type Game struct {
 	chests                      []Chest
 	coins                       []Coin
 	effects                     []Effect
+	actualDamage                []actualDamageSample
 
 	skeletonAnimTimer  float64
 	skeletonAnimFrame  int
@@ -69,6 +70,7 @@ func (g *Game) reset() {
 	g.chests = g.chests[:0]
 	g.coins = g.coins[:0]
 	g.effects = g.effects[:0]
+	g.actualDamage = g.actualDamage[:0]
 	g.spatial.Rebuild(g.skeleton)
 	g.skeletonAnimTimer = 0
 	g.skeletonAnimFrame = 0

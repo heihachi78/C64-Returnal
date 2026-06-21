@@ -231,6 +231,9 @@ func (g *Game) damageSkeleton(index, amount int, attack AttackKind, queueLevelUp
 	if index < 0 || index >= len(g.skeleton) || amount <= 0 {
 		return 0
 	}
+	if attack != AttackNone {
+		g.recordActualDamage(min(amount, g.skeleton[index].HP))
+	}
 	if g.skeleton[index].HP > amount {
 		g.skeleton[index].HP -= amount
 		g.skeleton[index].HitFlash = skeletonDamageFlashDuration

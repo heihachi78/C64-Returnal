@@ -290,6 +290,13 @@ func TestHUDStatusPanelLayoutMatchesOriginalHUDRect(t *testing.T) {
 	}
 }
 
+func TestDPSPanelLayoutAnchorsBottomRight(t *testing.T) {
+	x, y, w, h := dpsPanelRect(800, 600)
+	if x != 656 || y != 534 || w != 136 || h != 58 {
+		t.Fatalf("dps panel rect = (%v,%v,%v,%v), want (656,534,136,58)", x, y, w, h)
+	}
+}
+
 func TestChestRewardLayoutMatchesOriginalHUDRect(t *testing.T) {
 	x, y, w, h := chestOverlayPanelRect(800, 600, 1)
 	if x != 90 || y != 196 || w != 620 || h != 208 {

@@ -11,6 +11,11 @@ const (
 	AttackNone
 )
 
+type actualDamageSample struct {
+	Time   float64
+	Amount int
+}
+
 type SkeletonKind int
 
 const (
