@@ -12,7 +12,7 @@ The game opens a resizable 1200x900 window and runs the simulation at 120 ticks 
 - Auto-cast fireballs, chain lightning, orbital orbs, beams, meteors, and an unlockable death wave.
 - Level-up choices, queued level-up overlays, coin-funded redraws, and chest rewards.
 - Skeleton variants with current hit points of 1 regular, 3 red, 7 purple, 29 black, and 1000 blue.
-- Dynamic spawn pressure based on each level's level-long actual damage rate and current enemy HP budget, with `SkeletonHPPerSecondLevelUpBonus` defaulting to a +0.4 HP/sec bump per level-up; default tuning caps spawns at 999 active skeletons and one queued spawn per tick.
+- Dynamic spawn pressure based on each level's level-long actual damage rate and current enemy HP budget, with level-banded skeleton HP/sec bumps; default tuning caps spawns at 999 active skeletons and one queued spawn per tick.
 - A parallel skeleton movement path exists for tuning that allows at least 1024 active skeletons; damage, kills, rewards, and overlays stay on the main update path.
 - Tests for the entrypoint, progression, combat, pickups, overlays, rendering fidelity, generated assets, spatial indexing, and branch coverage.
 

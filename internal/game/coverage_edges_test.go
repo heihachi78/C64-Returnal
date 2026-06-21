@@ -157,7 +157,7 @@ func TestCoverageProgressionAndSpawnPressureEdges(t *testing.T) {
 		t.Fatalf("queued spawn pressure state = actual %v levels %d damage %d", g.pendingSpawnPressureActual, g.pendingSpawnPressureLevels, g.actualDamageLevelTotal)
 	}
 	g.applyPendingDynamicSpawnPressure()
-	if g.skeletonHPPerSecond != 8+g.tuning.SkeletonHPPerSecondLevelUpBonus || g.pendingSpawnPressureLevels != 1 {
+	if g.skeletonHPPerSecond != 8+skeletonHPPerSecondLevelUpBonus(g.tuning, 2) || g.pendingSpawnPressureLevels != 1 {
 		t.Fatalf("actual-target spawn pressure = hp/s %v levels %d", g.skeletonHPPerSecond, g.pendingSpawnPressureLevels)
 	}
 	g.pendingSpawnPressureActual = 0
