@@ -78,6 +78,37 @@ func TestParallelSkeletonUpdateMatchesOriginalSequentialMovement(t *testing.T) {
 	}
 }
 
+func TestSkeletonKindsMoveAtConfiguredSpeedMultipliers(t *testing.T) {
+	g := New()
+	g.player.Pos = Vec2{X: 1000}
+	g.tuning.SkeletonSpeed = 100
+	g.skeleton = []Skeleton{
+		{ID: 1, Kind: SkeletonRegular},
+		{ID: 2, Kind: SkeletonRed},
+		{ID: 3, Kind: SkeletonPurple},
+		{ID: 4, Kind: SkeletonBlack},
+		{ID: 5, Kind: SkeletonBlue},
+	}
+
+	g.updateSkeletons(1)
+
+	tests := []struct {
+		kind SkeletonKind
+		want float64
+	}{
+		{kind: SkeletonRegular, want: 100},
+		{kind: SkeletonRed, want: 99},
+		{kind: SkeletonPurple, want: 97},
+		{kind: SkeletonBlack, want: 94},
+		{kind: SkeletonBlue, want: 90},
+	}
+	for i, tt := range tests {
+		if got := g.skeleton[i].Pos.X; math.Abs(got-tt.want) > 0.0001 {
+			t.Fatalf("kind %v moved %v, want %v", tt.kind, got, tt.want)
+		}
+	}
+}
+
 func TestHalveSkeletonsUsesTemporaryShuffledTargetsLikeOriginal(t *testing.T) {
 	const seed int64 = 19
 	initial := []Skeleton{

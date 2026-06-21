@@ -54,6 +54,20 @@ func (k SkeletonKind) ExperienceReward() int {
 		return 1
 	}
 }
+func (k SkeletonKind) SpeedMultiplier() float64 {
+	switch k {
+	case SkeletonRed:
+		return 0.99
+	case SkeletonPurple:
+		return 0.97
+	case SkeletonBlack:
+		return 0.94
+	case SkeletonBlue:
+		return 0.9
+	default:
+		return 1
+	}
+}
 
 type EffectKind int
 

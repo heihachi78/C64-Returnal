@@ -46,7 +46,8 @@ func (g *Game) updateSkeletonRange(start, end int, dt float64, playerPos Vec2) {
 			continue
 		}
 		move := toPlayer.Normalized()
-		g.skeleton[i].Pos = g.skeleton[i].Pos.Add(move.Mul(g.tuning.SkeletonSpeed * dt))
+		speed := g.tuning.SkeletonSpeed * g.skeleton[i].Kind.SpeedMultiplier()
+		g.skeleton[i].Pos = g.skeleton[i].Pos.Add(move.Mul(speed * dt))
 		if move.X < 0 {
 			g.skeleton[i].Facing = -1
 		} else if move.X > 0 {
