@@ -53,9 +53,6 @@ func (g *Game) checkChestPickups() {
 func (g *Game) applyChestReward(tier ChestTier) {
 	skills := g.availableChestRewardSkills()
 	items := []ChestRewardDisplayItem{}
-	if len(skills) == 0 {
-		return
-	}
 	switch tier {
 	case ChestBronze:
 		skill := skills[g.rng.Intn(len(skills))]

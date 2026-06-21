@@ -700,6 +700,13 @@ func TestCoverageInputOverridesDriveOverlayInputBranches(t *testing.T) {
 	}
 
 	g = New()
+	justPressed = map[ebiten.Key]bool{ebiten.KeyDigit0: true}
+	consumed, err = g.updateOverlayInput()
+	if consumed || err != nil || g.session.Progression.Level != debugLevelJumpTarget {
+		t.Fatalf("debug jump = consumed %v err %v level %d", consumed, err, g.session.Progression.Level)
+	}
+
+	g = New()
 	g.session.ChestRewardActive = true
 	pressed[ebiten.KeyArrowLeft] = true
 	justPressed = map[ebiten.Key]bool{chestRewardAdvanceKey(): true}

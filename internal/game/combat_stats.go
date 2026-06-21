@@ -11,9 +11,6 @@ func (g *Game) recordActualDamage(amount int) {
 }
 
 func (g *Game) ActualDPS() float64 {
-	if actualDPSWindow <= 0 {
-		return 0
-	}
 	g.pruneActualDamageSamples()
 	return float64(g.actualDamageWindowTotal) / actualDPSWindow
 }

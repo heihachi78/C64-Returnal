@@ -168,9 +168,6 @@ func edgeIndicatorPosition(screenW, screenH int, targetX, targetY, inset float64
 	} else if dy < 0 {
 		scale = math.Min(scale, (top-centerY)/dy)
 	}
-	if math.IsInf(scale, 1) || scale < 0 {
-		scale = 0
-	}
 	return centerX + dx*scale, centerY + dy*scale
 }
 func (g *Game) worldToScreen(pos Vec2) (float64, float64) {
